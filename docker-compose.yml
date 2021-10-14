@@ -1,0 +1,13 @@
+version: '2'
+services:
+  dokidb:
+    restart: always
+    image: 'mariadb:latest'
+    ports:
+      - '127.0.0.1:3306:3306'
+    environment:
+      MARIADB_ROOT_PASSWORD: dokidoki
+    volumes:
+      - local-doki-db:/var/lib/mysql
+volumes:
+  local-doki-db:
