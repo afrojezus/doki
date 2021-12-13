@@ -11,7 +11,7 @@ using SixLabors.ImageSharp.Web.Resolvers;
 
 namespace Doki.Utils
 {
-    public static class PathStringExtensions
+  public static class PathStringExtensions
   {
     public static bool StartsWithNormalizedSegments(this PathString path, PathString other)
     {
@@ -89,7 +89,7 @@ namespace Doki.Utils
     /// </summary>
     /// <param name="environment">The environment used by this middleware.</param>
     /// <param name="formatUtilities">Contains various format helper methods based on the current configuration.</param>
-    public CustomPhysicalFileSystemProvider(IHostingEnvironment environment, FormatUtilities formatUtilities, IOptions<CustomPhysicalFileSystemProviderOptions> mediaOptions)
+    public CustomPhysicalFileSystemProvider(IWebHostEnvironment environment, FormatUtilities formatUtilities, IOptions<CustomPhysicalFileSystemProviderOptions> mediaOptions)
     {
       this._fileProvider = new PhysicalFileProvider(mediaOptions.Value.ContentPath);
       this._formatUtilities = formatUtilities;

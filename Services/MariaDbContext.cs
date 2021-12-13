@@ -12,5 +12,7 @@ namespace Doki.Services
         public virtual DbSet<File> Files { get; set; }
         public virtual DbSet<Author> Author { get; set; }
         public virtual DbSet<Comment> Comments { get; set; }
+        public virtual DbSet<Like> Likes { get; set; }
+        //public virtual DbSet<Folder> Folders { get; set; }
     }
 }
