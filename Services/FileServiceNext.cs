@@ -58,7 +58,7 @@ namespace Doki.Services
                         _dbContext.Comments.Remove(comment);
                     }
                 }
-                if (file.Thumbnail != null)
+                if (file.Thumbnail != null && file.Thumbnail.Contains("_thumbnail."))
                 {
                     System.IO.File.Delete($"{root}/ClientApp/build/{file.Thumbnail}");
                 }
