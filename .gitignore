@@ -232,7 +232,6 @@ _Pvt_Extensions
 .fake/
 
 # Doki-specific
-ClientApp/
 appsettings.*
 wwwroot/is-cache
 *.dokiconfig
