@@ -4,7 +4,7 @@
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
     <IsPackable>false</IsPackable>
-    <SpaRoot>ClientApp\</SpaRoot>
+    <SpaRoot>app\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
     <UserSecretsId>cce80b07-0a2d-444b-bfbf-9970aa616f89</UserSecretsId>
   </PropertyGroup>
@@ -31,7 +31,7 @@
     <_ContentIncludedByDefault Remove="dist\Doki.runtimeconfig.json" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ClientApp\build\files" />
+    <Folder Include="app\build\files" />
   </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <Exec Command="node --version" ContinueOnError="true">

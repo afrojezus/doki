@@ -15,7 +15,7 @@ using SixLabors.ImageSharp.Web.Providers;
 
 namespace Doki
 {
-    public class Startup
+  public class Startup
   {
     public Startup(IConfiguration configuration)
     {
@@ -23,8 +23,6 @@ namespace Doki
     }
 
     public IConfiguration Configuration { get; }
-
-    // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddDbContext<MariaDbContext>(option =>
@@ -34,14 +32,12 @@ namespace Doki
                   new MariaDbServerVersion(new Version(10, 3, 30))
               )
       );
-      services.AddScoped<FileServiceNext>();
+      services.AddScoped<PrimaryService>();
       services.Configure<CookiePolicyOptions>(options => { options.CheckConsentNeeded = context => true; });
       services.AddControllersWithViews().AddNewtonsoftJson(o =>
           o.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
       services.AddControllersWithViews();
-
-      // In production, the React files will be served from this directory
-      services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
+      services.AddSpaStaticFiles(configuration => { configuration.RootPath = "app/build"; });
 
       services.AddImageSharp()
        .RemoveProvider<PhysicalFileSystemProvider>()
@@ -49,12 +45,11 @@ namespace Doki
       .Configure<CustomPhysicalFileSystemProviderOptions>(options =>
     {
       options.RequestPath = "/files";
-      options.ContentPath = Path.GetFullPath("ClientApp/build/files");
+      options.ContentPath = Path.GetFullPath("app/build/files");
     });
 
     }
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
       if (env.IsDevelopment())
@@ -64,7 +59,6 @@ namespace Doki
       else
       {
         app.UseExceptionHandler("/Error");
-        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
         app.UseHsts();
       }
 
@@ -84,7 +78,7 @@ namespace Doki
 
       app.UseSpa(spa =>
       {
-        spa.Options.SourcePath = "ClientApp";
+        spa.Options.SourcePath = "app";
 
         if (env.IsDevelopment())
         {

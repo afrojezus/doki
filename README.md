@@ -14,10 +14,10 @@ This is the core repository for the project.
 ## Installation
 
 Doki can be set up easily by running `bootstrapper.sh` which
-installs the required libraries and configures your server to run it.
+installs the required libraries and configures your server to run it. Available in the releases.
 
 If you prefer a quick-and-easy way of running Doki, you can also make use
-of Docker to virtualize the environment needed for the platform.
+of Docker to virtualize the environment needed for the platform. A docker compose file is included.
 
 You can make use of the project itself and compile it on your own.
 
@@ -34,13 +34,15 @@ These requirements are handled by the bootstrapper. That includes setting up the
 ### Deciding type of production runtime
 
 Doki can be used as a public platform or as a private platform. This is
-decided within `ClientApp`. To switch between the types, edit  `REACT_APP_TYPE `to either `PRIVATE `or `PUBLIC `in `.env `within `ClientApp`.
+decided within `app`. To switch between the types, edit  `REACT_APP_TYPE` to either `PRIVATE` or `PUBLIC` in `.env` within `app`.
 
-Differences between these modes are availability of features. An public instance of Doki allows for the functionality of:
+Differences between these modes are availability of features. A public instance of Doki allows for the functionality of:
 
 - Reporting files
 - Sharing files directly to other social media
 - Use auto-moderation tools on newly uploaded files
+
+Both production runtime types allow for changing the visible name of the instance by changing `REACT_APP_NAME` in `.env`
 
 ## Contributing
 
