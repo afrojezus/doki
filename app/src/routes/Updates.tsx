@@ -3,7 +3,7 @@ import Container from "@mui/material/Container"
 import Typography from "@mui/material/Typography"
 import Box from "@mui/material/Box"
 import Divider from "@mui/material/Divider"
-import { connect } from "react-redux"
+import {connect} from "react-redux"
 
 const Updates = () => (
         <Container maxWidth="lg" style={{ paddingBottom: 64 }}>
@@ -18,20 +18,33 @@ const Updates = () => (
                 <Typography variant="caption" sx={{ fontWeight: 600 }}>
                     New in 15.01-2022.MAIN</Typography>
                 <p>
-                    General<br />
+                    General:<br />
                     - Edgy redesign.<br />
-                    - Huge refactoring to minimize tech debt.<br />
-                    - First build ready for public testing.<br />
-                    Public-only<br />
+                    - Huge refactoring to minimize tech debt. (not finished)<br />
+                - First build ready for public testing. (not finished)<br />
+                - Misc. UI customization in settings (not finished)<br />
+                - The formerly known "Browser page" is now responsble for viewing other pages alongside the file grid.<br /><br />
+                Browser:<br />
+                - Administrator mode<br />
+                - Drag-and-drop is possible again (not finished)<br />
+                - Folder navigation now makes sense with multiple subfolders <br />
+                - 2 new sorting options: views and likes<br />
+                - Refresh button has returned<br /><br />
+                Player:<br />
+                - Timestamps and seeking functionality added<br />
+                - Right-click will now pause and play the video. Downloading the video is doable through the share menu instead<br />
+                - More file details added to the second row of the title<br />
+
+                {/*Public-only<br />
                     - Report functionality.<br />
                     - Scanning functionality (using abuse repositories and MD5 hashes).<br />
-                    - Social network sharing options.<br />
+                    - Social network sharing options.<br />*/}
                 </p>
                 <Typography variant="caption" sx={{ fontWeight: 600 }}>New in 14.01-2022.MAIN</Typography>
                 <p>
-                    General<br />
+                    General<br /><br />
                     - The top bar is gone, the file browser is the only relevant route.<br />
-                    - View counting.<br />
+                    - View counting.<br /><br />
                     Browser<br />
                     - What you've uploaded should show up much more obvious<br />
                     - Useless search has been replaced with small lists of most viewed and most liked files.<br />
@@ -45,13 +58,13 @@ const Updates = () => (
                     - Cleaner bar design, does not get in your way now<br />
                     - Backend now uses .NET 6, faster file handling.<br />
                     - More active alert management<br />
-                    - Super hidden exclusive snow effect with optional raytracing mode in the settings<br />
+                    - Super hidden exclusive snow effect with optional raytracing mode in the settings<br /><br />
                     Browser<br />
                     - File management from "My Files" have migrated over to the browser and completely removed its purpose<br />
-                    - Minor adjustments to UI, you can now right click files to delete or change their folders<br />
+                    - Minor adjustments to UI, you can now right click files to delete or change their folders<br /><br />
                     Player<br />
                     - Common media playback control added<br />
-                    - Autoplay is now default<br />
+                    - Autoplay is now default<br /><br />
                     Settings<br />
                     - Now holds your Doki ID info<br />
                     - Anonymous will correctly show up now<br />

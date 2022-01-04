@@ -33,7 +33,7 @@ namespace Doki
               )
       );
       services.AddScoped<PrimaryService>();
-      services.Configure<CookiePolicyOptions>(options => { options.CheckConsentNeeded = context => true; });
+      services.Configure<CookiePolicyOptions>(options => { options.CheckConsentNeeded = _ => true; });
       services.AddControllersWithViews().AddNewtonsoftJson(o =>
           o.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
       services.AddControllersWithViews();

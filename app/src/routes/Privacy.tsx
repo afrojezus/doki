@@ -2,14 +2,28 @@ import React from "react"
 import Container from "@mui/material/Container"
 import Typography from "@mui/material/Typography"
 import Box from "@mui/material/Box"
-import { connect } from "react-redux"
+import {connect} from "react-redux"
 
 const Privacy = () => (
         <Container maxWidth="lg" style={{ paddingBottom: 64 }}>
             <Box my={4}>
                 <br />
-                <Typography variant="h4" gutterBottom style={{ fontFamily: "doublewide", fontWeight: 700 }}>TERMS OF SERVICE</Typography>
+            <Typography variant="h4" gutterBottom style={{ fontFamily: "doublewide", fontWeight: 700 }}>TERMS OF SERVICE</Typography>
+            <Typography variant="h6">
+                Upload terms
+</Typography>
+<Typography>
+            - NSFW content must be marked as NSFW. NSFW content without this mark will be removed.<br/>
+- Gore and related violent content is not tolerated and will be removed if found.<br/>
+- Content revealing abuse of minors of any form is not tolerated and will be removed.<br/>
+- If not specified, the content must adhere to Dutch law.
+            </Typography>
                 <br />
+            <br />
+            <Typography variant="h6">
+                Privacy policy
+            </Typography>
+            <br />
                 <Typography>
                     The file service stores a cookie used for identifying authors for files uploaded. The cookie is
                     responsible for validating your ownership of your files on the service.

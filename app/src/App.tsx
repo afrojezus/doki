@@ -1,29 +1,28 @@
 import * as React from "react"
-import { Route } from "react-router"
-import { Color, createTheme, CssBaseline, PaletteMode, ThemeProvider, useMediaQuery } from "@mui/material"
-import { amber, blue, brown, green, grey, lightBlue, lime, red, teal, yellow } from "@mui/material/colors"
-import Me from "./routes/Me"
+import {Route} from "react-router"
+import {Color, createTheme, CssBaseline, PaletteMode, ThemeProvider, useMediaQuery} from "@mui/material"
+import {amber, blue, brown, green, grey, lime, red, yellow} from "@mui/material/colors"
 import Privacy from "./routes/Privacy"
-import Apidesc from "./routes/Apidesc"
 
 import "./style/animations.css"
 import "./style/common.css"
-import { useDispatch, useSelector } from "react-redux"
-import { actionCreators, PreferencesState } from "./store/Preferences"
+import {useDispatch, useSelector} from "react-redux"
+import {actionCreators, PreferencesState} from "./store/Preferences"
 import Special from "./routes/Special"
 import Landing from "./routes/Landing"
 import Browser from "./routes/Browser"
 import TriggerRoute from "./routes/TriggerRoute"
 import ErrorRoute from "./routes/404"
-import { ApplicationState } from "./store"
+import {ApplicationState} from "./store"
 import Root from "./meta-views/Root"
 import Updates from "./routes/Updates"
-import { createShadow } from "./utils"
+import {createShadow} from "./utils"
 
 export default () => {
     const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)")
     const colorScheme = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).colorScheme)
     const light = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).light)
+    const borderRadius = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).borderRadius)
     const tvMode = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).tvMode)
     // const isTV = useMediaQuery('(width: 3840px) and (height: 2160px), (width: 1920px) and (height: 1080px), (width: 1280px) and (height: 720px)')
     const dispatch = useDispatch()
@@ -97,7 +96,7 @@ export default () => {
                         paper: tvMode ? grey["900"] : paperColor
                     },
                 },
-                shape: { borderRadius: 0 },
+                shape: { borderRadius },
                 shadows: [
                     "none",
                     createShadow(0, 2, 1, -1, 0, 1, 1, 0, 0, 1, 3, 0),
@@ -209,7 +208,7 @@ export default () => {
                 }
             })
         },
-        [prefersDarkMode, colorScheme, light, tvMode],
+        [prefersDarkMode, colorScheme, light, tvMode, borderRadius],
     )
     return (
         <React.Fragment>

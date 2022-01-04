@@ -1,5 +1,5 @@
-import { Theme, Typography } from "@mui/material"
-import { styled } from "@mui/system"
+import {Theme, Typography} from "@mui/material"
+import {styled} from "@mui/system"
 import React from "react"
 import LightTooltip from "./LightTooltip"
 

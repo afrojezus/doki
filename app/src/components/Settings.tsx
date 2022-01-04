@@ -1,33 +1,39 @@
-﻿import React, { useState } from "react"
+﻿import React, {useState} from "react"
 import {
-    Avatar, Button,
-    Card, CardHeader,
+    Avatar,
+    Button,
+    Card,
+    CardHeader,
     Chip,
-    Dialog, DialogActions,
+    Dialog,
+    DialogActions,
     DialogContent,
-    DialogTitle, Divider,
+    Divider,
     FormControl,
     Grid,
     InputLabel,
     MenuItem,
     Select,
     SelectChangeEvent,
+    Slider,
     Switch,
-    Theme, Toolbar,
+    Theme,
+    Toolbar,
     Typography,
 } from "@mui/material"
 import createStyles from "@mui/styles/createStyles"
 import makeStyles from "@mui/styles/makeStyles"
-import { useDispatch, useSelector } from "react-redux"
-import { ApplicationState } from "../store"
-import { actionCreators, PreferencesState } from "../store/Preferences"
-import { actionCreators as fileActions, FileServiceState } from "../store/FileService"
-import { AuthorModel } from "../models"
-import { LightTooltip, readURL, retrieveAuthorInfo } from "../utils"
+import {useDispatch, useSelector} from "react-redux"
+import {ApplicationState} from "../store"
+import {sessionActions, SessionState} from "../store/Session"
+import {actionCreators, PreferencesState} from "../store/Preferences"
+import {actionCreators as fileActions, FileServiceState} from "../store/FileService"
+import {AuthorModel} from "../models"
+import {LightTooltip, readURL, retrieveAuthorInfo} from "../utils"
 import Cookies from "js-cookie"
-import { teal, yellow } from "@mui/material/colors"
+import {yellow} from "@mui/material/colors"
 import moment from "moment"
-import { styled } from "@mui/material/styles"
+import {styled} from "@mui/material/styles"
 
 const Input = styled("input")({
     display: "none",
@@ -72,7 +78,9 @@ const Settings = ({ open, close }: { open: boolean, close: () => void }) => {
     const hasAllowedAds = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).allowAds)
     const hasTVmode = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).tvMode)
     const hasSnow = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).snow)
+     const hasBorderRadius = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).borderRadius)
     const id = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).id)
+    const isAdmin = useSelector((state: ApplicationState) => (state.session as SessionState).adminPowers)
     const dispatch = useDispatch()
     const [color, setColor] = useState<string>(colorScheme)
     const [light, setLight] = useState(prevLight)
@@ -81,6 +89,8 @@ const Settings = ({ open, close }: { open: boolean, close: () => void }) => {
     const [tvMode, setTVmode] = useState(hasTVmode)
     const [snow, setSnow] = useState(hasSnow)
     const [raytracing, setRaytracing] = useState(false)
+    const [br, setBr] = useState(hasBorderRadius)
+    const [admin, setAdmin] = useState(isAdmin)
 
     // User management
     const [user, setUser] = React.useState<AuthorModel>({ name: "Anonymous", creationDate: 0, authorId: "0" })
@@ -124,6 +134,10 @@ const Settings = ({ open, close }: { open: boolean, close: () => void }) => {
     const handleSnow = (event: any) => setSnow(event.target.checked)
     const handleRaytracing = (event: any) => setRaytracing(event.target.checked)
     const handleRemoveFilter = (e: string) => setWatchFilter(watchFilter.filter(x => x !== e))
+
+    const handleBR = (event: Event, value: number | number[], activeThumb: number) => setBr(value as number)
+
+    const handleAdmin = (event: any) => setAdmin(event.target.checked)
     React.useEffect(() => {
         localStorage.setItem("color_scheme", color)
         dispatch(actionCreators.setColorScheme(color))
@@ -154,6 +168,12 @@ const Settings = ({ open, close }: { open: boolean, close: () => void }) => {
             document.body.style.filter = "none"
         }
     }, [raytracing])
+    React.useEffect(() => {
+        dispatch(actionCreators.setBorderRadius(br))
+    }, [br])
+    React.useEffect(() => {
+        dispatch(sessionActions.setAdminPowers(admin))
+    }, [admin])
 
 
     const handleDownloadProfile = () => {
@@ -210,6 +230,11 @@ const Settings = ({ open, close }: { open: boolean, close: () => void }) => {
             <Divider />
             <DialogContent>
                 <Toolbar variant="dense" disableGutters>
+                    <Typography variant="caption" gutterBottom>Administrator mode</Typography>
+                    <div style={{ flex: 1 }} />
+                    <Switch checked={admin} disabled={process.env.REACT_APP_TYPE === "PUBLIC"} onChange={handleAdmin} />
+                </Toolbar>
+                <Toolbar variant="dense" disableGutters>
                     <Typography variant="caption">
                         Doki ID management
                     </Typography>
@@ -264,6 +289,11 @@ const Settings = ({ open, close }: { open: boolean, close: () => void }) => {
                         onDelete={() => handleRemoveFilter(e)} /></Grid>)}</Grid>
                 </FormControl>
                 <Toolbar variant="dense" disableGutters>
+                    <Typography variant="caption" gutterBottom>Border radius on the UI</Typography>
+                    <div style={{ flex: 1 }} />
+                    <Slider marks sx={{maxWidth: 150}} valueLabelDisplay="auto" min={0} max={36} step={1} value={br} onChange={handleBR} />
+                </Toolbar>
+                <Toolbar variant="dense" disableGutters>
                     <Typography variant="caption" gutterBottom>Show snow effect</Typography>
                     <div style={{ flex: 1 }} />
                     <Switch checked={snow} onChange={handleSnow} />
@@ -271,7 +301,7 @@ const Settings = ({ open, close }: { open: boolean, close: () => void }) => {
                 <Toolbar variant="dense" disableGutters>
                     <Typography variant="caption" gutterBottom>Raytracing on the snow</Typography>
                     <div style={{ flex: 1 }} />
-                    <Switch checked={raytracing} onChange={handleRaytracing} />
+                    <Switch checked={raytracing} disabled={!snow} onChange={handleRaytracing} />
                 </Toolbar>
                 {/*<FormControl variant="outlined" className={classes.formControl}>
                     <Typography gutterBottom>TV Mode</Typography>

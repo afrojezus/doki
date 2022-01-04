@@ -1,8 +1,5 @@
-import {ButtonBase, CircularProgress, IconButton, styled, Theme, Typography} from "@mui/material"
-import {
-  ArrowBack as BackIcon,
-  AppsOutlined as AllFilesIcon, Tv, FileCopy
-} from "@mui/icons-material"
+import {CircularProgress, IconButton, styled, Theme, Typography} from "@mui/material"
+import {FileCopy, Tv} from "@mui/icons-material"
 import React from "react"
 
 interface IMagicButton {

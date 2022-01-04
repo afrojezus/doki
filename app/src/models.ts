@@ -30,5 +30,5 @@ export interface FileModel {
   folderDesc: string;
   likes: number;
   nsfw: boolean;
-  views: boolean;
+  views: number;
 }

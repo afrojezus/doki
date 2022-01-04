@@ -5,17 +5,16 @@ import {
     Card,
     CardActions,
     CardContent,
-    DialogContent,
-    DialogTitle,
+    CircularProgress,
     Divider,
-    Dialog,
     Fade,
-    IconButton, LinearProgress,
+    IconButton,
     List,
     ListItem,
     ListItemText,
     Menu,
-    MenuItem, Paper,
+    MenuItem,
+    Paper,
     Popover,
     Slide,
     Switch,
@@ -24,40 +23,39 @@ import {
     Toolbar,
     Tooltip,
     Typography,
-    useMediaQuery,
-    DialogActions, linearProgressClasses
+    useMediaQuery
 } from "@mui/material"
 import Browser from "../routes/Browser"
-import { createStyles, makeStyles, withStyles } from "@mui/styles"
+import {createStyles, makeStyles} from "@mui/styles"
 import {
     AccountBoxTwoTone as AccountIcon,
     CommentTwoTone as CommentIcon,
-    MoreVertTwoTone as MoreIcon,
-    OpenInNewTwoTone as OpenIcon,
+    CopyAllTwoTone,
+    ExpandLess,
+    ExpandMore,
+    FastForwardTwoTone as ForwardIcon,
+    FastRewindTwoTone as RewindIcon,
+    PauseCircleTwoTone as PauseIcon,
+    PlayCircleTwoTone as PlayIcon,
     PlaylistPlayTwoTone as PlaylistIcon,
     RefreshTwoTone,
     ReportTwoTone as ReportIcon,
-    SettingsTwoTone as SettingsIcon, SettingsRemote,
+    SettingsRemote,
+    SettingsTwoTone as SettingsIcon,
     ShareTwoTone as ShareIcon,
     ThumbUpTwoTone as LikeIcon,
-    Tv,
     VolumeMuteTwoTone as VolMuteIcon,
-    VolumeUpTwoTone as VolIcon,
-    PlayCircleTwoTone as PlayIcon,
-    PauseCircleTwoTone as PauseIcon,
-    FastRewindTwoTone as RewindIcon,
-    FastForwardTwoTone as ForwardIcon,
-    MenuTwoTone as MenuIcon, ExpandLess, ExpandMore
+    VolumeUpTwoTone as VolIcon
 } from "@mui/icons-material"
 import moment from "moment"
-import React, { useRef, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { useHistory } from "react-router"
-import { Link, NavLink, Switch as SwitchRouter, useLocation } from "react-router-dom"
-import { CommentModel, FileModel } from "../models"
-import { ApplicationState } from "../store"
-import { actionCreators, FileServiceState } from "../store/FileService"
-import { actionCreators as prefCreators, PreferencesState } from "../store/Preferences"
+import React, {createRef, useRef, useState} from "react"
+import {useDispatch, useSelector} from "react-redux"
+import {useHistory} from "react-router"
+import {Link, useLocation} from "react-router-dom"
+import {CommentModel, FileModel} from "../models"
+import {ApplicationState} from "../store"
+import {actionCreators, FileServiceState} from "../store/FileService"
+import {actionCreators as prefCreators, PreferencesState} from "../store/Preferences"
 import Commenter from "../components/Commenter"
 import MediaPlayer from "../components/MediaPlayer"
 import Settings from "../components/Settings"
@@ -66,11 +64,12 @@ import PlaylistThumbnail from "../components/extended/PlaylistThumbnail"
 import MarginedToolbarIconButton from "../components/extended/MarginedToolbarIconButton"
 import ToolbarVolumeSlider from "../components/extended/ToolbarVolumeSlider"
 import ToolbarCaption from "../components/extended/ToolbarCaption"
-import { audioExt, checkFile, displayFilename, imgExt, mediaExt, truncate, viewable } from "../utils"
+import {audioExt, checkFile, displayFilename, imgExt, LightTooltip, mediaExt, truncate, viewable} from "../utils"
 import clsx from "clsx"
-
-
-import { LightTooltip } from "../utils"
+import Marquee from "react-fast-marquee"
+import Duration from "../components/Duration"
+import PlayerProgressBar from "../components/PlayerProgressBar"
+import ReactPlayer from "react-player"
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
     playerFlex: {
@@ -155,8 +154,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         position: "fixed",
         opacity: 0
     },
-    miniPadding: {
-    },
+    miniPadding: {},
     hiddenPanel: {
         maxHeight: "0 !important",
         opacity: "0 !important",
@@ -361,11 +359,13 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const TOOLBAR_SIZE = 47
 const DRAWER_WIDTH = 300
 
-const Main = ({ children }: React.PropsWithChildren<any>) => {
+const Main = ({children}: React.PropsWithChildren<any>) => {
     const classes = useStyles()
     const notMobile = useMediaQuery("(min-width:900px)")
     const history = useHistory()
     const location = useLocation()
+
+    const player = createRef()
 
     const tvMode = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).tvMode)
 
@@ -397,14 +397,16 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
     const [willPlayAd, setWillPlayAd] = useState(false)
     const [videoCounter, setVideoCounter] = useState(0)
 
+    const [osd, setOSD] = useState(false)
+
     const [interacted, setInteracted] = useState(hasInteracted)
     const [playing, setPlaying] = useState(false)
     const [loading, setLoading] = useState(isLoading)
     const [muted, setMuted] = useState(lastMute)
     const [volume, setVolume] = useState(lastVolume)
     const [duration, setDuration] = useState(0)
-    const [progress, setProgress] = useState({ played: 0, playedSeconds: 0, loaded: 0, loadedSeconds: 0 })
-    const [played, setPlayed] = useState(progress.playedSeconds)
+    const [progress, setProgress] = useState({played: 0, playedSeconds: 0, loaded: 0, loadedSeconds: 0})
+    const [seeking, setSeeking] = useState(false)
 
     const [scrolling, setScrolling] = useState(false)
     const [scrollTop, setScrollTop] = useState(0)
@@ -593,8 +595,15 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
     const onDuration = (n: number) => setDuration(n)
 
     const onProgress = (p: { played: number, playedSeconds: number, loaded: number, loadedSeconds: number }) => {
-        setPlayed(p.playedSeconds)
         setProgress(p)
+    }
+
+    const handleSeekDown = () => setSeeking(true)
+    const handleSeekChange = (event: React.ChangeEvent<{}>, value: (number | number[])) => {
+    }
+    const handleSeekUp = (value: number) => {
+        setSeeking(false);
+        (player.current as unknown as ReactPlayer).seekTo(value as number, "seconds")
     }
 
 
@@ -611,18 +620,24 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                     <Browser>
                         {children}
                     </Browser>
-                    <Toolbar />
+                    <Toolbar/>
                 </Box>
             </Slide>}
             <Box
-                style={{ display: !currentFile ? "flex" : !checkFile(viewable, currentFile) ? "flex" : undefined }}
+                onContextMenu={(e: React.MouseEvent) => {
+                    e.preventDefault()
+                    if (currentFile && checkFile(mediaExt, currentFile))
+                        setPlaying(!playing)
+                }}
+                style={{display: !currentFile ? "flex" : !checkFile(viewable, currentFile) ? "flex" : undefined}}
                 className={clsx(classes.playerFlex, classes.tvContainer, showFiles && tvMode && classes.tvHide, showFiles && !tvMode && classes.mini)}
                 onClick={() => {
                     if (currentFile && !checkFile(viewable, currentFile)) {
                         return
                     }
                     if (interacted) {
-                        if (willPlayAd) { } else {
+                        if (willPlayAd) {
+                        } else {
                             if (files.length > 1 && !showFiles) {
                                 newVideo()
                             }
@@ -635,84 +650,296 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                     }
                 }}>
                 {checkFile(viewable, currentFile) ? <>
-                    {checkFile(mediaExt, currentFile) &&
-                        <MediaPlayer
-                            className={showFiles && currentFile ? tvMode ? classes.inactivePlayerTV : classes.inactivePlayer : clsx(classes.player, prepareNewFile && classes.inactivePlayer, fmtCover ? classes.pcov : undefined)}
-                            url={currentFile ? currentFile.fileURL : undefined}
-                            width="100%"
-                            onDuration={onDuration}
-                            onProgress={onProgress}
-                            light={(checkFile(audioExt, currentFile) && !interacted) || (!interacted && (currentFile as FileModel && (currentFile as FileModel).thumbnail as string))}
-                            height="100%" loop={!continuous} playing={playing} muted={muted}
-                            onReady={() => setLoading(false)}
-                            onEnded={() => willPlayAd ? handleEndOfAd() : continuous && newVideo()}
-                            volume={volume} />}
-                    {checkFile(imgExt, currentFile) &&
-                        <img onLoad={() => setLoading(false)} alt="" src={currentFile ? currentFile.fileURL : undefined}
-                            style={showFiles ? {
-                                width: "100%",
-                                height: "100vh",
-                                objectFit: fmtCover ? "cover" : "contain",
-                                filter: "brightness(25%)"
-                            } : {
-                                width: "100%",
-                                height: "100vh",
-                                objectFit: fmtCover ? "cover" : "contain"
-                            }} />}
-                </> :
+                        {checkFile(mediaExt, currentFile) &&
+                            <MediaPlayer
+                                className={showFiles && currentFile ? tvMode ? classes.inactivePlayerTV : classes.inactivePlayer : clsx(classes.player, prepareNewFile && classes.inactivePlayer, fmtCover ? classes.pcov : undefined)}
+                                ref={player}
+                                progressInterval={0.0001}
+                                url={currentFile ? currentFile.fileURL : undefined}
+                                width="100%"
+                                onDuration={onDuration}
+                                onProgress={onProgress}
+                                light={(checkFile(audioExt, currentFile) && !interacted) || (!interacted && (currentFile as FileModel && (currentFile as FileModel).thumbnail as string))}
+                                height="100%" loop={!continuous} playing={playing} muted={muted}
+                                onPlaying={() => {
+                                    setBarOnFocus(false)
+                                    setOSD(true)
+                                    setTimeout(() => setOSD(false), 250)
+                                }}
+                                onPause={() => {
+                                    setBarOnFocus(true)
+                                    setOSD(true)
+
+                                }}
+
+                                onReady={() => setLoading(false)}
+                                onEnded={() => willPlayAd ? handleEndOfAd() : continuous && newVideo()}
+                                volume={volume}/>}
+                        {checkFile(imgExt, currentFile) &&
+                            <><img onLoad={() => setLoading(false)} alt=""
+                                   src={currentFile ? currentFile.fileURL : undefined}
+                                   style={showFiles ? {
+                                       width: "100%",
+                                       height: "100vh",
+                                       objectFit: fmtCover ? "cover" : "contain",
+                                       filter: "brightness(25%)"
+                                   } : {
+                                       width: "100%",
+                                       height: "100vh",
+                                       objectFit: fmtCover ? "cover" : "contain"
+                                   }}/>
+                                <Marquee gradient={false} speed={60}
+                                         style={{position: "fixed", width: "100%", top: 32, zIndex: -1}}>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                </Marquee>
+                                <Marquee gradient={false} speed={90}
+                                         style={{position: "fixed", width: "100%", top: "25%", bottom: "25%", zIndex: -1}}>
+                                    <Typography
+                                        variant="h1"
+                                        sx={{
+                                            textTransform: "uppercase",
+                                            fontSize: "12em",
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "doublewide",
+                                            whiteSpace: "nowrap"
+                                        }}>{displayFilename(currentFile ? currentFile.fileURL : "")}</Typography>
+                                    <Typography
+                                        variant="h1"
+                                        sx={{
+                                            textTransform: "uppercase",
+                                            fontSize: "12em",
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "text.primary",
+                                            fontFamily: "doublewide",
+                                            whiteSpace: "nowrap"
+                                        }}>{displayFilename(currentFile ? currentFile.fileURL : "")}</Typography>
+                                    <Typography
+                                        variant="h1"
+                                        sx={{
+                                            textTransform: "uppercase",
+                                            fontSize: "12em",
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "doublewide",
+                                            whiteSpace: "nowrap"
+                                        }}>{displayFilename(currentFile ? currentFile.fileURL : "")}</Typography>
+                                    <Typography
+                                        variant="h1"
+                                        sx={{
+                                            textTransform: "uppercase",
+                                            fontSize: "12em",
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "text.primary",
+                                            fontFamily: "doublewide",
+                                            whiteSpace: "nowrap"
+                                        }}>{displayFilename(currentFile ? currentFile.fileURL : "")}</Typography>
+                                </Marquee>
+                                <Marquee direction="right" gradient={false} speed={60}
+                                         style={{position: "fixed", width: "100%", bottom: 32, zIndex: -1}}>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 600,
+                                            zIndex: -1,
+                                            color: "primary.main",
+                                            fontFamily: "'Zen Kaku Gothic Antique'",
+                                            whiteSpace: "nowrap"
+                                        }}>ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ ドキ</Typography>
+                                </Marquee>
+                            </>}
+                    </> :
                     <>
-                        {!showFiles && <Box sx={{ margin: "auto", display: "inline-flex", flexDirection: "row" }}>
-                            <>
-                            <Typography
-                                variant="h3"
-                                    sx={{ fontWeight: 600, color: "primary.main", fontFamily: "doublewide", transform: "rotate(-90deg) translateX(-100px)", margin: "auto", width: "100px", height: 0 }}>BINARY</Typography>
+                        {!showFiles && <Box sx={{margin: "auto", display: "inline-flex", flexDirection: "row"}}>
+                            {files.length > 0 && currentFile && <>
+                                <Typography
+                                    variant="h3"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: "primary.main",
+                                        fontFamily: "doublewide",
+                                        transform: "rotate(-90deg) translateX(-100px)",
+                                        margin: "auto",
+                                        width: "100px",
+                                        height: 0
+                                    }}>BINARY</Typography>
                                 <Typography
                                     variant="h1"
-                                    sx={{ fontWeight: 600, zIndex: -1, margin: "auto", color: "text.primary", fontFamily: "doublewide", transform: "translateY(-242px)", width: 0, height: 0 }}>{currentFile && currentFile.fileURL.split(".")[currentFile.fileURL.split(".").length - 1].toUpperCase()}</Typography>
+                                    sx={{
+                                        fontWeight: 600,
+                                        zIndex: -1,
+                                        margin: "auto",
+                                        color: "text.primary",
+                                        fontFamily: "doublewide",
+                                        transform: "translateY(-242px)",
+                                        width: 0,
+                                        height: 0
+                                    }}>{currentFile && currentFile.fileURL.split(".")[currentFile.fileURL.split(".").length - 1].toUpperCase()}</Typography>
                                 <Typography
-                                    sx={{ fontWeight: 600, zIndex: -1, margin: "auto", color: "primary.main", fontFamily: "'Zen Kaku Gothic Antique'", transform: "translateY(150px)", width: 0, whiteSpace: "nowrap", height: 0 }}>アップロードされたバイナリデータ</Typography>
-                            </>
+                                    sx={{
+                                        fontWeight: 600,
+                                        zIndex: -1,
+                                        margin: "auto",
+                                        color: "primary.main",
+                                        fontFamily: "'Zen Kaku Gothic Antique'",
+                                        transform: "translateY(150px)",
+                                        width: 0,
+                                        whiteSpace: "nowrap",
+                                        height: 0
+                                    }}>アップロードされたバイナリデータ</Typography>
+                            </>}
                             <Card sx={{
-                            padding: (theme: Theme) => theme.spacing(2),
-                            background: (theme) => theme.palette.primary.main
-                        }} elevation={24}>
-                            {files.length > 0 && currentFile ? <><CardContent sx={{ minWidth: 400 }}>
-                                <Typography
-                                    variant="h5"
-                                    sx={{ fontWeight: 600, color: "primary.contrastText" }}>{currentFile ? currentFile.fileURL.replace("files/", "") : ""}</Typography>
-                                <Typography sx={{ background: (theme) => theme.palette.primary.contrastText, fontWeight: 600, padding: 0.25 }} variant="caption">Size</Typography>
-                                    <Typography sx={{ fontWeight: 600,color: "primary.contrastText" }}>{currentFile ? (currentFile.size / 1024 / 1024).toFixed(2) + " MB" : ""}</Typography>
-                                    <Typography sx={{ background: (theme) => theme.palette.primary.contrastText, fontWeight: 600, padding: 0.25 }} variant="caption">Date</Typography>
-                                    <Typography sx={{ fontWeight: 600, color: "primary.contrastText" }}>{currentFile ? moment(currentFile.unixTime * 1e3).fromNow() : ""}</Typography>
-                                    <Typography sx={{ background: (theme) => theme.palette.primary.contrastText, fontWeight: 600, padding: 0.25 }} variant="caption">Uploader</Typography>
-                                    <Typography sx={{ fontWeight: 600, color: "primary.contrastText" }}>{currentFile ? currentFile.author.name : ""}</Typography>
-                            </CardContent>
-                                <CardActions>
-                                    <Button color="secondary" sx={{ width: "100%", color: "secondary.main", background: (theme) => theme.palette.primary.contrastText }} onClick={() => newVideo()} variant="contained">
-                                        Jump ahead
-                                    </Button>
-                                    <Button sx={{ width: "100%", color: "primary.main", background: (theme) => theme.palette.primary.contrastText }} onClick={() => {
-                                        window.open(currentFile ? currentFile.fileURL as string : "")
-                                    }} variant="contained">
-                                        Download
-                                    </Button>
-                                </CardActions>
-                            </> : files.length > 0 ?
-                                <CardContent>
+                                padding: (theme: Theme) => theme.spacing(2),
+                                background: (theme) => theme.palette.primary.main
+                            }} elevation={24}>
+                                {files.length > 0 && currentFile ? <><CardContent sx={{minWidth: 400}}>
                                     <Typography
-                                        variant="h6"
-                                        style={{ textAlign: "center" , color: "primary.contrastText"}}>404: File not found</Typography>
-                                    <Typography>Sure the link is correct?</Typography>
+                                        variant="h5"
+                                        sx={{
+                                            fontWeight: 600,
+                                            color: "primary.contrastText"
+                                        }}>{currentFile ? currentFile.fileURL.replace("files/", "") : ""}</Typography>
+                                    <Typography sx={{
+                                        background: (theme) => theme.palette.primary.contrastText,
+                                        color: "primary.main",
+                                        fontWeight: 600,
+                                        padding: 0.25
+                                    }} variant="caption">Size</Typography>
+                                    <Typography sx={{
+                                        fontWeight: 600,
+                                        color: "primary.contrastText"
+                                    }}>{currentFile ? (currentFile.size / 1024 / 1024).toFixed(2) + " MB" : ""}</Typography>
+                                    <Typography sx={{
+                                        background: (theme) => theme.palette.primary.contrastText,
+                                        color: "primary.main",
+                                        fontWeight: 600,
+                                        padding: 0.25
+                                    }} variant="caption">Date</Typography>
+                                    <Typography sx={{
+                                        fontWeight: 600,
+                                        color: "primary.contrastText"
+                                    }}>{currentFile ? moment(currentFile.unixTime * 1e3).fromNow() : ""}</Typography>
+                                    <Typography sx={{
+                                        background: (theme) => theme.palette.primary.contrastText,
+                                        fontWeight: 600,
+                                        color: "primary.main",
+                                        padding: 0.25
+                                    }} variant="caption">Uploader</Typography>
+                                    <Typography sx={{
+                                        fontWeight: 600,
+                                        color: "primary.contrastText"
+                                    }}>{currentFile ? currentFile.author.name : ""}</Typography>
                                 </CardContent>
-                                :
-                                <CardContent>
-                                    <Typography
-                                        variant="h6"
-                                        style={{ textAlign: "center" }}>There's no files!</Typography>
-                                    <Typography>Click on the Doki button to bring up the file browser. You can upload
-                                        there.</Typography>
-                                </CardContent>}
-                        </Card></Box>}
+                                    <CardActions>
+                                        <Button color="secondary" sx={{
+                                            width: "100%",
+                                            color: "secondary.main",
+                                            background: (theme) => theme.palette.primary.contrastText
+                                        }} onClick={() => newVideo()} variant="contained">
+                                            Jump ahead
+                                        </Button>
+                                        <Button sx={{
+                                            width: "100%",
+                                            color: "primary.main",
+                                            background: (theme) => theme.palette.primary.contrastText
+                                        }} onClick={() => {
+                                            window.open(currentFile ? currentFile.fileURL as string : "")
+                                        }} variant="contained">
+                                            Download
+                                        </Button>
+                                    </CardActions>
+                                </> : files.length > 0 ?
+                                    <CardContent>
+                                        <Typography
+                                            variant="h3"
+                                            sx={{
+                                                fontWeight: 600,
+                                                fontFamily: "doublewide",
+                                                color: "primary.contrastText"
+                                            }}>FILE NOT FOUND</Typography>
+                                        <Typography sx={{color: "primary.contrastText"}}>Sure the link is
+                                            correct?</Typography>
+                                    </CardContent>
+                                    :
+                                    <CardContent>
+                                        <Typography
+                                            variant="h3"
+                                            sx={{
+                                                fontWeight: 600,
+                                                fontFamily: "doublewide",
+                                                color: "primary.contrastText"
+                                            }}>EMPTY SERVER</Typography>
+                                        <Typography sx={{color: "primary.contrastText"}}>Click on the Doki button to
+                                            bring up the file browser. You can upload
+                                            there.</Typography>
+                                    </CardContent>}
+                            </Card></Box>}
                     </>}
             </Box>
             <>
@@ -742,143 +969,162 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                         fontWeight: 700,
                         transition: (theme: Theme) => theme.transitions.create(["all"]),
                     }}
-                        variant="h6" onMouseLeave={() => showFullTitle(false)} onMouseEnter={() => showFullTitle(true)}>{currentFile && truncate(currentFile.fileURL.replace("files/", "").split(".")[0], fullTitle ? 100 : 20)}</Typography>
+                                variant="h6" onMouseLeave={() => showFullTitle(false)}
+                                onMouseEnter={() => showFullTitle(true)}>{currentFile && truncate(currentFile.fileURL.replace("files/", "").split(".")[0], fullTitle ? 100 : 20)}</Typography>
                     {currentFile && currentFile.folder && <Typography
-                        variant="caption" sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 12 }}>{currentFile && currentFile.folder}</Typography>}
+                        variant="caption" sx={{
+                        whiteSpace: "nowrap",
+                        color: "text.secondary",
+                        fontSize: 12
+                    }}>{currentFile && currentFile.folder}</Typography>}
                 </Box>
-                <AppBar onMouseEnter={() => setBarOnFocus(true)} onMouseLeave={() => setBarOnFocus(false)} sx={{
-                    top: "initial",
-                    left: 0,
-                    bottom: 0,
-                    transition: (theme: Theme) => theme.transitions.create(["all"], { duration: 200 }),
-                    width: "100%",
-                    background: (theme: Theme) => barOnFocus || showFiles ? theme.palette.background.paper : "transparent",
-                    overflow: "hidden",
+                <Fade in={osd && !showFiles} timeout={250}><Box sx={{
+                    top: (theme) => theme.spacing(2),
+                    left: (theme) => theme.spacing(2),
                     position: "fixed",
-                    borderBottom: 0,
-                    borderTop: 0,
-                    boxShadow: (theme: Theme) => barOnFocus || showFiles ? theme.shadows[8] : 0
+                    margin: "auto",
+                    opacity: 0.3
                 }}>
-                    {checkFile(mediaExt, currentFile) && <LinearProgress sx={{ opacity: 0.5, transition: (theme) => theme.transitions.create(["all"]), position: "fixed", bottom: (theme) => barOnFocus || showFiles ? theme.spacing(8) : 0, width: "100%" }} variant="buffer" value={progress.played * 100} valueBuffer={progress.loaded * 100} />}
-                    <Toolbar>
-                        <Typography variant="h6" sx={{ fontFamily: "'doublewide', sans-serif", lineHeight: "normal", marginTop: "5px", marginRight: (theme) => barOnFocus || showFiles ? 0 : theme.spacing(4), fontWeight: 700, maxWidth: barOnFocus || showFiles ? 0 : 72, transition: (theme) => theme.transitions.create(["all"]), opacity: barOnFocus || showFiles ? 0 : 1 }}>{process.env.REACT_APP_NAME}</Typography>
-                        <Toolbar disableGutters sx={{ minWidth: currentFile === null ? 0 : barOnFocus || showFiles ? checkFile(mediaExt, currentFile) ? 150 : 32 : 0, transition: (theme) => theme.transitions.create(["all"]), opacity: barOnFocus || showFiles ? 1 : 0, flex: currentFile === null ? 0 : barOnFocus || showFiles ? checkFile(mediaExt, currentFile) ? 0.2 : 0.01 : 0 }}>
-                            {files.length > 0 && currentFile !== null && <LightTooltip title={!showFiles ? "Open file browser" : "Close file browser"}>
-                                <IconButton
-                                    color="inherit"
-                                    onClick={showFiles ? willNotShowFiles : willShowFiles}
-                                    className={clsx(classes.uiToggle, showFiles && checkFile(viewable, currentFile) ? classes.miniPadding : undefined, "unique-icon")}
-                                >
-                                    {showFiles ? <ExpandMore /> : <ExpandLess />}
-                                </IconButton>
-                            </LightTooltip>}
-                            {checkFile(mediaExt, currentFile) && <>
-                                <IconButton sx={{
-                                    color: "primary.main",
-                                    display: {
-                                        xs: "none",
-                                        sm: "none",
-                                        md: "inherit",
-                                        lg: "inherit",
-                                        xl: "inherit"
-                                    }
-                                }} disabled={previouslySeen.length === 0} onClick={() => newVideoBack()}>
-                                    <RewindIcon />
-                                </IconButton>
-                                <IconButton sx={{
-                                    color: "primary.main",
-                                    display: {
-                                        xs: "none",
-                                        sm: "none",
-                                        md: "inherit",
-                                        lg: "inherit",
-                                        xl: "inherit"
-                                    }
-                                }} onClick={() => {
-                                    if (playing)
-                                        setPlaying(false)
-                                    else {
-                                        setPlaying(true)
-                                        willNotShowFiles()
-                                    }
-                                }}>
-                                    {!playing ? <PlayIcon fontSize="large" /> : <PauseIcon fontSize="large" />}
-                                </IconButton>
-                                <IconButton sx={{
-                                    color: "primary.main",
-                                    display: {
-                                        xs: "none",
-                                        sm: "none",
-                                        md: "inherit",
-                                        lg: "inherit",
-                                        xl: "inherit"
-                                    }
-                                }} onClick={() => newVideo()}>
-                                    <ForwardIcon />
-                                </IconButton>
-                            </>}</Toolbar>
-                        <Box sx={{
-                            margin: (theme: Theme) => currentFile === null ? 0 : barOnFocus || showFiles ? theme.spacing(0, 2) : 0,
-                            transition: (theme: Theme) => theme.transitions.create(["all"]),
-                            display: "inline-flex",
-                            flexDirection: "column",
-                            lineHeight: "0.05em",
-                            ...(loading && {
-                                maxWidth: "0 !important",
-                                opacity: "0 !important",
-                                flex: "0 !important",
-                                margin: "0 !important",
-                                padding: "0 !important",
-                                pointerEvents: "none"
-                            })
-                        }}>
-                            <Typography sx={{
-                                background: (theme) => barOnFocus || showFiles ?
-                                    `linear-gradient(to right, ${theme.palette.text.primary}, ${theme.palette.text.primary})` : "linear-gradient(to right, #6666ff, #0099ff , #00ff00, #ff3399, #6666ff)",
-                                backgroundClip: "text",
-                                color: "transparent",
-                                animation: "rainbow_animation 30s ease-in-out infinite",
-                                backgroundSize: "400% 100%",
-                                opacity: "1 !important",
-                                whiteSpace: "nowrap",
+                </Box></Fade>
+                <Box onMouseOver={() => setBarOnFocus(true)} onMouseLeave={() => setBarOnFocus(false)} sx={{
+                    height: 72, width: "100%", left: 0,
+                    bottom: 0, position: "fixed"
+                }}>
+                    <AppBar sx={{
+                        top: "initial",
+                        left: 0,
+                        bottom: 0,
+                        transition: (theme: Theme) => theme.transitions.create(["all"], {duration: 200}),
+                        width: "100%",
+                        background: (theme: Theme) => barOnFocus || showFiles ? theme.palette.background.paper : "transparent",
+                        overflow: "hidden",
+                        position: "fixed",
+                        borderBottom: 0,
+                        borderTop: 0,
+                        boxShadow: (theme: Theme) => barOnFocus || showFiles ? theme.shadows[8] : 0,
+                    }}>
+                        {checkFile(mediaExt, currentFile) &&
+                            <PlayerProgressBar onFocus={barOnFocus} duration={duration} seekTo={handleSeekUp}
+                                               showBar={showFiles} played={progress.played}
+                                               buffered={progress.loaded}/>}
+                        <Toolbar>
+                            <Typography variant="h6" sx={{
+                                fontFamily: "'doublewide', sans-serif",
                                 lineHeight: "normal",
-                                textShadow: barOnFocus || showFiles ? "none" : "1px 2px 6px rgba(0,0,0,.4)",
+                                marginTop: "5px",
+                                marginRight: (theme) => barOnFocus || showFiles ? 0 : theme.spacing(4),
                                 fontWeight: 700,
+                                maxWidth: barOnFocus || showFiles ? 0 : 72,
+                                transition: (theme) => theme.transitions.create(["all"]),
+                                opacity: barOnFocus || showFiles ? 0 : 1,
+                                textShadow: barOnFocus || showFiles ? "none" : "1px 2px 6px rgba(0,0,0,.4)"
+                            }}>{process.env.REACT_APP_NAME}</Typography>
+                            <Toolbar disableGutters sx={{
+                                minWidth: currentFile === null ? 0 : barOnFocus || showFiles ? checkFile(mediaExt, currentFile) ? 150 : 32 : 0,
+                                transition: (theme) => theme.transitions.create(["all"]),
+                                opacity: barOnFocus || showFiles ? 1 : 0,
+                                flex: currentFile === null ? 0 : barOnFocus || showFiles ? checkFile(mediaExt, currentFile) ? 0.2 : 0.01 : 0
+                            }}>
+                                {files.length > 0 && currentFile !== null &&
+                                    <LightTooltip title={!showFiles ? "Open file browser" : "Close file browser"}>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={showFiles ? willNotShowFiles : willShowFiles}
+                                            className={clsx(classes.uiToggle, showFiles && checkFile(viewable, currentFile) ? classes.miniPadding : undefined, "unique-icon")}
+                                        >
+                                            {showFiles ? <ExpandMore/> : <ExpandLess/>}
+                                        </IconButton>
+                                    </LightTooltip>}
+                                {checkFile(mediaExt, currentFile) && <>
+                                    <IconButton sx={{
+                                        color: "primary.main",
+                                        display: {
+                                            xs: "none",
+                                            sm: "none",
+                                            md: "inherit",
+                                            lg: "inherit",
+                                            xl: "inherit"
+                                        }
+                                    }} disabled={previouslySeen.length === 0} onClick={() => newVideoBack()}>
+                                        <RewindIcon/>
+                                    </IconButton>
+                                    <IconButton sx={{
+                                        color: "primary.main",
+                                        display: {
+                                            xs: "none",
+                                            sm: "none",
+                                            md: "inherit",
+                                            lg: "inherit",
+                                            xl: "inherit"
+                                        }
+                                    }} onClick={() => {
+                                        if (playing)
+                                            setPlaying(false)
+                                        else {
+                                            setPlaying(true)
+                                            willNotShowFiles()
+                                        }
+                                    }}>
+                                        {!playing ? <PlayIcon fontSize="large"/> : <PauseIcon fontSize="large"/>}
+                                    </IconButton>
+                                    <IconButton sx={{
+                                        color: "primary.main",
+                                        display: {
+                                            xs: "none",
+                                            sm: "none",
+                                            md: "inherit",
+                                            lg: "inherit",
+                                            xl: "inherit"
+                                        }
+                                    }} onClick={() => newVideo()}>
+                                        <ForwardIcon/>
+                                    </IconButton>
+                                </>}</Toolbar>
+                            <Box sx={{
+                                margin: (theme: Theme) => currentFile === null ? 0 : barOnFocus || showFiles ? theme.spacing(0, 2) : 0,
                                 transition: (theme: Theme) => theme.transitions.create(["all"]),
-                                marginLeft: (theme: Theme) => theme.spacing(2),
-                                display: {
-                                    xs: "none",
-                                    sm: "none",
-                                    md: "initial",
-                                    lg: "initial",
-                                    xl: "initial"
-                                },
-                            }}
-                                variant="h6">{currentFile ? truncate(displayFilename(currentFile.fileURL), 100) : "Currently not viewing a file"}</Typography>
-                            {currentFile && <Box sx={{ flexFlow: "row wrap", width: "100%" }}>
-                                {currentFile.folder && <Typography
-                                    variant="caption" sx={{
-                                        whiteSpace: "nowrap", color: barOnFocus || showFiles ? "text.primary" : "text.disabled", fontSize: 12, marginLeft: (theme: Theme) => theme.spacing(2), display: {
-                                            xs: "none",
-                                            sm: "none",
-                                            md: "initial",
-                                            lg: "initial",
-                                            xl: "initial"
-                                        }
-                                    }}>{currentFile && currentFile.folder.replaceAll(".", "/")} ∙ </Typography>}
-                                <Typography
-                                    variant="caption" sx={{
-                                        whiteSpace: "nowrap", color: barOnFocus || showFiles ? "text.primary" : "text.disabled", fontSize: 12, marginLeft: (theme: Theme) => currentFile.folder ? theme.spacing(0) : theme.spacing(2), display: {
-                                            xs: "none",
-                                            sm: "none",
-                                            md: "initial",
-                                            lg: "initial",
-                                            xl: "initial"
-                                        }
-                                    }}>{currentFile.views} views ∙ {(currentFile.size / 1024 / 1024).toFixed(2)} MB ∙ </Typography>
-                                <Typography
-                                    variant="caption" sx={{
-                                        whiteSpace: "nowrap", color: barOnFocus || showFiles ? "text.primary" : "text.disabled", fontSize: 12,
+                                display: "inline-flex",
+                                flexDirection: "column",
+                                lineHeight: "0.05em",
+                                ...(loading && {
+                                    maxWidth: "0 !important",
+                                    opacity: "0 !important",
+                                    flex: "0 !important",
+                                    margin: "0 !important",
+                                    padding: "0 !important",
+                                    pointerEvents: "none"
+                                })
+                            }}>
+                                <Typography sx={{
+                                    background: (theme) => barOnFocus || showFiles ?
+                                        `linear-gradient(to right, ${theme.palette.text.primary}, ${theme.palette.text.primary})` : "linear-gradient(to right, #6666ff, #0099ff , #00ff00, #ff3399, #6666ff)",
+                                    backgroundClip: "text",
+                                    color: "transparent",
+                                    animation: "rainbow_animation 30s ease-in-out infinite",
+                                    backgroundSize: "400% 100%",
+                                    opacity: "1 !important",
+                                    whiteSpace: "nowrap",
+                                    lineHeight: "normal",
+                                    textShadow: barOnFocus || showFiles ? "none" : "1px 2px 6px rgba(0,0,0,.4)",
+                                    fontWeight: 700,
+                                    transition: (theme: Theme) => theme.transitions.create(["all"]),
+                                    marginLeft: (theme: Theme) => theme.spacing(2),
+                                    display: {
+                                        xs: "none",
+                                        sm: "none",
+                                        md: "initial",
+                                        lg: "initial",
+                                        xl: "initial"
+                                    },
+                                }}
+                                            variant="h6">{currentFile ? truncate(displayFilename(currentFile.fileURL), 100) : "Currently not viewing a file"}</Typography>
+                                {currentFile && <Box sx={{flexFlow: "row wrap", width: "100%"}}>
+                                    {currentFile.folder && <Typography
+                                        variant="caption" sx={{
+                                        whiteSpace: "nowrap",
+                                        color: barOnFocus || showFiles ? "text.primary" : "text.disabled",
+                                        fontSize: 12,
+                                        marginLeft: (theme: Theme) => theme.spacing(2),
                                         display: {
                                             xs: "none",
                                             sm: "none",
@@ -886,90 +1132,153 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                                             lg: "initial",
                                             xl: "initial"
                                         }
-                                    }}>{currentFile.fileURL.split(".")[currentFile.fileURL.split(".").length - 1].toUpperCase()}</Typography>
-                            </Box>}
-                        </Box>
-                        <div style={{ flex: 1 }} />
-                        {process.env.NODE_ENV === "development" && <Typography variant="caption" sx={{
-                            margin: (theme: Theme) => theme.spacing(0, 3),
-                            color: "text.primary"
-                        }}>
-                            Development mode
-                        </Typography>}
-                        <Toolbar disableGutters sx={{ transition: (theme) => theme.transitions.create(["all"]), opacity: barOnFocus || showFiles ? 1 : 0, pointerEvents: barOnFocus || showFiles ? "initial" : "none" }}>
-                            <LightTooltip sx={{
-                                display: {
-                                    xs: "none",
-                                    sm: "none",
-                                    md: "inherit",
-                                    lg: "inherit",
-                                    xl: "inherit",
-                                }
-                            }} title="Toggle sound"><MarginedToolbarIconButton
-                                onClick={() => {
-                                    setMuted(!muted)
-                                }}>{muted ?
-                                    <VolMuteIcon /> : <VolIcon />}</MarginedToolbarIconButton></LightTooltip>
-                            <ToolbarVolumeSlider sx={{
-                                display: {
-                                    xs: "none",
-                                    sm: "none",
-                                    md: "initial",
-                                    lg: "initial",
-                                    xl: "initial",
-                                },
-                                minWidth: muted ? 0 : 100,
-                                maxWidth: 100
-                            }} size="small" muted={muted} max={0.9999} min={0}
-                                value={volume} step={0.001} onChange={handleVolumeChange} />
-                            {currentFile && <><LightTooltip title="Like this file"><Button sx={{ color: "primary.main" }} color="inherit" startIcon={<LikeIcon />}
-                                onClick={() => {
-                                    if (currentFile) {
-                                        const updateForm = new FormData()
-                                        updateForm.append("id", currentFile.id.toString())
-                                        dispatch(actionCreators.giveLikeToFile(currentFile.id, updateForm))
+                                    }}>{currentFile && currentFile.folder.replaceAll(".", "/")} ∙ </Typography>}
+                                    <Typography
+                                        variant="caption" sx={{
+                                        whiteSpace: "nowrap",
+                                        color: barOnFocus || showFiles ? "text.primary" : "text.disabled",
+                                        fontSize: 12,
+                                        marginLeft: (theme: Theme) => currentFile.folder ? theme.spacing(0) : theme.spacing(2),
+                                        display: {
+                                            xs: "none",
+                                            sm: "none",
+                                            md: "initial",
+                                            lg: "initial",
+                                            xl: "initial"
+                                        }
+                                    }}>{currentFile.views} views ∙ {(currentFile.size / 1024 / 1024).toFixed(2)} MB
+                                        ∙ </Typography>
+                                    <Typography
+                                        variant="caption" sx={{
+                                        whiteSpace: "nowrap",
+                                        color: barOnFocus || showFiles ? "text.primary" : "text.disabled",
+                                        fontSize: 12,
+                                        display: {
+                                            xs: "none",
+                                            sm: "none",
+                                            md: "initial",
+                                            lg: "initial",
+                                            xl: "initial"
+                                        }
+                                    }}>{currentFile.fileURL.split(".")[currentFile.fileURL.split(".").length - 1].toUpperCase()} ∙
+                                        Uploaded by {currentFile.author.name}</Typography>
+                                </Box>}
+                            </Box>
+                            <Box sx={{
+                                margin: (theme: Theme) => currentFile === null ? 0 : barOnFocus || showFiles ? theme.spacing(0, 2) : theme.spacing(0, 2),
+                                transition: (theme: Theme) => theme.transitions.create(["all"]),
+                                display: "inline-flex",
+                                flexDirection: "row",
+                                lineHeight: "0.05em",
+                                ...(!loading && {
+                                    maxWidth: "0 !important",
+                                    opacity: "0 !important",
+                                    flex: "0 !important",
+                                    margin: "0 !important",
+                                    padding: "0 !important",
+                                    pointerEvents: "none"
+                                })
+                            }}>
+                                <CircularProgress size={16} sx={{width: 16, margin: "auto"}}/>
+                                <Typography sx={{margin: "auto", marginLeft: 2}} variant="caption">LOADING</Typography>
+                            </Box>
+                            <div style={{flex: 1}}/>
+                            {checkFile(mediaExt, currentFile) && <Typography variant="caption" sx={{
+                                margin: (theme: Theme) => theme.spacing(0, 3),
+                                color: "text.primary",
+                                opacity: barOnFocus || showFiles ? 1 : 0
+                            }}>
+                                <Duration seconds={duration * progress.played}/>
+                                /
+                                <Duration seconds={duration}/>
+                            </Typography>}
+                            {process.env.NODE_ENV === "development" && <Typography variant="caption" sx={{
+                                margin: (theme: Theme) => theme.spacing(0, 3),
+                                color: "text.primary",
+                                opacity: barOnFocus || showFiles ? 1 : 0
+                            }}>
+                                Development mode
+                            </Typography>}
+                            <Toolbar disableGutters sx={{
+                                transition: (theme) => theme.transitions.create(["all"]),
+                                opacity: barOnFocus || showFiles ? 1 : 0,
+                                pointerEvents: barOnFocus || showFiles ? "initial" : "none"
+                            }}>
+                                <LightTooltip sx={{
+                                    display: {
+                                        xs: "none",
+                                        sm: "none",
+                                        md: "inherit",
+                                        lg: "inherit",
+                                        xl: "inherit",
                                     }
-                                }}>{currentFile && currentFile.likes}</Button></LightTooltip>
-                                <LightTooltip title="Share"><MarginedToolbarIconButton
+                                }} title="Toggle sound"><MarginedToolbarIconButton
+                                    onClick={() => {
+                                        setMuted(!muted)
+                                    }}>{muted ?
+                                    <VolMuteIcon/> : <VolIcon/>}</MarginedToolbarIconButton></LightTooltip>
+                                <ToolbarVolumeSlider sx={{
+                                    display: {
+                                        xs: "none",
+                                        sm: "none",
+                                        md: "initial",
+                                        lg: "initial",
+                                        xl: "initial",
+                                    },
+                                    minWidth: muted ? 0 : 100,
+                                    maxWidth: 100
+                                }} size="small" muted={muted} max={0.9999} min={0}
+                                                     value={volume} step={0.001} onChange={handleVolumeChange}/>
+                                {currentFile && <><LightTooltip title="Like this file"><Button
+                                    sx={{color: "primary.main"}} color="inherit" startIcon={<LikeIcon/>}
+                                    onClick={() => {
+                                        if (currentFile) {
+                                            const updateForm = new FormData()
+                                            updateForm.append("id", currentFile.id.toString())
+                                            dispatch(actionCreators.giveLikeToFile(currentFile.id, updateForm))
+                                        }
+                                    }}>{currentFile && currentFile.likes}</Button></LightTooltip>
+                                    <LightTooltip title="Share"><MarginedToolbarIconButton
+                                        onClick={(e) => {
+                                            setShowShare(e.currentTarget)
+                                        }}><ShareIcon/></MarginedToolbarIconButton></LightTooltip></>}
+                                {currentFile && currentFile.folder &&
+                                    <LightTooltip title="Folder playlist"><MarginedToolbarIconButton
+                                        onClick={(e) => {
+                                            setShowPlaylist(e.currentTarget)
+                                        }}><PlaylistIcon/></MarginedToolbarIconButton></LightTooltip>}
+                                {process.env.REACT_APP_TYPE === "PUBLIC" &&
+                                    <LightTooltip title="Report file"><MarginedToolbarIconButton
+                                        onClick={() => {
+                                            setShowReport(true)
+                                        }}><ReportIcon/></MarginedToolbarIconButton></LightTooltip>}
+                                {currentFile && <LightTooltip title="Show comments"><MarginedToolbarIconButton
+                                    ref={commentsButtonRef}
                                     onClick={(e) => {
-                                        setShowShare(e.currentTarget)
-                                    }}><ShareIcon /></MarginedToolbarIconButton></LightTooltip></>}
-                            {currentFile && currentFile.folder && <LightTooltip title="Folder playlist"><MarginedToolbarIconButton
-                                onClick={(e) => {
-                                    setShowPlaylist(e.currentTarget)
-                                }}><PlaylistIcon /></MarginedToolbarIconButton></LightTooltip>}
-                            {process.env.REACT_APP_TYPE === "PUBLIC" && <LightTooltip title="Report file"><MarginedToolbarIconButton
-                                onClick={() => {
-                                    setShowReport(true)
-                                }}><ReportIcon /></MarginedToolbarIconButton></LightTooltip>}
-                            {currentFile && <LightTooltip title="Show comments"><MarginedToolbarIconButton
-                                ref={commentsButtonRef}
-                                onClick={(e) => {
-                                    setShowComments(e.currentTarget)
-                                    if (showComments) {
-                                        refreshComments()
-                                    }
-                                }}><CommentIcon /></MarginedToolbarIconButton></LightTooltip>}
-                            <LightTooltip title="Control Panel"><MarginedToolbarIconButton
-                                onClick={(e) => {
-                                    setShowControlPanel(e.currentTarget)
-                                }}><SettingsRemote /></MarginedToolbarIconButton></LightTooltip>
-                            <LightTooltip title="Settings"><MarginedToolbarIconButton
-                                onClick={(e) => {
-                                    setShowSettings(true)
-                                }}><SettingsIcon /></MarginedToolbarIconButton></LightTooltip>
+                                        setShowComments(e.currentTarget)
+                                        if (showComments) {
+                                            refreshComments()
+                                        }
+                                    }}><CommentIcon/></MarginedToolbarIconButton></LightTooltip>}
+                                <LightTooltip title="Control Panel"><MarginedToolbarIconButton
+                                    onClick={(e) => {
+                                        setShowControlPanel(e.currentTarget)
+                                    }}><SettingsRemote/></MarginedToolbarIconButton></LightTooltip>
+                                <LightTooltip title="Settings"><MarginedToolbarIconButton
+                                    onClick={(e) => {
+                                        setShowSettings(true)
+                                    }}><SettingsIcon/></MarginedToolbarIconButton></LightTooltip>
+                            </Toolbar>
                         </Toolbar>
-                    </Toolbar>
-                </AppBar>
-                <LinearProgress color="primary" className={clsx(classes.loadingbarglow, !loading && classes.hidden)} />
-                <LinearProgress color="primary" className={clsx(classes.loadingbarglow, !isUploading && classes.hidden)} />
+                    </AppBar>
+                </Box>
             </>
             <Report open={showReport} close={() => {
                 setShowReport(false)
-            }} />
+            }}/>
             <Settings open={showSettings} close={() => {
                 setShowSettings(false)
-            }} />
+            }}/>
             <Popover anchorEl={showComments} anchorOrigin={{
                 vertical: "top",
                 horizontal: "center",
@@ -981,43 +1290,53 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                     maxHeight: 600
                 }
             }} TransitionComponent={Fade}
-                transformOrigin={{
-                    vertical: "bottom",
-                    horizontal: "center",
-                }} open={Boolean(showComments)} onClose={() => setShowComments(null)}>
-                <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0, 2), background: (theme) => theme.palette.background.paper }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: 14 }}>Comments</Typography>
-                    <div style={{ flex: 1 }} />
+                     transformOrigin={{
+                         vertical: "bottom",
+                         horizontal: "center",
+                     }} open={Boolean(showComments)} onClose={() => setShowComments(null)}>
+                <Toolbar variant="dense" disableGutters sx={{
+                    padding: (theme) => theme.spacing(0, 2),
+                    background: (theme) => theme.palette.background.paper
+                }}>
+                    <Typography variant="h6" sx={{fontWeight: 700, fontSize: 14}}>Comments</Typography>
+                    <div style={{flex: 1}}/>
                     <Tooltip title="Refresh comments"><IconButton
-                        onClick={refreshComments}><RefreshTwoTone /></IconButton></Tooltip>
+                        onClick={refreshComments}><RefreshTwoTone/></IconButton></Tooltip>
                 </Toolbar>
-                <Divider />
-                {currentFile && <Paper sx={{ margin: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(0) }}>
-                    <Commenter file={currentFile.id.toString()} />
-                </Paper>}
+                <Divider/>
+                {currentFile &&
+                    <Paper sx={{margin: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(0)}}>
+                        <Commenter file={currentFile.id.toString()}/>
+                    </Paper>}
                 <List>
                     {comments && comments.length > 0 ? comments.sort((a, b) => b.date - a.date).map((c, i) =>
-                        <Paper key={i} sx={{ margin: (theme) => theme.spacing(1) }}>
+                        <Paper key={i} sx={{margin: (theme) => theme.spacing(1)}}>
                             <ListItem>
                                 <Tooltip title={moment(c.date * 1e3).fromNow()}><ListItemText primary={c.author.name}
-                                    secondary={c.content} /></Tooltip>
+                                                                                              secondary={c.content}/></Tooltip>
                             </ListItem></Paper>
                     ) : <ListItem>
-                        <ListItemText style={{ opacity: 0.5 }} primary={"O.O No comments!"} />
+                        <ListItemText style={{opacity: 0.5}} primary={"O.O No comments!"}/>
                     </ListItem>}
                 </List>
             </Popover>
-            <Menu anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                transformOrigin={{ horizontal: "center", vertical: "bottom" }} anchorEl={showMore}
-                TransitionComponent={Fade}
-                open={Boolean(showMore)} onClose={() => {
-                    setShowMore(null)
+            <Menu anchorOrigin={{vertical: "top", horizontal: "center"}}
+                  transformOrigin={{horizontal: "center", vertical: "bottom"}} anchorEl={showMore}
+                  TransitionComponent={Fade}
+                  open={Boolean(showMore)} onClose={() => {
+                setShowMore(null)
+            }}>
+                <Toolbar variant="dense" disableGutters sx={{
+                    padding: (theme) => theme.spacing(0, 2),
+                    background: (theme) => theme.palette.background.paper
                 }}>
-                <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0, 2), background: (theme) => theme.palette.background.paper }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: 14 }}>Build {process.env.REACT_APP_BUILD}.{process.env.REACT_APP_MINOR_VERSION} {process.env.REACT_APP_TYPE}</Typography>
-                    <div style={{ flex: 1 }} />
+                    <Typography variant="h6" sx={{
+                        fontWeight: 700,
+                        fontSize: 14
+                    }}>Build {process.env.REACT_APP_BUILD}.{process.env.REACT_APP_MINOR_VERSION} {process.env.REACT_APP_TYPE}</Typography>
+                    <div style={{flex: 1}}/>
                 </Toolbar>
-                <Divider />
+                <Divider/>
                 <MenuItem onClick={() => {
                     setShowUpdates(true)
                     setShowMore(null)
@@ -1034,9 +1353,19 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                 <MenuItem component={Link} to="/special" onClick={() => {
                     setShowMore(null)
                 }}>o.o</MenuItem>
-                <Divider />
-                <Toolbar disableGutters variant="dense" sx={{ width: 250, padding: (theme) => theme.spacing(0, 2), background: (theme) => theme.palette.background.paper }}>
-                    <Typography variant="h6" sx={{ fontFamily: "'Josefin Sans', sans-serif", flex: 1, lineHeight: "normal", marginTop: "5px", fontWeight: 700 }}>{process.env.REACT_APP_NAME}</Typography>
+                <Divider/>
+                <Toolbar disableGutters variant="dense" sx={{
+                    width: 250,
+                    padding: (theme) => theme.spacing(0, 2),
+                    background: (theme) => theme.palette.background.paper
+                }}>
+                    <Typography variant="h6" sx={{
+                        fontFamily: "'Josefin Sans', sans-serif",
+                        flex: 1,
+                        lineHeight: "normal",
+                        marginTop: "5px",
+                        fontWeight: 700
+                    }}>{process.env.REACT_APP_NAME}</Typography>
                     <LightTooltip title="My profile"><IconButton sx={{
                         margin: (theme: Theme) => theme.spacing(0, 0.5),
                         "&:first-of-type": {
@@ -1046,37 +1375,42 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                             margin: 0
                         }
                     }} component={Link}
-                        to="/me" ><AccountIcon
-                            fontSize="small" /></IconButton></LightTooltip>
+                                                                 to="/me"><AccountIcon
+                        fontSize="small"/></IconButton></LightTooltip>
                     <LightTooltip title="Settings"><MarginedToolbarIconButton
                         onClick={() => {
                             setShowSettings(true)
                         }}><SettingsIcon
-                            fontSize="small" /></MarginedToolbarIconButton></LightTooltip>
+                        fontSize="small"/></MarginedToolbarIconButton></LightTooltip>
                 </Toolbar>
             </Menu>
-            <Menu anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                transformOrigin={{ horizontal: "center", vertical: "bottom" }} PaperProps={{
-                    style: {
-                        maxHeight: 500,
-                        maxWidth: 400,
-                        padding: 0,
-                        paddingTop: 0,
-                        paddingBottom: 0
-                    },
-                }} TransitionComponent={Fade}
-                anchorEl={showPlaylist} open={Boolean(showPlaylist)} onClose={() => {
-                    setShowPlaylist(null)
+            <Menu anchorOrigin={{vertical: "top", horizontal: "center"}}
+                  transformOrigin={{horizontal: "center", vertical: "bottom"}} PaperProps={{
+                style: {
+                    maxHeight: 500,
+                    maxWidth: 400,
+                    padding: 0,
+                    paddingTop: 0,
+                    paddingBottom: 0
+                },
+            }} TransitionComponent={Fade}
+                  anchorEl={showPlaylist} open={Boolean(showPlaylist)} onClose={() => {
+                setShowPlaylist(null)
+            }}>
+                <Toolbar variant="dense" disableGutters sx={{
+                    padding: (theme) => theme.spacing(0, 2),
+                    background: (theme) => theme.palette.background.paper
                 }}>
-                <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0, 2), background: (theme) => theme.palette.background.paper }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: 14 }}>{currentFile && currentFile.folder}</Typography>
-                    <div style={{ flex: 1 }} />
+                    <Typography variant="h6"
+                                sx={{fontWeight: 700, fontSize: 14}}>{currentFile && currentFile.folder}</Typography>
+                    <div style={{flex: 1}}/>
                 </Toolbar>
-                <Divider />
+                <Divider/>
                 {files.length > 0 && currentFile && files.filter(x => currentFile.folder ? x.folder === currentFile.folder : x.folder).map((x, i) =>
                     <MenuItem key={i} onClick={() => {
                         setShowPlaylist(null)
-                    }} component={Link} to={"/watch/" + x.id}><PlaylistThumbnail src={x.thumbnail} alt="" />{x.fileURL.replace("files/", "")}
+                    }} component={Link} to={"/watch/" + x.id}><PlaylistThumbnail src={x.thumbnail}
+                                                                                 alt=""/>{x.fileURL.replace("files/", "")}
                     </MenuItem>)}
             </Menu>
             <Popover anchorEl={showShare} anchorOrigin={{
@@ -1088,27 +1422,40 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                     maxWidth: 600
                 }
             }} TransitionComponent={Fade}
-                transformOrigin={{
-                    vertical: "bottom",
-                    horizontal: "center",
-                }} open={Boolean(showShare)} onClose={() => setShowShare(null)}>
-                <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0, 2), background: (theme) => theme.palette.background.paper }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: 14 }}>Share</Typography>
-                    <div style={{ flex: 1 }} />
-                    <Button size="small" variant="contained" onClick={() => navigator.clipboard.writeText(currentFile ? `https://${window.location.hostname}/watch/${currentFile.id}` : "")}>Copy to clipboard</Button>
+                     transformOrigin={{
+                         vertical: "bottom",
+                         horizontal: "center",
+                     }} open={Boolean(showShare)} onClose={() => setShowShare(null)}>
+                <Toolbar variant="dense" disableGutters sx={{
+                    padding: (theme) => theme.spacing(0, 2),
+                    background: (theme) => theme.palette.background.paper
+                }}>
+                    <Typography variant="h6" sx={{fontWeight: 700, fontSize: 14}}>Share</Typography>
+                    <div style={{flex: 1}}/>
+                    <Button sx={{marginLeft: 1}} size="small" variant="contained"
+                            onClick={() => window.open(currentFile ? `https://${window.location.hostname}/${currentFile.fileURL}` : "")}>Download
+                        file</Button>
                 </Toolbar>
-                <Divider />
-                <Box sx={{ display: "inline-flex", flexDirection: "column", padding: (theme) => theme.spacing(2) }}>
-                    <Paper sx={{ padding: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(1) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>Doki link</Typography>
-                        <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0) }}>
-                            <TextField size="small" InputProps={{ style: { fontSize: 12 } }} fullWidth sx={{ paddingTop: (theme) => theme.spacing(1) }} style={{ width: 300 }} value={currentFile && `https://${window.location.hostname}/watch/${currentFile.id}`} />
+                <Divider/>
+                <Box sx={{display: "inline-flex", flexDirection: "column", padding: (theme) => theme.spacing(2)}}>
+                    <Paper sx={{
+                        padding: (theme) => theme.spacing(1),
+                        marginBottom: (theme) => theme.spacing(1)
+                    }}><Typography variant="caption" sx={{fontWeight: 700}}>Doki link</Typography>
+                        <Toolbar variant="dense" disableGutters sx={{padding: (theme) => theme.spacing(0)}}>
+                            <TextField size="small" InputProps={{style: {fontSize: 12}}} fullWidth
+                                       sx={{paddingTop: (theme) => theme.spacing(1)}} style={{width: 300}}
+                                       value={currentFile && `https://${window.location.hostname}/watch/${currentFile.id}`}/>
+                            <IconButton color="primary"
+                                        onClick={() => navigator.clipboard.writeText(currentFile ? `https://${window.location.hostname}/watch/${currentFile.id}` : "")}><CopyAllTwoTone/></IconButton>
                         </Toolbar>
                     </Paper>
-                    <Paper sx={{ padding: (theme) => theme.spacing(1) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>Direct link</Typography>
-                        <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0) }}>
-                            <TextField size="small" InputProps={{ style: { fontSize: 12 } }} fullWidth sx={{ paddingTop: (theme) => theme.spacing(1) }} style={{ width: 300 }} value={currentFile && `https://${window.location.hostname}/${currentFile.fileURL}`} />
+                    <Paper sx={{padding: (theme) => theme.spacing(1)}}>
+                        <Typography variant="caption" sx={{fontWeight: 700}}>Direct link</Typography>
+                        <Toolbar variant="dense" disableGutters sx={{padding: (theme) => theme.spacing(0)}}>
+                            <TextField size="small" InputProps={{style: {fontSize: 12}}} fullWidth
+                                       sx={{paddingTop: (theme) => theme.spacing(1)}} style={{width: 300}}
+                                       value={currentFile && `https://${window.location.hostname}/${currentFile.fileURL}`}/>
                         </Toolbar>
                     </Paper>
                 </Box>
@@ -1123,16 +1470,19 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                 },
                 onMouseLeave: () => setShowControlPanel(null)
             }} TransitionComponent={Fade}
-                transformOrigin={{
-                    vertical: "bottom",
-                    horizontal: "center",
-                }} open={Boolean(showControlPanel)} onClose={() => setShowControlPanel(null)}>
-                <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0, 2), background: (theme) => theme.palette.background.paper }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: 14 }}>Control Panel</Typography>
-                    <div style={{ flex: 1 }} />
+                     transformOrigin={{
+                         vertical: "bottom",
+                         horizontal: "center",
+                     }} open={Boolean(showControlPanel)} onClose={() => setShowControlPanel(null)}>
+                <Toolbar variant="dense" disableGutters sx={{
+                    padding: (theme) => theme.spacing(0, 2),
+                    background: (theme) => theme.palette.background.paper
+                }}>
+                    <Typography variant="h6" sx={{fontWeight: 700, fontSize: 14}}>Control Panel</Typography>
+                    <div style={{flex: 1}}/>
                 </Toolbar>
-                <Divider />
-                <Box sx={{ padding: (theme) => theme.spacing(2) }}>
+                <Divider/>
+                <Box sx={{padding: (theme) => theme.spacing(2)}}>
                     <Paper sx={{
                         padding: (theme) => theme.spacing(1),
                         marginBottom: (theme) => theme.spacing(1),
@@ -1146,33 +1496,36 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                         flexDirection: "column",
                         width: "100%"
                     }} className={clsx(currentFile && !checkFile(mediaExt, currentFile) && classes.hiddenPanel)}>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>Playback control</Typography>
-                        <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0) }}>
-                            <div style={{ flex: 1 }} />
+                        <Typography variant="caption" sx={{fontWeight: 700}}>Playback control</Typography>
+                        <Toolbar variant="dense" disableGutters sx={{padding: (theme) => theme.spacing(0)}}>
+                            <div style={{flex: 1}}/>
                             <IconButton disabled={previouslySeen.length === 0} onClick={() => newVideoBack()}>
-                                <RewindIcon />
+                                <RewindIcon/>
                             </IconButton>
                             <IconButton onClick={() => playing ? setPlaying(false) : setPlaying(true)}>
-                                {!playing ? <PlayIcon /> : <PauseIcon />}
+                                {!playing ? <PlayIcon/> : <PauseIcon/>}
                             </IconButton>
                             <IconButton onClick={() => newVideo()}>
-                                <ForwardIcon />
+                                <ForwardIcon/>
                             </IconButton>
-                            <div style={{ flex: 1 }} />
+                            <div style={{flex: 1}}/>
                         </Toolbar>
                     </Paper>
-                    <Paper className={clsx(currentFile && !checkFile(mediaExt, currentFile) && classes.hiddenPanel)} sx={{ padding: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(1) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>Playback mode</Typography>
-                        <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0) }}>
-                            <ToolbarCaption variant="caption" style={{ flex: 1 }}>{continuous ? "Find a new one when the current file ends" : "Loop the currently playing file"}</ToolbarCaption>
-                            <Switch checked={continuous} onChange={handleContinuousSwitch} />
+                    <Paper className={clsx(currentFile && !checkFile(mediaExt, currentFile) && classes.hiddenPanel)}
+                           sx={{padding: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(1)}}>
+                        <Typography variant="caption" sx={{fontWeight: 700}}>Playback mode</Typography>
+                        <Toolbar variant="dense" disableGutters sx={{padding: (theme) => theme.spacing(0)}}>
+                            <ToolbarCaption variant="caption"
+                                            style={{flex: 1}}>{continuous ? "Find a new one when the current file ends" : "Loop the currently playing file"}</ToolbarCaption>
+                            <Switch checked={continuous} onChange={handleContinuousSwitch}/>
                         </Toolbar>
                     </Paper>
-                    <Paper sx={{ padding: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(1) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>Media scale</Typography>
-                        <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0) }}>
-                            <ToolbarCaption variant="caption" style={{ flex: 1 }}>{fmtCover ? "Cover the entire screen" : "Make all of it visible"}</ToolbarCaption>
-                            <Switch checked={fmtCover} onChange={handleObjectFit} />
+                    <Paper sx={{padding: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(1)}}>
+                        <Typography variant="caption" sx={{fontWeight: 700}}>Media scale</Typography>
+                        <Toolbar variant="dense" disableGutters sx={{padding: (theme) => theme.spacing(0)}}>
+                            <ToolbarCaption variant="caption"
+                                            style={{flex: 1}}>{fmtCover ? "Cover the entire screen" : "Make all of it visible"}</ToolbarCaption>
+                            <Switch checked={fmtCover} onChange={handleObjectFit}/>
                         </Toolbar>
                     </Paper>
                     <Paper sx={{
@@ -1187,50 +1540,20 @@ const Main = ({ children }: React.PropsWithChildren<any>) => {
                         width: "100%"
                     }
                     }>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>Volume control</Typography>
-                        <Toolbar variant="dense" disableGutters sx={{ padding: (theme) => theme.spacing(0) }}>
+                        <Typography variant="caption" sx={{fontWeight: 700}}>Volume control</Typography>
+                        <Toolbar variant="dense" disableGutters sx={{padding: (theme) => theme.spacing(0)}}>
                             <LightTooltip title="Toggle sound"><MarginedToolbarIconButton
                                 onClick={() => {
                                     setMuted(!muted)
                                 }}>{muted ?
-                                    <VolMuteIcon fontSize="small" /> : <VolIcon fontSize="small" />}</MarginedToolbarIconButton></LightTooltip>
+                                <VolMuteIcon fontSize="small"/> :
+                                <VolIcon fontSize="small"/>}</MarginedToolbarIconButton></LightTooltip>
                             <ToolbarVolumeSlider size="small" muted={muted} max={0.9999} min={0}
-                                value={volume} step={0.001} onChange={handleVolumeChange} />
+                                                 value={volume} step={0.001} onChange={handleVolumeChange}/>
                         </Toolbar>
                     </Paper>
                 </Box>
             </Popover>
-            <Dialog open={firstTime} onClose={() => {
-                setFirstTime(false)
-                window.localStorage.setItem("first_time", "false")
-            }}>
-                <DialogTitle>
-                    What's new
-                </DialogTitle>
-                <DialogContent dividers>
-                    General<br />
-                    - Gone back to the old bar layout but patched it up a bit<br />
-                    - Backend now uses .NET 6, faster file handling.<br />
-                    - More active alert management<br />
-                    - Super hidden exclusive snow effect with optional raytracing mode in the settings<br />
-                    Browser<br />
-                    - File management from "My Files" have migrated over to the browser and completely removed its purpose<br />
-                    - Minor adjustments to UI, you can now right click files to delete or change their folders<br />
-                    Player<br />
-                    - Common media playback control added<br />
-                    - Autoplay is now default<br />
-                    Settings<br />
-                    - Now holds your Doki ID info<br />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => {
-                        setFirstTime(false)
-                        window.localStorage.setItem("first_time", "false")
-                    }}>
-                        Very cool
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </>
     )
 }

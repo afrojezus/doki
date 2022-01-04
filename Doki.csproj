@@ -7,6 +7,8 @@
     <SpaRoot>app\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
     <UserSecretsId>cce80b07-0a2d-444b-bfbf-9970aa616f89</UserSecretsId>
+    <AssemblyVersion>15.01.2022.0</AssemblyVersion>
+    <FileVersion>15.01.2022.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.0" />

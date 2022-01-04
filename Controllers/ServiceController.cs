@@ -167,7 +167,7 @@ namespace Doki.Controllers
     [HttpPost]
     public async Task<ActionResult<IEnumerable<File>>> UploadFile([FromForm] UploadForm upload)
     {
-      _logger.LogInformation($"Upload request with ID {upload.Id}");
+      _logger.LogInformation("Upload request with ID {upload.Id}", upload.Id);
       if (upload.File == null || upload.File.Count == 0)
       {
         return NotFound();
@@ -191,7 +191,7 @@ namespace Doki.Controllers
       int i = 0;
       foreach (var file in upload.File)
       {
-        _logger.LogInformation($"uploading {file.FileName}");
+        _logger.LogInformation("uploading {file.FileName}", file.FileName);
         var sanitizedFileName = Regex.Replace(file.FileName.Trim(), @"\s+", "");
         var targetFileName =
             $"{HostingEnvironment.ContentRootPath}/app/build/files/{sanitizedFileName}";
@@ -199,7 +199,7 @@ namespace Doki.Controllers
         await file.CopyToAsync(fileStream);
 
         _logger.LogInformation(
-            $"uploader id {author.AuthorId}, name {author.Name}, creation_date {author.CreationDate}");
+            "uploader id {author.AuthorId}, name {author.Name}, creation_date {author.CreationDate}", author.AuthorId, author.Name, author.CreationDate);
 
         /*Folder folder = null;
         if (upload.Folder[i] == "undefined")

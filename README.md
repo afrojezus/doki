@@ -1,13 +1,11 @@
 <p>
-  <a href="/LICENSE"><img src="https://img.shields.io/badge/License-MIT-black.svg?style=for-the-badge" alt="MIT License"></a>
-  <a><img src="https://img.shields.io/badge/OS-Any-blue.svg?style=for-the-badge" alt="Any"></a>
-  <a><img src="https://img.shields.io/badge/Platform-ASP.NET-blue.svg?style=for-the-badge" alt="ASP.NET"></a>
-  <a><img src="https://img.shields.io/badge/Build-11.10--2021-blue.svg?style=for-the-badge" alt="11.10-2021"></a>
+  <a href="/LICENSE"><img src="https://img.shields.io/badge/License-MIT-black.svg" alt="MIT License"></a>
+  <a><img src="https://img.shields.io/badge/OS-Linux-blue.svg" alt="Linux"></a>
+  <a><img src="https://img.shields.io/badge/Platform-ASP.NET-blue.svg" alt="ASP.NET"></a>
+  <a><img src="https://img.shields.io/badge/Build-15.01--2022-blue.svg" alt="15.01-2022"></a>
 </p>
 
 # doki
-
-File hosting platform for the viewers
 
 This is the core repository for the project.
 

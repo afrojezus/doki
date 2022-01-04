@@ -1,51 +1,42 @@
 ﻿import * as React from "react"
-import { useCallback, useEffect, useState } from "react"
-import Container from "@mui/material/Container"
-import { FileServiceState } from "../store/FileService"
-import { useHistory } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
+import {useCallback, useEffect, useState} from "react"
+import {actionCreators as fileActions, FileServiceState} from "../store/FileService"
+import {useHistory} from "react-router-dom"
+import {useDispatch, useSelector} from "react-redux"
 import {
+    alpha,
     AppBar,
-    Box,
     Button,
-    Divider,
+    ButtonBase,
+    Checkbox,
     CircularProgress,
+    Divider,
+    Fab,
+    Fade,
+    Grid,
     IconButton,
-    InputBase,
     Menu,
     MenuItem,
-    Slide,
+    Slider,
     Theme,
     Toolbar,
     Typography,
     useMediaQuery,
-    alpha,
-    Grid, Fab, Slider, Checkbox, Fade, Grow, ButtonBase,
 } from "@mui/material"
 import createStyles from "@mui/styles/createStyles"
 import makeStyles from "@mui/styles/makeStyles"
-import { ApplicationState } from "../store"
-import DokiCube from "../components/DokiCube"
-import {
-    Add,
-    ChevronRight,
-    SortTwoTone,
-    SearchOutlined as SearchIcon,
-    UploadFile,
-    Apps,
-    ArrowCircleUp,
-    ArrowBack,
-    UploadFileTwoTone
-} from "@mui/icons-material"
+import {ApplicationState} from "../store"
+import {ArrowBack, RefreshTwoTone, SortTwoTone, UploadFile, UploadFileTwoTone} from "@mui/icons-material"
 import Uploader from "../components/Uploader"
-import { useDropzone } from "react-dropzone"
-import { FileModel } from "../models"
-import { actionCreators, PreferencesState } from "../store/Preferences"
-import { TransitionProps } from "react-transition-group/Transition"
+import {useDropzone} from "react-dropzone"
+import {FileModel} from "../models"
+import {sessionActions, SessionState} from "../store/Session"
+import {actionCreators, PreferencesState} from "../store/Preferences"
 import LightTooltip from "../components/extended/LightTooltip"
 import GridView from "../components/GridView"
 import clsx from "clsx"
-import { LoadingButton } from "@mui/lab"
+import {LoadingButton} from "@mui/lab"
+import {DRAWER_WIDTH} from "../utils"
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -219,7 +210,8 @@ const useStyles = makeStyles((theme: Theme) =>
         leftPane: {
             transition: theme.transitions.create(["all"]),
             borderRight: `1px solid ${theme.palette.primary.dark}`,
-            borderBottom: `1px solid ${theme.palette.primary.dark}`
+            borderBottom: `1px solid ${theme.palette.primary.dark}`,
+            maxWidth: DRAWER_WIDTH
         },
         leftPaneNoBorder: {
             borderRight: "none"
@@ -239,10 +231,15 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
     const isUploading = useSelector((state: ApplicationState) => (state.files as FileServiceState).isUploading)
     const prefOrder = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).order)
     const id = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).id)
+
+    const isAdmin = useSelector((state: ApplicationState) => (state.session as SessionState).adminPowers)
+    
+        const lastScale = useSelector((state: ApplicationState) => (state.session as SessionState).gridScale)
+
     const [orderMode, setOrderMode] = useState(prefOrder)
     const [orderMenuOpen, setOrderMenuOpen] = useState<null | HTMLElement>(null)
 
-    const [scale, setScale] = useState(5)
+    const [scale, setScale] = useState(lastScale)
     const [onlyUser, setOnlyUser] = useState(false)
 
     const [currentFolder, setCurrentFolder] = useState<string | null>(null)
@@ -256,6 +253,7 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
         setDroppedFiles(accepted)
         setWillUpload(true)
     }, [])
+    // TODO: Bring back drag-and-drop to the view itself, not just the upload dialog.
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 
     useEffect(() => {
@@ -263,8 +261,26 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
         setCurrentFolder(query)
     }, [window.location.search])
 
+    useEffect(() => {
+        dispatch(sessionActions.setGridScale(scale))
+    }, [scale])
+
     const handleOpenOrderMenu = (event: React.MouseEvent<HTMLElement>) => {
         setOrderMenuOpen(event.currentTarget)
+    }
+
+    const selectOrderByLikes = () => {
+        handleCloseMenu()
+        setOrderMode("likes")
+        dispatch(actionCreators.setOrder("likes"))
+        localStorage.setItem("order", "likes")
+    }
+
+    const selectOrderByViews = () => {
+        handleCloseMenu()
+        setOrderMode("views")
+        dispatch(actionCreators.setOrder("views"))
+        localStorage.setItem("order", "views")
     }
 
     const selectOrderByTime = () => {
@@ -295,6 +311,10 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
 
     const handleSort = (A: FileModel, B: FileModel): number => {
         switch (orderMode) {
+            case "likes":
+                return B.likes - A.likes
+            case "views":
+                return B.views - A.views
             case "time":
                 return B.unixTime - A.unixTime
             case "name": {
@@ -324,11 +344,9 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
     const handleUpFolder = () => {
         if (currentFolder) {
             const folders = currentFolder.split(".")
-            const willAddSeperator = () =>
-                currentFolder.split(".").length >= 2 ? "." : ""
-            console.log(folders, folders[folders.length - 2], folders.length - 1, folders.slice(0, folders.length - 2).join("."), willAddSeperator())
             if (folders.length === 1) handleRootFolder()
-            else history.push(`/browse?f=${folders.slice(0, folders.length - 2).join(".") + willAddSeperator() + folders[folders.length - 2]}`)
+            else if (folders.length === 2) history.push(`/browse?f=${folders[0]}`) 
+            else history.push(`/browse?f=${folders.slice(0, folders.length - 2).join(".") + "." + folders[folders.length - 2]}`)
         }
     }
 
@@ -349,10 +367,10 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
             <Toolbar disableGutters variant="dense" sx={{ height: tvMode ? 72 : undefined }}>
                 <Grid container style={{ flex: 1 }}>
                     <Grid item xs={2} className={classes.leftPane}>
-                        <ButtonBase onClick={handleRootFolder} component={Toolbar} disableGutters variant="dense" sx={{ padding: (theme: Theme) => theme.spacing(0, 2), background: (theme) => theme.palette.primary.main }}>
+                        <ButtonBase onClick={handleRootFolder} component={Toolbar} disableGutters variant="dense" sx={{ padding: (theme: Theme) => theme.spacing(0, 2), background: (theme) => theme.palette.primary.main, justifyContent: "initial" }}>
                             <Typography variant="h6" sx={{ fontFamily: "'doublewide', sans-serif", lineHeight: "normal", marginTop: "5px", marginRight: (theme) => theme.spacing(4), fontWeight: 700, color: (theme) => theme.palette.primary.contrastText }}>{process.env.REACT_APP_NAME}</Typography>
-                            <div style={{ flex: 1 }} />
-                            {L && <Typography variant="caption" sx={{ color: (theme) => theme.palette.primary.contrastText }}>Version {process.env.REACT_APP_BUILD}.{process.env.REACT_APP_MINOR_VERSION}</Typography>}
+                            {/*<div style={{ flex: 1 }} />
+                            {L && <Typography variant="caption" sx={{ color: (theme) => theme.palette.primary.contrastText }}>Version {process.env.REACT_APP_BUILD}.{process.env.REACT_APP_MINOR_VERSION}</Typography>}*/}
                         </ButtonBase>
                     </Grid>
                     <Grid item xs>
@@ -372,6 +390,11 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
                                 </Typography>
                             </>}
                             <div style={{ flex: 1 }} />
+                             {isAdmin && <Typography sx={{fontWeight: 600, color: "error.main"}} variant="caption">ADMIN MODE</Typography>}
+
+                            <LightTooltip title={"Reload files"}><IconButton sx={{
+                                marginLeft: 1, marginRight: 1
+                            }} onClick={() => dispatch(fileActions.requestAllFiles())}><RefreshTwoTone /></IconButton></LightTooltip>
                             {id && <><Typography variant="caption">Show only my uploads</Typography>
                                 <Checkbox sx={{ marginRight: 1 }} checked={onlyUser} onChange={e => setOnlyUser(e.target.checked)} /></>}
                             <Typography variant="caption" sx={{ marginRight: 1 }}>Scale</Typography>
@@ -438,6 +461,8 @@ const Browser = ({ children }: { children: React.PropsWithChildren<any> }) => {
                 <Typography sx={{ fontWeight: 600 }}>Sort files by...</Typography>
             </Toolbar>
             <Divider />
+            <MenuItem onClick={selectOrderByViews}>Views</MenuItem>
+            <MenuItem onClick={selectOrderByLikes}>Likes</MenuItem>
             <MenuItem onClick={selectOrderByTime}>Time</MenuItem>
             <MenuItem onClick={selectOrderByName}>Name</MenuItem>
             <MenuItem onClick={selectOrderBySize}>Size</MenuItem>

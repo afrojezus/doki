@@ -1,25 +1,32 @@
 ﻿import React from "react"
 import Cookies from "js-cookie"
-import { useDispatch, useSelector } from "react-redux"
-import { ApplicationState } from "../store"
-import { actionCreators as fileS, FileServiceState } from "../store/FileService"
-import { actionCreators as pref, PreferencesState } from "../store/Preferences"
+import {useDispatch, useSelector} from "react-redux"
+import {ApplicationState} from "../store"
+import {actionCreators as fileS, FileServiceState} from "../store/FileService"
+import {actionCreators as pref} from "../store/Preferences"
 import {
+    Accordion,
+    AccordionActions,
+    AccordionDetails,
+    AccordionSummary,
+    Box,
     Button,
     Dialog,
     DialogActions,
     DialogContent,
-    DialogContentText,
-    DialogTitle,
+    Divider,
     LinearProgress,
+    Paper,
+    Switch,
+    Theme,
+    Toolbar,
     Typography,
-    Theme, Paper, Accordion, AccordionSummary, AccordionDetails, Box, Toolbar, AccordionActions, Switch, Divider,
 } from "@mui/material"
 import createStyles from "@mui/styles/createStyles"
 import makeStyles from "@mui/styles/makeStyles"
 import Dropzone from "react-dropzone"
-import { ExpandMore, UploadFile } from "@mui/icons-material"
-import { audioExt, checkFile, imgExt, viewable, truncate } from "../utils"
+import {ExpandMore, UploadFile} from "@mui/icons-material"
+import {audioExt, imgExt, truncate, viewable} from "../utils"
 import clsx from "clsx"
 
 const useStyles = makeStyles((theme: Theme) => createStyles({

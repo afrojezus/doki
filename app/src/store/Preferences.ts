@@ -1,5 +1,5 @@
-﻿import { Action, Reducer } from "redux"
-import { AppThunkAction } from "."
+﻿import {Action, Reducer} from "redux"
+import {AppThunkAction} from "."
 import Cookies from "js-cookie"
 
 export interface PreferencesState {
@@ -16,6 +16,7 @@ export interface PreferencesState {
     tvMode: boolean;
     lastChange: string;
     snow: boolean;
+    borderRadius: number;
 }
 
 export interface IDChange {
@@ -78,6 +79,11 @@ export interface SnowChange {
     snow: boolean;
 }
 
+export interface BorderRadiusChange {
+    type: "PREF_BORDER_RADIUS_CHANGE";
+    borderRadius: number;
+}
+
 export type KnownAction =
     IDChange
     | ColorSchemeChange
@@ -86,7 +92,7 @@ export type KnownAction =
     | OrderChange
     | MuteChange
     | ContinuousChange
-    | FilterChange | InteractionChange | AllowAdsChange | TVModeChange | SnowChange;
+    | FilterChange | InteractionChange | AllowAdsChange | TVModeChange | SnowChange | BorderRadiusChange;
 
 
 export const actionCreators = {
@@ -113,7 +119,8 @@ export const actionCreators = {
         }
     },
     setTVMode: (tvMode: boolean) => ({ type: "PREF_TV_MODE_CHANGE", tvMode } as TVModeChange),
-    setSnowMode: (snow: boolean) => ({ type: "PREF_SNOW_CHANGE", snow } as SnowChange)
+    setSnowMode: (snow: boolean) => ({ type: "PREF_SNOW_CHANGE", snow } as SnowChange),
+    setBorderRadius: (borderRadius: number) => ({ type: "PREF_BORDER_RADIUS_CHANGE", borderRadius } as BorderRadiusChange)
 }
 
 const unloadedState: PreferencesState = {
@@ -130,6 +137,7 @@ const unloadedState: PreferencesState = {
     tvMode: localStorage.getItem("tv_mode") ? (localStorage.getItem("tv_mode") as string) === "true" : false,
     lastChange: "",
     snow: localStorage.getItem("snow") ? (localStorage.getItem("snow") as string) === "true" : true,
+    borderRadius: localStorage.getItem("border_radius") ? parseInt(localStorage.getItem("border_radius") as string) : 0
 }
 
 export const reducer: Reducer<PreferencesState> = (state: PreferencesState | undefined, incomingAction: Action): PreferencesState => {
@@ -154,6 +162,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_COLORSCHEME_CHANGE":
             return {
@@ -170,6 +179,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_PLAYBACKVOLUME_CHANGE":
             return {
@@ -186,6 +196,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_LIGHT_CHANGE":
             return {
@@ -202,6 +213,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_ORDER_CHANGE":
             return {
@@ -218,6 +230,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_MUTE_CHANGE":
             return {
@@ -234,6 +247,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_CONTINUOUS_CHANGE":
             return {
@@ -250,6 +264,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_FILTER_CHANGE":
             return {
@@ -266,6 +281,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_INTERACTION_CHANGE":
             return {
@@ -282,6 +298,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_ALLOW_ADS_CHANGE":
             return {
@@ -298,6 +315,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_TV_MODE_CHANGE":
             return {
@@ -314,6 +332,7 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: action.tvMode,
                 lastChange: action.type,
                 snow: state.snow,
+                borderRadius: state.borderRadius
             }
         case "PREF_SNOW_CHANGE":
             return {
@@ -330,6 +349,24 @@ export const reducer: Reducer<PreferencesState> = (state: PreferencesState | und
                 tvMode: state.tvMode,
                 lastChange: action.type,
                 snow: action.snow,
+                borderRadius: state.borderRadius
+            }
+        case "PREF_BORDER_RADIUS_CHANGE":
+            return {
+                colorScheme: state.colorScheme,
+                id: state.id,
+                playbackVolume: state.playbackVolume,
+                light: state.light,
+                order: state.order,
+                willMute: state.willMute,
+                continuous: state.continuous,
+                watchFilter: state.watchFilter,
+                interacted: state.interacted,
+                allowAds: state.allowAds,
+                tvMode: state.tvMode,
+                lastChange: action.type,
+                snow: state.snow,
+                borderRadius: action.borderRadius
             }
         default:
             return state

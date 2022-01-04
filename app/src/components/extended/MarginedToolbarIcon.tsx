@@ -1,5 +1,5 @@
-import { Icon } from "@mui/material"
-import { styled } from "@mui/system"
+import {Icon} from "@mui/material"
+import {styled} from "@mui/system"
 import React from "react"
 
 export default styled(Icon)(({ theme }) => ({

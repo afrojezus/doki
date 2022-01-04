@@ -1,10 +1,10 @@
 import React from "react"
-import { useParams } from "react-router"
-import { actionCreators, FileServiceState } from "../store/FileService"
-import { useDispatch, useSelector } from "react-redux"
-import { ApplicationState } from "../store"
-import { PreferencesState } from "../store/Preferences"
-import { useHistory } from "react-router-dom"
+import {useParams} from "react-router"
+import {actionCreators, FileServiceState} from "../store/FileService"
+import {useDispatch, useSelector} from "react-redux"
+import {ApplicationState} from "../store"
+import {PreferencesState} from "../store/Preferences"
+import {useHistory} from "react-router-dom"
 
 const TriggerRoute = () => {
     const { id } = useParams<{ id: string }>()

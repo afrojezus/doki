@@ -1,11 +1,11 @@
-import { Button, TextField, Theme } from "@mui/material"
+import {Button, TextField, Theme} from "@mui/material"
 import createStyles from "@mui/styles/createStyles"
 import makeStyles from "@mui/styles/makeStyles"
-import React, { ChangeEvent, FormEvent, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { actionCreators, FileServiceState } from "../store/FileService"
-import { ApplicationState } from "../store"
-import { actionCreators as pref, PreferencesState } from "../store/Preferences"
+import React, {ChangeEvent, FormEvent, useState} from "react"
+import {useDispatch, useSelector} from "react-redux"
+import {actionCreators, FileServiceState} from "../store/FileService"
+import {ApplicationState} from "../store"
+import {actionCreators as pref, PreferencesState} from "../store/Preferences"
 import Cookies from "js-cookie"
 
 const useStyles = makeStyles((theme: Theme) =>

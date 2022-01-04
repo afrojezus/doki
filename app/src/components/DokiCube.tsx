@@ -1,17 +1,17 @@
-﻿import React, { CSSProperties } from "react"
-import { FileModel } from "../models"
-import { Box, ButtonBase, CircularProgress, Divider, Paper, Theme, Tooltip, Typography } from "@mui/material"
+﻿import React, {CSSProperties} from "react"
+import {FileModel} from "../models"
+import {Box, ButtonBase, Divider, Paper, Skeleton, Theme, Typography} from "@mui/material"
 import createStyles from "@mui/styles/createStyles"
 import makeStyles from "@mui/styles/makeStyles"
-import { Folder } from "@mui/icons-material"
-import { useHistory } from "react-router-dom"
+import {useHistory} from "react-router-dom"
 import clsx from "clsx"
 import moment from "moment"
-import { useSelector } from "react-redux"
-import { ApplicationState } from "../store"
-import { FileServiceState } from "../store/FileService"
-import { Skeleton } from "@mui/material"
-import {truncate, displayFilename} from "../utils"
+import {useSelector} from "react-redux"
+import {ApplicationState} from "../store"
+import {FileServiceState} from "../store/FileService"
+import {displayFilename, truncate} from "../utils"
+import {PreferencesState} from "../store/Preferences"
+import {SessionState} from "../store/Session"
 
 interface IDokiCubeProps {
     file: FileModel | null;
@@ -222,6 +222,9 @@ const useStyles = makeStyles((theme: Theme) =>
         },
         optimizedInfo: {
             display: "none"
+        },
+        ripple: {
+            color: theme.palette.primary.main
         }
     }),
 )
@@ -239,7 +242,9 @@ export default ({
     className,
     onContextMenu,
 }: IDokiCubeProps) => {
+    const id = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).id)
     const files = useSelector((state: ApplicationState) => (state.files as FileServiceState).files)
+    const scale = useSelector((state: ApplicationState) => (state.session as SessionState).gridScale)
     const prepareNewFile = useSelector((state: ApplicationState) => (state.files as FileServiceState).preparingNewFile)
     const [loaded, setLoaded] = React.useState(false)
     const [showFilenameN, setShowFilename] = React.useState(false)
@@ -263,7 +268,9 @@ export default ({
         return (
             <ButtonBase style={style}
                 TouchRippleProps={{
-                    color: "primary"
+                    classes: {
+                        ripple: classes.ripple
+                    }
                 }}
                 className={clsx(classes.cube, classes.fileItem, prepareNewFile && classes.optimized, mediaCheck && !(loaded) && classes.inactive, className)}
                 onClick={onClick}
@@ -296,16 +303,38 @@ export default ({
                             className={clsx(classes.f_p)}>{file.folder}</Typography>}
                     </Box>}
                 <div className={clsx(classes.info, prepareNewFile && classes.optimizedInfo)}>
-                    <Typography gutterBottom className={clsx(classes.infoTitle, classes.infoTitleShown)}>{truncate(displayFilename(file.fileURL), 28)}</Typography>
+                    <Box sx={{flexDirection: "row", display: "inline-flex"}}>
+                        {scale < 10 && <Typography gutterBottom className={clsx(classes.infoTitle, classes.infoTitleShown)}>{truncate(displayFilename(file.fileURL), scale < 5 ? 60 : scale > 10 ? 0 : 20)}</Typography>}
+                        {scale < 10 && <div style={{ flex: 1 }} />}
+                        
+                    {file.nsfw && <Typography variant="caption" sx={{
+                            color: "error.main",
+                            fontWeight: 600,
+                            background: (theme) => theme.palette.primary.contrastText,
+                            padding: (theme) => theme.spacing(0.25, 0.5),
+                            marginTop: -2,
+                            marginBottom:"auto",
+                            zIndex: 5
+                         }}>NSFW</Typography>}
+                        {id == file.author.authorId && <Typography variant="caption" sx={{
+                            color: "primary.contrastText",
+                            fontWeight: 600,
+                            background: (theme) => theme.palette.primary.main,
+                            padding: (theme) => theme.spacing(0.25, 0.5),
+                            marginRight: -1,
+                            marginTop: -2,
+                            marginBottom:"auto",
+                            zIndex: 5
+                        }}>YOURS</Typography>}
+                        {scale > 10 && <div style={{ flex: 1 }} />}
+                        </Box>
                     <Box sx={{flexDirection: "row", display: "inline-flex"}}>
                         <Typography variant="caption">{moment(file.unixTime * 1e3).fromNow()}</Typography>
                         <Divider sx={{margin: (theme) => theme.spacing(0, 1)}} orientation="vertical" />
-                        <Typography variant="caption">{file.views} views </Typography>
-                        <Divider orientation="vertical" sx={{ margin: (theme) => theme.spacing(0, 1) }}  />
-                        <Typography variant="caption">{file.likes} likes</Typography>
+                        <Typography variant="caption">{file.views} {scale < 10 && "views"} </Typography>
+                        {scale < 10 && <><Divider orientation="vertical" sx={{ margin: (theme) => theme.spacing(0, 1) }} />
+                            <Typography variant="caption">{file.likes} likes</Typography></>}
                     </Box>
-                    {file.nsfw && <Typography variant="h5" style={{ left: "initial", bottom: 8, right: 4, top: "initial", border: "1px solid #f00", color: "#f00", ...textStyle }}
-                        className={clsx(classes.span, classes.overlayText)}>NSFW</Typography>}
                 </div>
             </ButtonBase>
         )

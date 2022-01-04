@@ -1,42 +1,38 @@
 import {
   Box,
   Button,
-  Dialog, DialogContent, DialogContentText, Divider,
-  Grid, Grow,
-  Link,
-  Fade,
+  Dialog,
+  DialogContent,
+  DialogContentText,
+  Divider,
+  Grid,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
-  Paper, TextField,
-  Theme, Toolbar, Typography,
+  TextField,
+  Theme,
+  Toolbar,
+  Typography,
   useMediaQuery
 } from "@mui/material"
 import createStyles from "@mui/styles/createStyles"
 import makeStyles from "@mui/styles/makeStyles"
-import {
-  FixedSizeList,
-  FixedSizeGrid,
-  ListChildComponentProps,
-  GridChildComponentProps,
-  areEqual,
-  GridOnScrollProps
-} from "react-window"
-import React, { memo, useState } from "react"
-import { FileModel } from "../models"
+import {areEqual, FixedSizeGrid, FixedSizeList, GridChildComponentProps, ListChildComponentProps} from "react-window"
+import React, {memo, useState} from "react"
+import {FileModel} from "../models"
 import AutoSizer from "react-virtualized-auto-sizer"
 import DokiCube from "./DokiCube"
-import { useDispatch, useSelector } from "react-redux"
-import { ApplicationState } from "../store"
-import { PreferencesState } from "../store/Preferences"
-import { useHistory, Link as RouterLink, Route, Switch as SwitchRouter } from "react-router-dom"
+import {useDispatch, useSelector} from "react-redux"
+import {ApplicationState} from "../store"
+import {SessionState} from "../store/Session"
+import {PreferencesState} from "../store/Preferences"
+import {Link as RouterLink, Switch as SwitchRouter, useHistory} from "react-router-dom"
 import clsx from "clsx"
-import { Folder } from "@mui/icons-material"
 import Uploader from "./Uploader"
-import { actionCreators, FileServiceState } from "../store/FileService"
+import {actionCreators, FileServiceState} from "../store/FileService"
+import {DRAWER_WIDTH} from "../utils"
 
 const GUTTER_SIZE = 8
 
@@ -49,7 +45,8 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     boxSizing: "border-box",
     transition: theme.transitions.create(["all"]),
     willChange: "auto",
-    flexDirection: "column"
+    flexDirection: "column",
+    maxWidth: DRAWER_WIDTH
   },
   leftPaneTV: {
     borderRight: "1px solid rgba(255,255,255,0.5)",
@@ -81,6 +78,8 @@ const renderCell = memo((props: GridChildComponentProps) => {
   const dispatch = useDispatch()
   const id = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).id)
 
+  const isAdmin = useSelector((state: ApplicationState) => (state.session as SessionState).adminPowers)
+
   const { rowIndex, columnIndex, data, style } = props
   const item = data[rowIndex][columnIndex] as FileModel
 
@@ -95,7 +94,7 @@ const renderCell = memo((props: GridChildComponentProps) => {
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
-    if (id == item.author.authorId)
+    if (id == item.author.authorId || isAdmin)
       setMenu(menu === null
         ? {
           mouseX: e.clientX - 2,
@@ -215,8 +214,8 @@ const toMatrix = (arr: any[], width: number) =>
     : rows[rows.length - 1].push(key)) && rows, [])
 
 const GridView = ({ children, files, currentFolder, onListClick, onGridClick, scale }: { children: React.PropsWithChildren<any>, files: FileModel[], currentFolder: string | null, onListClick: (item: string) => void, onGridClick: (item: FileModel) => void, scale?: number }) => {
+  const serverFiles = useSelector((state: ApplicationState) => (state.files as FileServiceState).files)
   const watchFilter = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).watchFilter)
-  const prepareNewFile = useSelector((state: ApplicationState) => (state.files as FileServiceState).preparingNewFile)
   const tvMode = useSelector((state: ApplicationState) => (state.prefs as PreferencesState).tvMode)
   const classes = useStyles()
   const [showUploader, willShowUploader] = React.useState(false)
@@ -226,6 +225,7 @@ const GridView = ({ children, files, currentFolder, onListClick, onGridClick, sc
   let gridRef = React.createRef<FixedSizeGrid>()
 
   function renderRow(props: ListChildComponentProps) {
+    // TODO: Turn folders with subfolders into comboboxes in the list, also make it retain the old functionality.
     const { index, data, style } = props
     const item = data[index] as string
     return (<>
@@ -238,7 +238,7 @@ const GridView = ({ children, files, currentFolder, onListClick, onGridClick, sc
         {/*<ListItemIcon sx={{color: currentFolder === item ? "primary.contrastText" : undefined}}>
           <Folder />
     </ListItemIcon>*/}
-        <ListItemText className={classes.listText} secondary={item.includes(".") ? item.split(".")[0] : undefined} inset={item.includes(".")} primary={item.includes(".") ? item.split(".")[1] : item} />
+        <ListItemText className={classes.listText} primary={item.includes(".") ? item.split(".").join("/") :  item} />
       </ListItem>
     </>
     )
@@ -309,7 +309,7 @@ const GridView = ({ children, files, currentFolder, onListClick, onGridClick, sc
           <List dense sx={{flex: 1, padding: 0}}>
           <AutoSizer>
             {({ height, width }) => (
-              <FixedSizeList height={height} width={width} itemSize={46} itemCount={[...files].filter(x => x.folder !== null).map(x => x.folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).length} itemData={[...files].filter(x => x.folder !== null).map(x => x.folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).sort((a, b) => b.toLowerCase() > a.toLowerCase() ? -1 : 0)}>
+              <FixedSizeList height={height} width={width} itemSize={46} itemCount={[...serverFiles].filter(x => x.folder !== null).map(x => x.folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).length} itemData={[...serverFiles].filter(x => x.folder !== null).map(x => x.folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).sort((a, b) => b.toLowerCase() > a.toLowerCase() ? -1 : 0)}>
                 {renderRow}
               </FixedSizeList>
             )}

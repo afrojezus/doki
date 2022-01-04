@@ -1,18 +1,18 @@
-﻿import React, {ReactEventHandler, SyntheticEvent, useRef, useState} from "react"
-import { Box, Paper } from "@mui/material"
-import ReactPlayer, { ReactPlayerProps } from "react-player"
-import { useDispatch, useSelector } from "react-redux"
-import { ApplicationState } from "../store"
-import { actionCreators, PreferencesState } from "../store/Preferences"
-import { FileServiceState } from "../store/FileService"
-import { FileModel } from "../models"
+﻿import React, {forwardRef, useRef, useState} from "react"
+import {Box, Paper} from "@mui/material"
+import ReactPlayer, {ReactPlayerProps} from "react-player"
+import {useDispatch, useSelector} from "react-redux"
+import {ApplicationState} from "../store"
+import {actionCreators, PreferencesState} from "../store/Preferences"
+import {FileServiceState} from "../store/FileService"
+import {FileModel} from "../models"
 import {checkFile, mediaExt} from "../utils"
 
 interface MediaPlayerInterface extends ReactPlayerProps {
     
 }
 
-const MediaPlayer = (props: MediaPlayerInterface) => {
+const MediaPlayer = forwardRef((props: MediaPlayerInterface, ref: any) => {
     const visualExt = [
         "WEBM", "MP4", "MOV", "M4A", "AVI",
         "GIF"
@@ -124,11 +124,11 @@ const MediaPlayer = (props: MediaPlayerInterface) => {
             border: "none"
         }}>
             <Box className="player-container">
-                <ReactPlayer pip={pip} ref={player} onProgress={props.onProgress} onDuration={props.onDuration} width="100%" height="100%"
+                <ReactPlayer pip={pip} ref={ref} width="100%" height="100%"
                     className="player" style={props.style} {...props} />
                 {music && gif && <>
                 {checkFile(mediaExt, gif) ? <video autoPlay onPlay={handleGifPlaying} muted loop src={gif.fileURL} ref={gifVideo} className="gif" style={{objectFit: "cover", opacity: 0.5}} width="100%" height="100%"  /> : <img className="gif" alt="" src={gif.fileURL} style={{ opacity: played === 0 ? 0.5 : 1 }} />}</>}
             </Box></Paper>)
-}
+})
 
 export default MediaPlayer

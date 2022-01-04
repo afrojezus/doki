@@ -9,6 +9,7 @@ using Doki.Models;
 using Doki.Utils;
 using Microsoft.EntityFrameworkCore;
 using DokiFile = Doki.Models.File;
+using File = System.IO.File;
 
 namespace Doki.Services
 {
@@ -32,7 +33,7 @@ namespace Doki.Services
             ".EXE", ".ELF", ".NDS", ".APPIMAGE", ".DEB", ".APP", ".IPA", ".APK", ".BIN", ".RPM", ".PKG", ".DMG", ".ISO"
 };
 
-    public readonly List<string> FakeNames = System.IO.File.ReadAllLines("Names.dokiconfig").ToList();
+    public readonly List<string> FakeNames = File.ReadAllLines("Names.dokiconfig").ToList();
     public PrimaryService(MariaDbContext dbContext)
     {
       _dbContext = dbContext;
@@ -50,7 +51,7 @@ namespace Doki.Services
       try
       {
         var file = await FindOne(id);
-        var author = file.Author.AuthorId;
+        //var author = file.Author.AuthorId;
         foreach (var comment in _dbContext.Comments)
         {
           if (file.Id == comment.FileId)
@@ -60,9 +61,9 @@ namespace Doki.Services
         }
         if (file.Thumbnail != null && file.Thumbnail.Contains("_thumbnail."))
         {
-          System.IO.File.Delete($"{root}/app/build/{file.Thumbnail}");
+          File.Delete($"{root}/app/build/{file.Thumbnail}");
         }
-        System.IO.File.Delete($"{root}/app/build/{file.FileURL}");
+        File.Delete($"{root}/app/build/{file.FileURL}");
         _dbContext.Files.Remove(file);
         return await _dbContext.SaveChangesAsync();
       }
@@ -179,13 +180,13 @@ namespace Doki.Services
         FileURL = Format.DokiCompatibleFileName(filename),
         Thumbnail = Format.DokiCompatibleFileName(GenerateThumbnail(filename)),
         Folder = folder == "undefined" ? null : folder,
-        NSFW = nsfw == "1" ? true : false
+        NSFW = nsfw == "1"
       };
 
       return file;
     }
 
-    private async Task<int> GenerateUniqueId()
+    /*private async Task<int> GenerateUniqueId()
     {
       var r = new Random();
       var id = r.Next(0, int.MaxValue);
@@ -193,7 +194,7 @@ namespace Doki.Services
       var files = await _dbContext.Files.ToListAsync();
 
       return files.Any(file => file.Id == id) ? r.Next(0, int.MaxValue) : id;
-    }
+    }*/
 
     private static string GenerateThumbnail(string filename)
     {

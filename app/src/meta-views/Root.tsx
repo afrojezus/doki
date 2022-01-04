@@ -1,11 +1,11 @@
-import React, { useState } from "react"
-import { Alert, Fade, Snackbar, Theme, Typography, Box, Slide, SlideProps, CircularProgress } from "@mui/material"
-import { useHistory } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import { actionCreators, FileServiceState } from "../store/FileService"
-import { ApplicationState } from "../store"
+import React, {useState} from "react"
+import {Alert, Box, Fade, Slide, SlideProps, Snackbar, Theme, Typography} from "@mui/material"
+import {useHistory} from "react-router-dom"
+import {useDispatch, useSelector} from "react-redux"
+import {actionCreators, FileServiceState} from "../store/FileService"
+import {ApplicationState} from "../store"
 import Main from "./Main"
-import { PreferencesState } from "../store/Preferences"
+import {PreferencesState} from "../store/Preferences"
 import Snow from "../components/Snow"
 
 type TransitionProps = Omit<SlideProps, "direction">
@@ -16,6 +16,34 @@ function TransitionLeft(props: TransitionProps) {
 
 function TransitionDown(props: TransitionProps) {
     return <Slide {...props} direction="down" />
+}
+
+class RuntimeContainer extends React.Component<any,any> {
+    constructor(props: any) {
+        super(props)
+        this.state = {
+            error: null
+        }
+    }
+
+    public componentDidCatch(error: any) {
+        this.setState({error})
+    }
+
+    public render() {
+        if (this.state.error) {
+            return (
+                <>
+                    <Typography>{process.env.REACT_APP_NAME} crashed</Typography>
+                </>
+            )
+        }
+        return (
+            <>
+            {this.props.children}
+        </>
+        )
+    }
 }
 
 
@@ -49,22 +77,10 @@ export default function Root({ children }: React.PropsWithChildren<any>) {
     React.useEffect(() => {
         switch (type) {
             case "REQUEST_FILES":
-                setTimeout(() => {
-                    if (files.length === 0) {
                         setSnackMessage("Fetching files...")
                         setSnackType("info")
                         setSnackOpen(true)
-                    }
-                }, 1000) // After the intro animation, inform the user the client is currently loading.
-                setTimeout(() => {
-                    if (files.length === 0) {
-                        setSnackMessage("The server might be unavailable.")
-                        setSnackType("error")
-                        setSnackOpen(true)
-                        setShowTitle(false)
-                        setLoading(false)
-                    }
-                }, 15000) // If 15 seconds have gone, inform that the server might not be available.
+                // After the intro animation, inform the user the client is currently loading.
                 break
             case "SEND_FILE":
                 if (currentFile != null) {
@@ -97,7 +113,7 @@ export default function Root({ children }: React.PropsWithChildren<any>) {
                 setSnackOpen(true)
                 break
         }
-    }, [success])
+    }, [success, type])
 
     React.useEffect(() => {
         switch (prefChange) {
@@ -160,16 +176,15 @@ export default function Root({ children }: React.PropsWithChildren<any>) {
                     transform: "scale(1.1)"
                 })
             }}>
-                <Main children={children} />
-                <Snackbar TransitionComponent={TransitionDown} anchorOrigin={{ vertical: "top", horizontal: "center" }} open={snackOpen} autoHideDuration={3000}
+                <RuntimeContainer><Main children={children} /></RuntimeContainer>
+            </Box>
+             <Snackbar TransitionComponent={TransitionDown} anchorOrigin={{ vertical: "top", horizontal: "center" }} open={snackOpen} autoHideDuration={6000}
                     onClose={handleSnackClose}>
                     <Alert variant="filled" action={<></>} onClose={handleSnackClose}
                         severity={snackType}>
                         {snackMessage}
                     </Alert>
                 </Snackbar>
-                {isLoading && <CircularProgress sx={{ position: "fixed", width: 24, right: "50%", left: "50%", transform: "translate(-50%)", bottom: (theme) => theme.spacing(1.5) }} variant="indeterminate" />}
-            </Box>
         </>
     )
 }

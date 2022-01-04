@@ -1,5 +1,5 @@
-import { Slider, Theme } from "@mui/material"
-import { styled } from "@mui/system"
+import {Slider, Theme} from "@mui/material"
+import {styled} from "@mui/system"
 import React from "react"
 
 export default styled(Slider)<{ muted: boolean }>(({ theme, muted }) => ({

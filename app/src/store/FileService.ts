@@ -1,7 +1,6 @@
-
-import { AppThunkAction } from "./index"
-import { FileModel, CommentModel } from "../models"
-import { Action, Reducer } from "redux"
+import {AppThunkAction} from "./index"
+import {CommentModel, FileModel} from "../models"
+import {Action, Reducer} from "redux"
 
 export interface FileServiceState {
     isLoading: boolean;

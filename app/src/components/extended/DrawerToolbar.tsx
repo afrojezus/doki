@@ -1,4 +1,4 @@
-import { styled } from "@mui/system"
+import {styled} from "@mui/system"
 import React from "react"
 
 export default styled("div")(({ theme }) => ({

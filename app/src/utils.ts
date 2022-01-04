@@ -1,7 +1,8 @@
-import {useState, useCallback, useEffect} from "react"
-import { Theme, Tooltip } from "@mui/material"
-import { withStyles } from "@mui/styles"
-import { AuthorModel, FileModel } from "./models"
+import {Theme, Tooltip} from "@mui/material"
+import {withStyles} from "@mui/styles"
+import {AuthorModel, FileModel} from "./models"
+
+export const DRAWER_WIDTH = 250 
 
 export const mediaExt = [
     "WEBM", "MP4", "MOV", "M4A", "AVI", "MP3", "WAV", "AAC", "OGG", "FLAC"
@@ -18,6 +19,8 @@ export const checkFile = (extArray: Array<string>, file: FileModel | null) => fi
 export const truncate = (str: string, len: number = 10) => str.length > len ? str.substring(0, len) + "..." : str
 
 export const displayFilename = (str: string) => str.split(".")[0].replace("files/", "").replaceAll("-", " ").replaceAll(".", " ").replaceAll("_", " ").replaceAll("(", " (").replaceAll(")", ") ")
+
+export const normalise = (value: number, min: number, max: number) => ((value - min) * 100) / (max - min)
 
 export const retrieveAuthorInfo = async (id: number): Promise<AuthorModel> => {
     try {
@@ -56,4 +59,28 @@ export function createShadow(...px: number[]) {
         `${px[4] + 2}px ${px[5] + 2}px 0px rgba(0,0,0,${shadowKeyPenumbraOpacity})`,
         `${px[8]}px ${px[9]}px 0px rgba(0,0,0,${shadowAmbientShadowOpacity})`,
     ].join(",")
+}
+
+// TODO: Function for getting MD5 hash of a file and checking it up to hash databases for illegal content.
+export const safeCheck = async (file: File) => {
+    interface SafeCheck {
+        csam: boolean;
+        nsfw: boolean;
+        error: Response | null;
+    }
+    let checks: SafeCheck = {
+        csam: false,
+        nsfw: false,
+        error: null
+    }
+    try {
+        const md5 = null // Find a way to get hash value of file
+        checks.csam = await fetch("some government database").then(r => r.json())
+        checks.nsfw = await fetch("local nsfw repository").then(r => r.json())
+    } catch (e: unknown) {
+        if (process.env.NODE_ENV === "development") console.error({ e })
+        checks.error = e as Response
+    } finally {
+        return checks
+  }
 }

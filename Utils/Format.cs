@@ -1,5 +1,3 @@
-using System;
-
 namespace Doki.Utils
 {
   public static class Format

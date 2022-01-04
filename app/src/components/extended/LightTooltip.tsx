@@ -1,6 +1,6 @@
 import React from "react"
-import { Theme, Tooltip, TooltipProps } from "@mui/material"
-import { styled } from "@mui/system"
+import {Theme, Tooltip, TooltipProps} from "@mui/material"
+import {styled} from "@mui/system"
 
 interface ILightTooltip extends TooltipProps {
   theme?: Theme
