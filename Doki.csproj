@@ -7,8 +7,8 @@
     <SpaRoot>app\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
     <UserSecretsId>cce80b07-0a2d-444b-bfbf-9970aa616f89</UserSecretsId>
-    <AssemblyVersion>15.01.2022.0</AssemblyVersion>
-    <FileVersion>15.01.2022.0</FileVersion>
+    <AssemblyVersion>15.01.2022.1</AssemblyVersion>
+    <FileVersion>15.01.2022.1</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.0" />
@@ -24,6 +24,8 @@
     <Content Remove="$(SpaRoot)**" />
     <None Remove="$(SpaRoot)**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+    <None Remove="app\build\**" />
+    <Content Remove="app\build\**" />
   </ItemGroup>
   <ItemGroup>
     <_ContentIncludedByDefault Remove="dist\web.config" />
@@ -31,9 +33,14 @@
     <_ContentIncludedByDefault Remove="dist\appsettings.json" />
     <_ContentIncludedByDefault Remove="dist\Doki.deps.json" />
     <_ContentIncludedByDefault Remove="dist\Doki.runtimeconfig.json" />
+    <_ContentIncludedByDefault Remove="app\build\asset-manifest.json" />
+    <_ContentIncludedByDefault Remove="app\build\manifest.json" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="app\build\files" />
+    <Compile Remove="app\build\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="app\build\**" />
   </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <Exec Command="node --version" ContinueOnError="true">

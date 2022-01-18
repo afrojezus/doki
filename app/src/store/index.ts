@@ -1,6 +1,6 @@
-import * as FileService from "./FileService"
-import * as Preferences from "./Preferences"
-import * as Session from "./Session"
+import * as FileService from './FileService';
+import * as Preferences from './Preferences';
+import * as Session from './Session';
 
 export interface ApplicationState {
     files: FileService.FileServiceState | undefined;
@@ -9,10 +9,10 @@ export interface ApplicationState {
 }
 
 export const reducers = {
-    files: FileService.reducer,
-    prefs: Preferences.reducer,
-    session: Session.reducer
-}
+  files: FileService.reducer,
+  prefs: Preferences.reducer,
+  session: Session.reducer,
+};
 
 export interface AppThunkAction<TAction> {
     (dispatch: (action: TAction) => void, getState: () => ApplicationState): void;

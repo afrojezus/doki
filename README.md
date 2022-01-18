@@ -1,7 +1,7 @@
 <p>
   <a href="/LICENSE"><img src="https://img.shields.io/badge/License-MIT-black.svg" alt="MIT License"></a>
-  <a><img src="https://img.shields.io/badge/OS-Linux-blue.svg" alt="Linux"></a>
-  <a><img src="https://img.shields.io/badge/Platform-ASP.NET-blue.svg" alt="ASP.NET"></a>
+  <a><img src="https://img.shields.io/badge/OS-Linux first-blue.svg" alt="Linux"></a>
+  <a><img src="https://img.shields.io/badge/Platform-ASP.NET+React-blue.svg" alt="ASP.NET"></a>
   <a><img src="https://img.shields.io/badge/Build-15.01--2022-blue.svg" alt="15.01-2022"></a>
 </p>
 
@@ -14,20 +14,15 @@ This is the core repository for the project.
 Doki can be set up easily by running `bootstrapper.sh` which
 installs the required libraries and configures your server to run it. Available in the releases.
 
-If you prefer a quick-and-easy way of running Doki, you can also make use
-of Docker to virtualize the environment needed for the platform. A docker compose file is included.
-
-You can make use of the project itself and compile it on your own.
-
 The system running Doki must include the following libraries:
 
-- FFmpeg
+- FFmpeg (for generating thumbnails)
 - MariaDB
-- .NET Core (SDK if developing, runtime else)
-- Nginx
-- NodeJS (only when developing; see the section below)
+- Nginx (or any other form of web server)
 
 These requirements are handled by the bootstrapper. That includes setting up the database.
+
+For development you will need .NET Core and NodeJS (unless you decide to replace the `app` frontend with something else)
 
 ### Deciding type of production runtime
 
@@ -37,7 +32,8 @@ decided within `app`. To switch between the types, edit  `REACT_APP_TYPE` to eit
 Differences between these modes are availability of features. A public instance of Doki allows for the functionality of:
 
 - Reporting files
-- Sharing files directly to other social media
+- Fixed amount of channels that can be used
+- Additional client-side security hardening
 - Use auto-moderation tools on newly uploaded files
 
 Both production runtime types allow for changing the visible name of the instance by changing `REACT_APP_NAME` in `.env`

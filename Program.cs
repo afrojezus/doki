@@ -9,7 +9,7 @@ namespace Doki
   {
     public static void Main(string[] args)
     {
-      Console.WriteLine($"DOKI {Assembly.GetExecutingAssembly().GetName().Version.ToString()}");
+      Console.WriteLine($"DOKI {Assembly.GetExecutingAssembly().GetName().Version?.ToString()}");
       CreateHostBuilder(args).Build().Run();
     }
 

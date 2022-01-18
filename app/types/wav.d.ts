@@ -1,4 +1,4 @@
-declare module "*.wav" {
-  const value: any
-  export default value
+declare module '*.wav' {
+  const value: unknown;
+  export default value;
 }

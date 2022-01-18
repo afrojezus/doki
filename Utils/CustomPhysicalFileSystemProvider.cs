@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -15,9 +16,9 @@ namespace Doki.Utils
   {
     public static bool StartsWithNormalizedSegments(this PathString path, PathString other)
     {
-      if (other.HasValue && other.Value.EndsWith('/'))
+      if (other.Value != null && other.HasValue && other.Value.EndsWith('/'))
       {
-        return path.StartsWithSegments(other.Value.Substring(0, other.Value.Length - 1));
+        return path.StartsWithSegments(other.Value[..^1]);
       }
 
       return path.StartsWithSegments(other);
@@ -25,9 +26,9 @@ namespace Doki.Utils
 
     public static bool StartsWithNormalizedSegments(this PathString path, PathString other, StringComparison comparisonType)
     {
-      if (other.HasValue && other.Value.EndsWith('/'))
+      if (other.Value != null && other.HasValue && other.Value.EndsWith('/'))
       {
-        return path.StartsWithSegments(other.Value.Substring(0, other.Value.Length - 1), comparisonType);
+        return path.StartsWithSegments(other.Value[..^1], comparisonType);
       }
 
       return path.StartsWithSegments(other, comparisonType);
@@ -35,9 +36,9 @@ namespace Doki.Utils
 
     public static bool StartsWithNormalizedSegments(this PathString path, PathString other, out PathString remaining)
     {
-      if (other.HasValue && other.Value.EndsWith('/'))
+      if (other.Value != null && other.HasValue && other.Value.EndsWith('/'))
       {
-        return path.StartsWithSegments(other.Value.Substring(0, other.Value.Length - 1), out remaining);
+        return path.StartsWithSegments(other.Value[..^1], out remaining);
       }
 
       return path.StartsWithSegments(other, out remaining);
@@ -45,9 +46,9 @@ namespace Doki.Utils
 
     public static bool StartsWithNormalizedSegments(this PathString path, PathString other, StringComparison comparisonType, out PathString remaining)
     {
-      if (other.HasValue && other.Value.EndsWith('/'))
+      if (other.Value != null && other.HasValue && other.Value.EndsWith('/'))
       {
-        return path.StartsWithSegments(other.Value.Substring(0, other.Value.Length - 1), comparisonType, out remaining);
+        return path.StartsWithSegments(other.Value[..^1], comparisonType, out remaining);
       }
 
       return path.StartsWithSegments(other, comparisonType, out remaining);
@@ -115,7 +116,8 @@ namespace Doki.Utils
     public Task<IImageResolver> GetAsync(HttpContext context)
     {
       // Remove assets request path if it's set.
-      string path = string.IsNullOrEmpty(_requestPath) ? context.Request.Path.Value : context.Request.Path.Value.Substring(_requestPath.Value.Length);
+      Debug.Assert(_requestPath.Value != null, "_requestPath.Value != null");
+      string path = string.IsNullOrEmpty(_requestPath) ? context.Request.Path.Value : context.Request.Path.Value?[_requestPath.Value.Length..];
 
       // Path has already been correctly parsed before here.
       IFileInfo fileInfo = this._fileProvider.GetFileInfo(path);

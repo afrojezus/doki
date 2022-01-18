@@ -1,0 +1,46 @@
+@font-face {
+    font-family: 'sqrdi';
+    src: url('../assets/sqrdi.ttf')  format('truetype')
+}
+
+@font-face {
+    font-family: 'cube';
+    src: url('../assets/Cube.ttf')  format('truetype')
+}
+
+@font-face {
+    font-family: 'plank';
+    src: url('../assets/plank.ttf')  format('truetype')
+}
+
+@font-face {
+    font-family: 'doublewide';
+    src: url('../assets/doublewide.otf')  format('opentype')
+}
+
+.player-container {
+  position: relative;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        background-color: black;
+}
+
+.player {
+  position: absolute;
+        top: 0;
+        left: 0;
+}
+
+.gif {
+  position: absolute;
+        background-color: black;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+}
+
+.global-dropzone {
+    
+}
