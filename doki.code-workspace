@@ -1,10 +1,10 @@
 {
-    "folders": [
+	"folders": [
 		{
 			"path": "Web"
 		},
 		{
-			"path": "doki"
+			"path": "Mobile"
 		}
 	]
 }
