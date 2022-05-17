@@ -1,0 +1,30 @@
+{
+  "Viewer": {
+    "play": "Play/pause the current medium",
+    "skip": "Go to next medium",
+    "prev": "Go back to previous medium",
+    "repeat": "Repeat/autoplay",
+    "pip": "Picture-in-picture mode",
+    "contain": "Contain/cover the medium",
+    "help-title": "How to use Doki",
+    "help-controls": "Player controls (when applicable) are located in the top-left corner, the repeat button can switch between continuous or looped playback.\nFound a funny moment? The play/pause button lets you pause the content.",
+    "help-quickdetails": "Bottom-left corner contains quick details of what you're looking at.\nTitle of the file, description, uploader, file-type and view count is stored here.",
+    "help-navcard": "Right side of the site is the navigation card, this comes out of sight when you're watching content, but can be retrieved through either moving your mouse to the right edge, right-clicking anywhere, or scrolling downwards.\nIn this page it contains full details and comments for the content. The sitemap is located here.",
+    "help-accept": "Understood",
+    "uploaded-by": "Uploaded by",
+    "file": "-file",
+    "views": "views",
+    "likes": "likes",
+    "nc-details": "details",
+    "nc-filesize": "Filesize",
+    "nc-upload-date": "Upload date",
+    "nc-uploader": "Uploader",
+    "nc-views": "Views",
+    "nc-category": "Category",
+    "nc-file-type": "File type",
+    "nc-tags": "tags",
+    "nc-comment-policy": "Current comment policy",
+    "nc-comment-policy-message": "Don't be a cunt",
+    "nc-upload": "Upload"
+  }
+}

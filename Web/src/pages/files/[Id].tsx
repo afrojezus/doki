@@ -3,25 +3,18 @@
     Aside,
     Box,
     Button,
-    Card,
-    Container,
+    Card, Divider,
     Group,
-    Image,
     Modal,
     Paper,
-    Progress,
     ScrollArea,
     Slider,
-    Space,
     Stack,
     Text,
-    ThemeIcon,
-    Title,
     Tooltip,
     useMantineTheme
 } from '@mantine/core';
 import {
-    File as FileIcon,
     Help,
     PictureInPicture,
     PlayerPause,
@@ -34,13 +27,11 @@ import {
     Volume,
     Volume3
 } from 'tabler-icons-react';
-import { showNotification } from '@mantine/notifications';
-import { createRef, useEffect, useState } from 'react';
-import ReactPlayer from 'react-player';
-import { Document, Page as PDFPage } from 'react-pdf';
-import { checkCookies, getCookie, setCookies } from 'cookies-next';
-import { CommentBox } from '../../components/comments';
-import Layout, { Menubar, Tabbar } from '../../components/layout';
+import {showNotification} from '@mantine/notifications';
+import {useEffect, useState} from 'react';
+import {checkCookies, getCookie, setCookies} from 'cookies-next';
+import {CommentBox} from '../../components/comments';
+import Layout, {Menubar, Tabbar} from '../../components/layout';
 import SEO from '../../components/seo';
 import {
     audioFormats,
@@ -48,18 +39,20 @@ import {
     getExt,
     onlyGetMedia,
     onlyGetVideo,
-    pictureFormats,
     playableFormats,
-    random
+    random,
+    random2, retrieveAllFileTypes, retrieveAllTags
 } from "../../../utils/file";
+import dynamic from 'next/dynamic';
 import FileRepository from "@server/repositories/FileRepository";
-import { Author, File } from "@server/models";
-import { formatDate, ParseUnixTime } from "../../../utils/date";
-import { NextPageContext } from 'next';
-import { useRouter } from 'next/router';
-import { LinkButton } from "@src/components/buttons";
-import { useMediaQuery } from '@mantine/hooks';
-import { useLongPress } from "../../../utils/react";
+import {Author, File} from "@server/models";
+import {formatDate, ParseUnixTime} from "../../../utils/date";
+import {NextPageContext} from 'next';
+import {useRouter} from 'next/router';
+import {useMediaQuery} from '@mantine/hooks';
+import {useLongPress} from "../../../utils/react";
+import {QuickDetails, ContentSlide} from "@src/components/player-elements";
+import Link from "next/link";
 
 interface PageProps {
     post: File;
@@ -68,14 +61,21 @@ interface PageProps {
     muted: boolean;
     loop: boolean;
     firstTime: boolean;
+    filter: string[];
+    messages: any;
 }
+
+const DynamicContentSlide = dynamic(() => Promise.resolve(ContentSlide), {
+    ssr: false
+});
+
 
 export async function getServerSideProps(nextPage: NextPageContext) {
     const id = nextPage.query.Id as string;
     let ids: number[];
     let post: File;
     try {
-        ids = await FileRepository.findAll({ attributes: ["Id", "Thumbnail", "FileURL"] });
+        ids = await FileRepository.findAll({ attributes: ["Id", "Thumbnail", "FileURL", "Folder"] });
         post = await FileRepository.findOne({
             include: {
                 model: Author,
@@ -89,7 +89,9 @@ export async function getServerSideProps(nextPage: NextPageContext) {
                 volume: checkCookies('player-volume', nextPage) ? getCookie('player-volume', nextPage) : 0.25,
                 muted: checkCookies('player-muted', nextPage) ? getCookie('player-muted', nextPage) : false,
                 loop: checkCookies('player-loop', nextPage) ? getCookie('player-loop', nextPage) : true,
-                firstTime: checkCookies('first-time', nextPage) ? getCookie('first-time', nextPage) : true
+                firstTime: checkCookies('first-time', nextPage) ? getCookie('first-time', nextPage) : true,
+                filter: checkCookies('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : [],
+                messages: (await import(`../../../${nextPage.locale}.json`)).default
             }
         };
     } catch (e) {
@@ -102,148 +104,13 @@ export async function getServerSideProps(nextPage: NextPageContext) {
     }
 }
 
-function QuickDetails({ sx, full = false, current, isPlayable, progress }) {
-    return <Stack sx={sx}>
-        <Title order={5} className="rainbow">{displayFilename(current)}</Title>
-        {current.Description && <Text color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text>}
-        <Group>
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>Uploaded
-                by {current.Author.Name}</Text>
-            <Space />
-            <Text size="xs" color={isPlayable && full ? "white" : undefined}
-                weight={500}>{getExt(current.FileURL)}-file</Text>
-            <Space />
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{current.Views} views</Text>
-        </Group>
-        <Progress radius={0} size="sm" value={progress.played * 100} styles={{
-            root: {
-                opacity: 0.5,
-                display: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
-            },
-            bar: {
-                transition: 'all 0.375s cubic-bezier(.07, .95, 0, 1)'
-            }
-        }} />
-    </Stack>;
-}
-
-function ContentSlide({
-    visualizer,
-    data,
-    isSelected,
-    muted,
-    volume,
-    repeat,
-    onEnded,
-    onClick,
-    href = "/",
-    onProgress,
-    pip,
-    pipCallback,
-    objFit
-}) {
-    const [player, setPlayer] = useState<ReactPlayer>(null);
-    const audioVisualizer = createRef<HTMLVideoElement>();
-
-    function handleReady(p) {
-        setPlayer(p);
-    }
-
-    useEffect(() => {
-        if (pip) {
-            if (document.pictureInPictureEnabled) {
-                (player.getInternalPlayer() as HTMLVideoElement).requestPictureInPicture()
-                    .catch((e) => {
-                        showNotification({
-                            title: "Failed to enable picture-in-picture",
-                            message: e,
-                            color: "red"
-                        })
-                    });
-                pipCallback();
-            } else {
-                showNotification({
-                    title: "Browser error",
-                    message: "Your browser currently doesn't support picture-in-picture mode",
-                    color: "yellow"
-                })
-            }
-        }
-    }, [pip, player]);
-
-    useEffect(() => {
-        if (audioVisualizer.current instanceof HTMLVideoElement) {
-            audioVisualizer.current.playbackRate = 5;
-            if (isSelected) audioVisualizer.current.play();
-            else audioVisualizer.current.pause();
-        }
-    }, [audioVisualizer, isSelected]);
-
-    return <div className="player-wrapper">
-        {playableFormats.includes(getExt(data)) ?
-            <Box sx={{ "& > * > video": { objectFit: objFit ? "contain" : "cover" } }}
-                style={{ width: "inherit", height: "inherit", position: "inherit" }} onClick={onClick}>
-                <ReactPlayer onReady={handleReady} progressInterval={0.001} stopOnUnmount playing={isSelected}
-                    onProgress={onProgress} muted={muted} volume={volume} loop={repeat} onEnded={onEnded}
-                    className="react-player"
-                    url={data} width="100%" height="100%" />
-                {audioFormats.includes(getExt(data)) &&
-                    <video src={`/${visualizer.FileURL}`} autoPlay loop muted width="100%" height="100%"
-                        ref={audioVisualizer}
-                        style={{ objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh" }} />}
-            </Box> :
-            pictureFormats.includes(getExt(data)) ?
-                <Image onClick={onClick} src={data} alt="" width="100%" height="100vh"
-                    fit={objFit ? "contain" : "cover"} sx={{ margin: "auto" }} />
-                :
-                getExt(data) === "PDF" ?
-                    <Document file={data}>
-                        <PDFPage pageNumber={1} />
-                    </Document>
-                    :
-                    <Container sx={{ height: "100vh", display: "inline-flex" }}>
-                        <Card sx={{ margin: "auto", minWidth: 200 }}>
-                            <Card.Section>
-                                <ThemeIcon variant="gradient" sx={{ width: "100%", height: 160 }} radius={0}
-                                    gradient={{ from: 'teal', to: 'blue', deg: 60 }}>
-                                    <FileIcon size={48} />
-                                </ThemeIcon>
-                            </Card.Section>
-                            <Text my="md">
-                                Binary {getExt(data)} file
-                            </Text>
-                            <Button mb="md" fullWidth variant="light">
-                                Download
-                            </Button>
-                            <LinkButton href={href} fullWidth variant="light">
-                                Continue
-                            </LinkButton>
-                        </Card>
-                    </Container>}
-    </div>
-}
-
 function Page(props: PageProps) {
-
-    /**
-     *  The idea here is to make a stacking carousel of media content, illustrated like this
-     *
-     *          VIDEO -n..0     PREVIOUS
-     *          -------------
-     *          VIDEO 1         CURRENT
-     *          -------------
-     *          VIDEO 2         NEXT
-     *
-     *  Upon clicking the media content, it should "slide" up to the next one.
-     *  Scrolling could also be a natural interaction with this.
-     *  Once we've reached the end, start from the first one in the stack in which we go full circle.
-     * */
-
     const router = useRouter();
 
     const theme = useMantineTheme();
     const desktop = useMediaQuery('(min-width: 760px)', false);
 
+    const [previous, setPrevious] = useState<number[]>([]);
     const [current, setCurrent] = useState<File>(props.post);
     const [visualizer, setVisualizer] = useState<File>(random(props.ids, onlyGetVideo));
 
@@ -264,7 +131,17 @@ function Page(props: PageProps) {
     const [objFit, setObjFit] = useState(true);
 
     function handleNewFile() {
-        router.push(`/files/${random(props.ids, onlyGetMedia).Id}`);
+        // check current as seen
+        setPrevious(x => [...x, current.Id]);
+        // get all media
+        const _m = onlyGetMedia(props.ids.filter(x => !props.filter.includes(x.Folder)).filter(x => x.Id !== current.Id));
+        if (previous.length === _m.length) {
+            // reset seen
+            setPrevious([]);
+            return router.push(`/files/${random2(_m).Id}`);
+        }
+        const _n = _m.filter(x => !previous.includes(x.Id));
+        return router.push(`/files/${random2(_n).Id}`);
     }
 
     useEffect(() => {
@@ -371,13 +248,14 @@ function Page(props: PageProps) {
             }}
             {...(!desktop && longPress)}
         >
-            <ContentSlide visualizer={visualizer} objFit={objFit} pipCallback={handlePiP} pip={pip}
+            <DynamicContentSlide visualizer={visualizer} objFit={objFit} pipCallback={handlePiP} pip={pip}
                 onProgress={(p) => setProgress(p)} onClick={handleNewFile} data={`/${current.FileURL}`}
                 isSelected={playing} muted={muted} volume={volume}
                 repeat={repeat} onEnded={handleNewFile}
                 href={`/files/${random(props.ids, onlyGetMedia).Id}`} />
 
-            <Box sx={{
+            <Box
+                sx={{
                 transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
                 position: 'absolute',
                 bottom: 0,
@@ -404,7 +282,8 @@ function Page(props: PageProps) {
                     transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)"
                 }} />}
             </Box>
-            <Box sx={{
+            <Box
+                sx={{
                 transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
                 position: 'absolute',
                 top: 0,
@@ -518,9 +397,15 @@ function Page(props: PageProps) {
                         <Text size="sm">{getExt(current.FileURL)}</Text>
                         <Text size="xs" sx={{ marginTop: -8 }}>File type</Text>
                     </Stack>
-                    {current.Tags && <Stack spacing="xs">
-                        <Text size="sm">{current.Tags.split(",").map((e, i) => e)}</Text>
-                    </Stack>}
+                </Stack>
+            </Aside.Section>
+            <Text mt="xs" size="xs" weight="500">tags</Text>
+            <Aside.Section mt="xs" mb="md">
+                <Stack spacing={0}>
+                    {current.Tags ? current.Tags.split(",").map((t, i) =>
+                        <Link href={`/browser?t=${t}`} key={i} passHref>
+                            <Text size="xs" color={theme.colors.blue[4]} sx={{textDecoration: "none", cursor: "pointer", "&:hover": {textDecoration: "underline"}}}>{t}</Text>
+                        </Link>) : <Text size="xs">None</Text>}
                 </Stack>
             </Aside.Section>
             <Card mb="sm">

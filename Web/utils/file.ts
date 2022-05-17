@@ -34,3 +34,19 @@ export function onlyGetVideo(files: File[]) {
 export function random(files: File[], filter: (files: File[]) => File[]) {
     return filter(files)[~~(Math.random() * filter(files).length)];
 }
+
+export function random2(files: File[]) {
+    return files[~~(Math.random() * files.length)];
+}
+
+export function retrieveAllTags(files: File[]) {
+    return files.filter(x => x.Tags).map(x => x.Tags.split(",")).flat().filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).map(x => x);
+}
+
+export function retrieveAllFolders(files: File[]) {
+    return files.map(x => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).map(x => x);
+}
+
+export function retrieveAllFileTypes(files: File[]) {
+    return files.map(x => getExt(x.FileURL)).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).map(x => x);
+}

@@ -2,6 +2,14 @@
 import Layout, {Menubar, Tabbar} from '../components/layout';
 import SEO from "@src/components/seo";
 
+export async function getStaticProps({locale}) {
+    return {
+        props: {
+            messages: (await import(`../../../${locale}.json`)).default
+        }
+    }
+}
+
 function Page() {
     return <Layout aside={
         <MediaQuery smallerThan="sm" styles={{display: 'none'}}>

@@ -4,28 +4,27 @@
     Button,
     Card,
     Group,
-    Image,
+    Image, MultiSelect,
     Text,
     Textarea,
     TextInput,
     useMantineTheme
 } from "@mantine/core";
 import {useForm} from "@mantine/form";
-import useSound from "use-sound";
-import {getExt} from "../../utils/file";
+import {getExt, retrieveAllFolders, retrieveAllTags} from "../../utils/file";
+import {File as MFile} from "@server/models";
 
 export interface FormFile {
     Title: string;
     Description: string;
     NSFW: boolean;
     File: File;
-    Tags: string;
+    Tags: string[];
     Folder: string;
 }
 
-export function UploadBox({rawFile, callback}: { rawFile: File, callback: (form: FormFile) => void }) {
+export function UploadBox({rawFile, file, posts}: { rawFile: File, file: FormFile, posts: MFile[] }) {
     const theme = useMantineTheme();
-    const [playAccept] = useSound("/assets/accept.wav");
 
     const form = useForm({
         initialValues: {
@@ -33,20 +32,14 @@ export function UploadBox({rawFile, callback}: { rawFile: File, callback: (form:
             Description: "",
             NSFW: false,
             File: rawFile,
-            Tags: "",
+            Tags: [],
             Folder: ""
         },
         validate: {
-            Title: (value: string) => value.length > 0 ? null : "Please enter a title"
+            Title: (value: string) => value.length > 0 ? null : "Please enter a title",
+            Tags: (value: string[]) => value.length > 0 ? null : "Please enter at least one tag"
         }
     });
-
-    function handleSaveForm() {
-        if (!form.validate().hasErrors) {
-            callback(form.values);
-            playAccept();
-        }
-    }
 
     return <Card sx={{display: "inline-flex"}}>
         <Card.Section mr="md" mb={-16}>
@@ -73,7 +66,17 @@ export function UploadBox({rawFile, callback}: { rawFile: File, callback: (form:
                 }
             }} src={URL.createObjectURL(rawFile)} alt="" sx={{color: theme.primaryColor}}/>
         </Card.Section>
-        <form style={{flex: 1}} onSubmit={form.onSubmit((values) => console.log(values))}>
+        <form style={{flex: 1}} onChange={(e) => {
+            e.preventDefault();
+            if (!form.validate().hasErrors) {
+                file.Title = form.values.Title;
+                file.Description = form.values.Description;
+                file.Folder = form.values.Folder;
+                file.NSFW = form.values.NSFW;
+                file.Tags = form.values.Tags;
+            }
+        }
+        }>
             <Group position="apart">
                 <Text size="xs">{rawFile.name}</Text>
                 <Group>
@@ -91,16 +94,12 @@ export function UploadBox({rawFile, callback}: { rawFile: File, callback: (form:
                 autosize
                 {...form.getInputProps("Description")}
             />
-            <Textarea
-                label="Tags"
-                placeholder="Separate tags by commas"
-                maxRows={2}
-                autosize
-                {...form.getInputProps("Tags")}
+            <MultiSelect data={[...retrieveAllTags(posts)]} label="Tags" placeholder="Select or create a tag" searchable creatable
+                getCreateLabel={(t) => `+ ${t}`}
+                         {...form.getInputProps("Tags")}
             />
             <Autocomplete label="Category" placeholder="Enter category here"
-                          data={["Sneed", "Feed"]} {...form.getInputProps("Folder")} />
-            <Button mt="md" fullWidth onClick={handleSaveForm}>Save</Button>
+                          data={retrieveAllFolders(posts)} {...form.getInputProps("Folder")} />
         </form>
     </Card>
 }

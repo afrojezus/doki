@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/Doki.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/en.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/no.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/public/assets/mode_press.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/public/assets/mode_select.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/components/filter-elements.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/components/player-elements.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/booru.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/index.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/tv.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/vr.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/Web/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/Web/next.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/components/grid-item.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/grid-item.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/components/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/components/upload-forms.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/upload-forms.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/_app.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/_app.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/about.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/about.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/api/upload.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/api/upload.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/browser.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/browser.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/files/[Id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/files/[Id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/license.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/license.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/policies.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/policies.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/settings.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/updates.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/updates.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/upload.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/upload.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/utils/date.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/date.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/utils/file.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/file.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/utils/language.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/language.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/utils/name.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/name.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="TypeScript JSX File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="29Fuc7sQRUAVWCJAwYt2QrZcJsH" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "D:/neko/Documents/dev/Doki",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "ts.external.directory.path": "D:\\neko\\Documents\\dev\\Doki\\Mobile\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="npm.Web - dev">
+    <configuration name="Web - dev JavaScript" type="JavascriptDebugType" uri="http://localhost:3000">
+      <method v="2" />
+    </configuration>
+    <configuration name="Mobile - dev" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/Mobile/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="start" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="Web - dev" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/Web/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2">
+        <option name="LaunchBrowser.Before.Run" url="localhost:3000" withDebugger="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="JavaScript Debug.Web - dev JavaScript" />
+      <item itemvalue="npm.Web - dev" />
+      <item itemvalue="npm.Mobile - dev" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="" />
+      <created>1652721231525</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1652721231525</updated>
+      <workItem from="1652721233848" duration="28134000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

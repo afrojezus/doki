@@ -34,7 +34,7 @@ interface PageProps {
 }
 
 
-export async function getServerSideProps({req, res}) {
+export async function getServerSideProps({req, res, locale}) {
     const posts = await FileRepository.findAll({
         include: {
             model: Author,
@@ -44,7 +44,8 @@ export async function getServerSideProps({req, res}) {
     return {
         props: {
             id: getCookie('DokiIdentification', {req, res}) || null,
-            posts
+            posts,
+            messages: (await import(`../../../${locale}.json`)).default
         }
     }
 }
@@ -104,11 +105,19 @@ function Page(props: PageProps) {
     const [ready, setReady] = useState<FormFile[]>([]);
 
     function onDrop(f: File[]) {
+        let _r = [];
+        f.forEach(f => {
+            _r.push({
+                Title: "",
+                Description: "",
+                NSFW: false,
+                File: f,
+                Tags: [],
+                Folder: ""
+            });
+        })
         setFiles(f);
-    }
-
-    function onUploadBoxSave(f: FormFile) {
-        setReady((current) => ([...current, f]));
+        setReady(_r);
     }
 
     function createNewID() {
@@ -128,7 +137,7 @@ function Page(props: PageProps) {
             form.append('File', ready[k].File);
             form.append('Folder', ready[k].Folder);
             form.append('NSFW', ready[k].NSFW ? "1" : "0");
-            form.append('Tags', ready[k].Tags.trim().replaceAll(" ", "_"));
+            form.append('Tags', ready[k].Tags.join(",").trim().replaceAll(" ", "_"));
             form.append('Title', ready[k].Title);
             form.append('Description', ready[k].Description);
             form.append('Id', id.toString());
@@ -220,7 +229,7 @@ function Page(props: PageProps) {
             {(status) => dropzoneChildren(status, theme)}
         </Dropzone>
         <Stack mt="md">
-            {files.map((e, i) => <UploadBox rawFile={e} key={i} callback={onUploadBoxSave}/>)}
+            {files.map((e, i) => <UploadBox rawFile={e} key={i} file={ready[i]} posts={props.posts} />)}
         </Stack>
     </Layout>;
 }

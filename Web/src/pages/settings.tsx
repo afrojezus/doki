@@ -8,7 +8,7 @@ import {
     ColorScheme,
     Group,
     MantineColor,
-    MediaQuery,
+    MediaQuery, MultiSelect,
     ScrollArea,
     Select,
     Stack,
@@ -28,17 +28,19 @@ import {useRouter} from 'next/router';
 import {languages} from "../../utils/language";
 import AuthorRepository from '@server/repositories/AuthorRepository';
 import {formatDate, ParseUnixTime} from 'utils/date';
+import {Item, Value} from "@src/components/filter-elements";
 
 interface PageProps {
     colorScheme: ColorScheme;
     accentColor: MantineColor;
     NSFW: boolean;
     posts: File[];
-    author?: Author
+    author?: Author;
+    filter: string[];
 }
 
 
-export async function getServerSideProps({req, res}) {
+export async function getServerSideProps({req, res, locale}) {
     const posts = await FileRepository.findAll({
         attributes: ["Folder", "Tags"]
     });
@@ -58,8 +60,10 @@ export async function getServerSideProps({req, res}) {
             colorScheme: checkCookies('color-scheme') ? getCookie('color-scheme', {req, res}) : "dark",
             accentColor: checkCookies('accent-color') ? getCookie('accent-color', {req, res}) : "blue",
             nsfw: checkCookies('allow-nsfw-content') ? getCookie('allow-nsfw-content', {req, res}) : true,
+            filter: checkCookies('filtered', {req, res}) ? JSON.parse(getCookie('filtered', {req, res}) as string) : [],
             posts,
-            author
+            author,
+            messages: (await import(`../../../${locale}.json`)).default
         }
     }
 }
@@ -70,6 +74,7 @@ function Page(props: PageProps) {
     const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme);
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [nsfwOn, setNsfw] = useState<boolean>(props.NSFW);
+    const [filter, setFilter] = useState<string[]>(props.filter);
 
     function toggleColorScheme() {
         const newColorScheme = colorScheme === 'dark' ? 'light' : 'dark';
@@ -94,7 +99,8 @@ function Page(props: PageProps) {
         if (props.accentColor !== accentColor) setAccentColor(props.accentColor);
         if (props.NSFW !== nsfwOn) setNsfw(props.NSFW);
         if (props.colorScheme !== colorScheme) setColorScheme(props.colorScheme);
-    }, [props.accentColor, props.NSFW, props.colorScheme]);
+        if (props.filter !== filter) setFilter(props.filter);
+    }, [props.accentColor, props.NSFW, props.colorScheme, props.filter]);
 
     return <Layout aside={
         <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
@@ -147,7 +153,18 @@ function Page(props: PageProps) {
         </Group>
         <Stack>
             <Text size="xs">Content</Text>
-            <Autocomplete placeholder="Enter tags and categories you wish to dismiss" data={[]}/>
+            <MultiSelect data={[...props.posts.map(x => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).map(x => x)]}
+            valueComponent={Value}
+            itemComponent={Item} defaultValue={props.filter}
+            searchable
+            placeholder="Pick a category"
+            label="Which categories of files do you wish to filter from the viewer?"
+                         onChange={(e) => {
+                             setFilter(e)
+                             setCookies('filtered', JSON.stringify(e), {maxAge: 60 * 60 * 24 * 30});
+                         }
+                         }
+            />
             <Group position="apart">
                 <Text size="xs">Allow not safe for work content to be shown on Doki</Text>
                 <Switch checked={nsfwOn} onChange={toggleNSFW} label={nsfwOn ? "On" : "Off"}/>

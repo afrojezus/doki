@@ -429,6 +429,13 @@ const PreM2 = [
     },
 ];
 
+export async function getStaticProps({locale}) {
+    return {
+        props: {
+            messages: (await import(`../../../${locale}.json`)).default
+        }
+    }
+}
 
 function Page() {
     return <Layout aside={

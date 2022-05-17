@@ -1,16 +1,16 @@
 ﻿const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
+    "Jan.",
+    "Feb.",
+    "Mar.",
+    "Apr.",
     "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec"
+    "Jun.",
+    "Jul.",
+    "Aug.",
+    "Sep.",
+    "Oct.",
+    "Nov.",
+    "Dec."
 ];
 
 export function ParseUnixTime(ux: number) {
@@ -18,5 +18,5 @@ export function ParseUnixTime(ux: number) {
 }
 
 export function formatDate(dt: Date) {
-    return `${dt.getDate()}. ${months[dt.getMonth()]}. ${dt.getFullYear()}`;
+    return `${dt.getDate()}. ${months[dt.getMonth()]} ${dt.getFullYear()}`;
 }

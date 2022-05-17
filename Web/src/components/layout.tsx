@@ -18,6 +18,7 @@ import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import Link from 'next/link';
 import {Folder, Home, InfoCircle, Settings, Upload, X} from 'tabler-icons-react';
+import useSound from "use-sound";
 
 import Emoji from './emoji';
 import {useRouter} from 'next/router';
@@ -54,6 +55,7 @@ function Mbar({
     const {data, error} = useSWR(() => `/api/disk`, fetcher);
     const desktop = useMediaQuery('(min-width: 760px)', false);
     const router = useRouter();
+    const [play] = useSound("/assets/mode_press.wav", {volume: 0.5});
 
     if (error) return <Aside.Section>
         <Text>The server is down.</Text>
@@ -62,7 +64,7 @@ function Mbar({
     return <>
         <Aside.Section style={{flexFlow: 'row wrap', display: 'inline-flex'}}>
             <LoadingOverlay visible={!data}/>
-            <Text weight="500">doki</Text><Tooltip label="Work in progress" placement="end"><Badge ml="sm"
+            <Text weight="500" sx={{fontFamily: "Manrope, sans-serif;", fontWeight: 800, lineHeight: 1.75}}>doki</Text><Tooltip label="Work in progress" placement="end"><Badge ml="sm"
                                                                                                    style={{marginTop: 3}}>M2</Badge></Tooltip>
             <div style={{flex: 1}}/>
             {desktop && <><Link href="/" passHref>
@@ -92,7 +94,10 @@ function Mbar({
                     <Menu.Item icon={<Settings size={14}/>}>Settings</Menu.Item>
                 </Link>
                 <Divider/>
-                <Link href="/policies" passHref>
+                <Link href="/modes" passHref>
+                    <Menu.Item onClick={play}>Modes</Menu.Item>
+                </Link>
+                {/*<Link href="/policies" passHref>
                     <Menu.Item>Policies</Menu.Item>
                 </Link>
                 <Link href="/about" passHref>
@@ -100,7 +105,7 @@ function Mbar({
                 </Link>
                 <Link href="/license" passHref>
                     <Menu.Item>License</Menu.Item>
-                </Link>
+                </Link>*/}
                 <Divider/>
                 <Menu.Label>Created by tokumei with <Emoji symbol={String.fromCodePoint(parseInt("2764", 16))}
                                                            label="Love"/>.<br/>{data && `Currently hosting ${((data.totalSpace - data.freeSpace) / 1e3 / 1e3 / 1e3).toFixed(2)} GB of files. ${(data.freeSpace / 1e3 / 1e3 / 1e3).toFixed(2)} GB available.`}
@@ -132,6 +137,7 @@ export default function Layout({children, footer, aside, header, navbar, additio
         styles={{
             main: {
                 background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                transition: "all .375s var(--animation-ease)",
                 ...additionalMainStyle
             },
         }}

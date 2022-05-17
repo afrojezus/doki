@@ -1,0 +1,30 @@
+{
+  "Viewer": {
+    "play": "Spill/paus nåværende media",
+    "skip": "Gå til neste media",
+    "prev": "Gå tilbake til forrige media",
+    "repeat": "Repeter/autospill",
+    "pip": "Bilde-i-bilde modus",
+    "contain": "innehold/strekk ut medien",
+    "help-title": "Hvordan bruke Doki",
+    "help-controls": "Spillerkontrollene (når det er nødvendig) vises i ytterst venstre hjørne. Repeter-knappen kan bytte mellom forutseende eller repeterende spilling.\nFant du noe artig? Avspill/pause-knappen lar deg pause innholdet.",
+    "help-quickdetails": "Nederst til venstre hjørne finner du sjappinformasjon om innholdet.\nHer ligger tittelen, beskrivelsen, opplasteren, filtype osv.",
+    "help-navcard": "Til høyre av hele siden kan du dra frem navigasjonskortet. Dette gjør du ved å enten dra musen til siden, ved høyreklikk eller ved å rulle ned på rullehjulen.\nHer ligger detaljer og kommentarer til innholdet. Navigasjonskartet til resten av siden er også tilstede.",
+    "help-accept": "Forstått",
+    "uploaded-by": "Lastet opp av",
+    "file": "-fil",
+    "views": "har sett dette",
+    "likes": "liker dette",
+    "nc-details": "detaljer",
+    "nc-filesize": "Filstørrelse",
+    "nc-upload-date": "Opplastsdato",
+    "nc-uploader": "Opplaster",
+    "nc-views": "Seere",
+    "nc-category": "Kategori",
+    "nc-file-type": "Filtype",
+    "nc-tags": "tagger",
+    "nc-comment-policy": "Nåværende retningslinje til kommentarer",
+    "nc-comment-policy-message": "Ikke vær en rasshøl.",
+    "nc-upload": "Last opp fil"
+  }
+}

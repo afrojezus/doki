@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
 
+:root {
+    --animation-ease: cubic-bezier(.07, .95, 0, 1);
+}
+
 ::-webkit-scrollbar {
     width: 1px;
 }
@@ -14,6 +18,11 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, .3);
+}
+
+.use-m-font {
+    font-family: Manrope, sans-serif;
+    font-weight: 700;
 }
 
 .player-wrapper {
@@ -79,6 +88,13 @@
 @keyframes shine {
     to {
         background-position: 200% center;
+    }
+}
+
+@keyframes flowDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50%);
     }
 }
 
