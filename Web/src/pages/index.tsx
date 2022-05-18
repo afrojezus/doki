@@ -10,7 +10,7 @@ export async function getServerSideProps() {
             required: true
         }
     });
-    if (!posts) {
+    if (posts.length <= 0) {
         return {
             redirect: {
                 destination: "/browser",
@@ -20,7 +20,7 @@ export async function getServerSideProps() {
     }
     return {
         redirect: {
-            destination: `/files/${posts[~~(Math.random() * posts.length)].Id}`,
+            destination: `/view/${posts[~~(Math.random() * posts.length)].Id}`,
             permanent: false
         }
     };

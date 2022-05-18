@@ -4,5 +4,5 @@
     "Stargazing Chariot",
     "Opaque Sun",
     "Dragonbreath",
-    "Suipiss"
+    "Suipiss",
 ];

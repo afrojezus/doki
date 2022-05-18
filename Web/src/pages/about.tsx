@@ -2,13 +2,13 @@
 import Layout, {Menubar, Tabbar} from '../components/layout';
 import {LinkButton} from "@src/components/buttons";
 
-export async function getStaticProps({locale}) {
+/*export async function getStaticProps({locale}) {
     return {
         props: {
-            messages: (await import(`../../../${locale}.json`)).default
+//            messages: (await import(`../../../${locale}nodemon.json`)).default
         }
     }
-}
+}*/
 
 function Page() {
     return <Layout aside={

@@ -4,7 +4,7 @@ import {
     Button,
     Checkbox,
     Divider,
-    Group,
+    Group, LoadingOverlay,
     MediaQuery,
     ScrollArea,
     Select,
@@ -19,8 +19,7 @@ import GridItem, {SmallGridItem} from '../components/grid-item';
 import Layout, {Menubar, Tabbar} from '../components/layout';
 import SEO from '../components/seo';
 import {Author, File} from "@server/models";
-import FileRepository from "@server/repositories/FileRepository";
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {Edit} from 'tabler-icons-react';
 import {useRouter} from 'next/router';
 import {getExt, retrieveAllFileTypes, retrieveAllTags} from "../../utils/file";
@@ -28,20 +27,24 @@ import Link from "next/link";
 import {checkCookies, getCookie} from "cookies-next";
 import {NextPageContext} from "next";
 import AuthorRepository from "@server/repositories/AuthorRepository";
+import useSWR from "swr";
+import {showNotification} from "@mantine/notifications";
+import {getLocale, LocaleContext} from "@src/locale";
 
 interface PageProps {
-    posts: File[];
+    // posts: File[];
     author: Author;
     filter: string[];
 }
 
 export async function getServerSideProps(nextPage: NextPageContext) {
-    const posts = await FileRepository.findAll({
+    // this is slow as fuck.
+    /*const posts = await FileRepository.findAll({
         include: {
             model: Author,
             required: true
         }
-    });
+    }); */
 
     let author: Author | null;
     try {
@@ -57,23 +60,39 @@ export async function getServerSideProps(nextPage: NextPageContext) {
     }
     return {
         props: {
-            posts, author, messages: (await import(`../../../${nextPage.locale}.json`)).default,
+            // posts,
+            author,
+            // messages: (await import(`../../../${nextPage.locale}nodemon.json`)).default,
             filter: checkCookies('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : []
         }
     };
 }
 
 function SearchInput({onSubmit}) {
+    const locale = useContext(LocaleContext);
     const [searchTerm, setSearchTerm] = useState<string>('');
     return <form onSubmit={(e) => {
         e.preventDefault();
         onSubmit(searchTerm);
-    }}><TextInput value={searchTerm} placeholder="Search" onChange={(v) => setSearchTerm(v.target.value)}/></form>
+    }}><TextInput value={searchTerm} placeholder={`${getLocale(locale).Browser["search"]}`} onChange={(v) => setSearchTerm(v.target.value)}/></form>
+}
+
+const fetcher = async (url) => {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (res.status !== 200) {
+        throw new Error(data.message);
+    }
+    return data as File[];
 }
 
 function Page(props: PageProps) {
     const theme = useMantineTheme();
     const router = useRouter();
+    const locale = useContext(LocaleContext);
+    const { data, error } = useSWR('/api/posts', fetcher);
+    const [noFiles, setNoFiles] = useState<boolean>(false);
     const [sort, setSort] = useState<string>("Time");
     const [onlyUsers, setOnlyUsers] = useState<boolean>(false);
     const [editMode, setEditMode] = useState<boolean>(false);
@@ -102,6 +121,21 @@ function Page(props: PageProps) {
             setType(null);
         }
     }, [router.query]);
+
+    useEffect(() => {
+
+        console.log(data, error);
+        if (error) {
+            showNotification({
+                color: "red",
+                title: "Error loading view",
+                message: error.message
+            });
+        }
+        else {
+            setNoFiles(data === undefined);
+        }
+    }, [data, error]);
 
     function handleSelect(value) {
         setSort(value);
@@ -134,7 +168,8 @@ function Page(props: PageProps) {
 
     return <Layout aside={
         <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
-            <Aside p="md" hiddenBreakpoint="sm" width={{lg: 300}}>
+            <Aside p="md" hiddenBreakpoint="sm" width={{xs: 300, lg: 300}}>
+                <LoadingOverlay visible={noFiles}/>
                 <Menubar/>
                 <SearchInput onSubmit={handleSearch}/>
                 <Accordion mt="md" sx={{
@@ -144,22 +179,22 @@ function Page(props: PageProps) {
                     contentInner: {padding: 0}
                 }} offsetIcon={false} onChange={toggleEditMode} disableIconRotation>
                     <Accordion.Item sx={{border: "none"}} icon={<Edit size={16}/>} styles={{label: {fontSize: 12}}}
-                                    label="Edit mode">
+                                    label={`${getLocale(locale).Browser["edit-mode"]}`}>
                         <Stack>
-                            <Text size="xs">{selected.length} file(s) selected</Text>
-                            <Button disabled={selected.length === 0} variant="light">Edit details</Button>
-                            <Button disabled={selected.length === 0} variant="light" color="red">Delete file(s)</Button>
+                            <Text size="xs">{selected.length}{` ${getLocale(locale).Browser["selected"]}`}</Text>
+                            <Button disabled={selected.length === 0} variant="light">{`${getLocale(locale).Browser["edit-details"]}`}</Button>
+                            <Button disabled={selected.length === 0} variant="light" color="red">{`${getLocale(locale).Browser["delete-files"]}`}</Button>
                         </Stack>
                     </Accordion.Item>
                 </Accordion>
-                <Divider label="view options" mt="sm"/>
-                <Select label="Sort" mt="xs" value={sort} onChange={handleSelect} data={["Time", "Size", "Views"]}/>
-                <Checkbox disabled={!props.author} label="Show only my uploads" mt="sm" checked={onlyUsers}
+                <Divider label={`${getLocale(locale).Browser["view-options"]}`} mt="sm"/>
+                <Select label={`${getLocale(locale).Browser["sort"]}`} mt="xs" value={sort} onChange={handleSelect} data={["Time", "Size", "Views"]}/>
+                <Checkbox disabled={!props.author} label={`${getLocale(locale).Browser["show-only"]}`} mt="sm" checked={onlyUsers}
                           onChange={handleOnlyUser}/>
-                <Divider label="tags" mb="sm" my="sm"/>
                 <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
-                    <Stack spacing={0}>
-                        {retrieveAllTags(props.posts).map((t, i) =>
+                    <Divider label={`${getLocale(locale).Browser["tags"]}`} mb="sm" my="sm"/>
+                    {data && <Stack spacing={0}>
+                        {retrieveAllTags(data).map((t, i) =>
                             <Link href={`/browser?t=${t}`} key={i} passHref>
                                 <Text size="xs" color={theme.colors.blue[4]} sx={{
                                     textDecoration: "none",
@@ -167,10 +202,10 @@ function Page(props: PageProps) {
                                     "&:hover": {textDecoration: "underline"}
                                 }}>{t}</Text>
                             </Link>)}
-                    </Stack>
-                    <Divider label="file types" mb="sm" my="sm"/>
-                    <Stack spacing={0}>
-                        {retrieveAllFileTypes(props.posts).map((t, i) =>
+                    </Stack>}
+                    <Divider label={`${getLocale(locale).Browser["file-types"]}`}mb="sm" my="sm"/>
+                    {data && <Stack spacing={0}>
+                        {retrieveAllFileTypes(data).map((t, i) =>
                             <Link href={`/browser?type=${t}`} key={i} passHref>
                                 <Text size="xs" color={theme.colors.blue[4]} sx={{
                                     textDecoration: "none",
@@ -178,7 +213,7 @@ function Page(props: PageProps) {
                                     "&:hover": {textDecoration: "underline"}
                                 }}>{t}</Text>
                             </Link>)}
-                    </Stack>
+                    </Stack>}
                 </Aside.Section>
                 <Tabbar/>
             </Aside></MediaQuery>}>
@@ -186,8 +221,15 @@ function Page(props: PageProps) {
         <Group>
             {category && <Title mb="md" order={5}>{category}</Title>}
         </Group>
-        {!category && props.posts.find(x => x.Folder) && <SimpleGrid cols={5} mb="md">
-            {props.posts.sort(_sort)
+            {!error && <LoadingOverlay visible={noFiles}/>}
+            {noFiles && <>
+                <Stack>
+                    <Title className="use-m-font fancy-transition1">O.O'</Title>
+                    <Text className="use-m-font fancy-transition1">There's no files here!</Text>
+                </Stack>
+            </>}
+        {!category && data && data.find(x => x.Folder) && <SimpleGrid cols={5} mb="md">
+            {data.sort(_sort)
                 .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
                 .filter((x) => x.Folder !== null).filter(f => !props.filter.includes(f.Folder)).map((x) => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter((x) => x !== null).map((elem, index) =>
                     <SmallGridItem data={elem} key={index}/>)}
@@ -198,7 +240,8 @@ function Page(props: PageProps) {
             {maxWidth: 'sm', cols: 2, spacing: 'sm'},
             {maxWidth: 'xs', cols: 1, spacing: 'sm'},
         ]}>
-            {props.posts
+            {data && data
+                .sort(_sort)
                 .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
                 .filter(f => f.Folder ? !props.filter.includes(f.Folder) : f)
                 .filter(f => category ? f.Folder === category : f)

@@ -1,7 +1,6 @@
 import {
     Accordion,
     Aside,
-    Autocomplete,
     Badge,
     Button,
     Card,
@@ -21,14 +20,14 @@ import {checkCookies, getCookie, setCookies} from 'cookies-next';
 import {Check} from 'tabler-icons-react';
 import Layout, {Menubar, Tabbar} from '../components/layout';
 import SEO from '../components/seo';
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import FileRepository from "@server/repositories/FileRepository";
 import {Author, File} from "@server/models";
-import {useRouter} from 'next/router';
 import {languages} from "../../utils/language";
 import AuthorRepository from '@server/repositories/AuthorRepository';
 import {formatDate, ParseUnixTime} from 'utils/date';
 import {Item, Value} from "@src/components/filter-elements";
+import {getLocale, LocaleContext} from "@src/locale";
 
 interface PageProps {
     colorScheme: ColorScheme;
@@ -37,10 +36,11 @@ interface PageProps {
     posts: File[];
     author?: Author;
     filter: string[];
+    locale: string;
 }
 
 
-export async function getServerSideProps({req, res, locale}) {
+export async function getServerSideProps({req, res}) {
     const posts = await FileRepository.findAll({
         attributes: ["Folder", "Tags"]
     });
@@ -60,21 +60,22 @@ export async function getServerSideProps({req, res, locale}) {
             colorScheme: checkCookies('color-scheme') ? getCookie('color-scheme', {req, res}) : "dark",
             accentColor: checkCookies('accent-color') ? getCookie('accent-color', {req, res}) : "blue",
             nsfw: checkCookies('allow-nsfw-content') ? getCookie('allow-nsfw-content', {req, res}) : true,
+            locale: checkCookies('locale', {req,res}) ? getCookie('locale', {req,res}) : "en",
             filter: checkCookies('filtered', {req, res}) ? JSON.parse(getCookie('filtered', {req, res}) as string) : [],
             posts,
             author,
-            messages: (await import(`../../../${locale}.json`)).default
         }
     }
 }
 
 function Page(props: PageProps) {
     const theme = useMantineTheme();
-    const router = useRouter();
+    const loc = useContext(LocaleContext);
     const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme);
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [nsfwOn, setNsfw] = useState<boolean>(props.NSFW);
     const [filter, setFilter] = useState<string[]>(props.filter);
+    const [locale, setLocale] = useState<string>(props.locale);
 
     function toggleColorScheme() {
         const newColorScheme = colorScheme === 'dark' ? 'light' : 'dark';
@@ -86,6 +87,12 @@ function Page(props: PageProps) {
     function newAccentColor(color: string) {
         setAccentColor(color);
         setCookies('accent-color', color, {maxAge: 60 * 60 * 24 * 30});
+        //router.reload();
+    }
+
+    function newLocale(loc: string) {
+        setLocale(loc);
+        setCookies('locale', loc, {maxAge: 60 * 60 * 24 * 30});
         //router.reload();
     }
 
@@ -121,25 +128,25 @@ function Page(props: PageProps) {
                                     </Badge>
                                 </Group>
                                 <Text size="xs">
-                                    First uploaded {formatDate(ParseUnixTime(props.author.CreationDate))}
+                                    {`${getLocale(loc).Settings["first-uploaded"]} `}{formatDate(ParseUnixTime(props.author.CreationDate))}
                                 </Text>
                                 <Button variant="light" color="blue" fullWidth style={{marginTop: 14}}>
-                                    Download profile
+                                    {`${getLocale(loc).Settings["download-profile"]}`}
                                 </Button>
                                 <Button variant="light" color="blue" fullWidth style={{marginTop: 14}}>
-                                    Import new profile
+                                    {`${getLocale(loc).Settings["import-profile"]}`}
                                 </Button>
                             </Card> :
                             <Card>
-                                <Text size="xs">Profile details will be shown here if you upload</Text>
+                                <Text size="xs">{`${getLocale(loc).Settings["details-desc"]}`}</Text>
                             </Card>
                         }
                     </Stack>
                 </Aside.Section>
                 <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
                     <Stack>
-                        <Button variant="default">Content settings</Button>
-                        <Button variant="default">UI settings</Button>
+                        <Button variant="default">{`${getLocale(loc).Settings["content-settings"]}`}</Button>
+                        <Button variant="default">{`${getLocale(loc).Settings["ui-settings"]}`}</Button>
                     </Stack>
                 </Aside.Section>
                 <Tabbar/>
@@ -147,18 +154,18 @@ function Page(props: PageProps) {
         <SEO title="Settings" siteTitle="Doki" description="Sneed"/>
         <Group>
             <Title order={5}>
-                Settings
+                {`${getLocale(loc).Settings["settings"]}`}
             </Title>
             <div style={{flex: 1}}/>
         </Group>
         <Stack>
-            <Text size="xs">Content</Text>
+            <Text size="xs">{`${getLocale(loc).Settings["content"]}`}</Text>
             <MultiSelect data={[...props.posts.map(x => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).map(x => x)]}
             valueComponent={Value}
             itemComponent={Item} defaultValue={props.filter}
             searchable
             placeholder="Pick a category"
-            label="Which categories of files do you wish to filter from the viewer?"
+            label={`${getLocale(loc).Settings["filter-label"]}`}
                          onChange={(e) => {
                              setFilter(e)
                              setCookies('filtered', JSON.stringify(e), {maxAge: 60 * 60 * 24 * 30});
@@ -166,25 +173,25 @@ function Page(props: PageProps) {
                          }
             />
             <Group position="apart">
-                <Text size="xs">Allow not safe for work content to be shown on Doki</Text>
-                <Switch checked={nsfwOn} onChange={toggleNSFW} label={nsfwOn ? "On" : "Off"}/>
+                <Text size="xs">{`${getLocale(loc).Settings["nsfw-label"]}`}</Text>
+                <Switch checked={nsfwOn} onChange={toggleNSFW} label={nsfwOn ? getLocale(loc).Settings["on"] : getLocale(loc).Settings["off"]}/>
             </Group>
             <Accordion>
-                <Accordion.Item label="Delete profile">
+                <Accordion.Item label={`${getLocale(loc).Settings["delete-profile-label"]}`}>
                     <Group position="apart">
                         <Text size="xs">By deleting your profile on Doki, you also risk deleting all of your
                             uploads.</Text>
-                        <Button variant="light" color="red">Delete profile</Button>
+                        <Button variant="light" color="red">{`${getLocale(loc).Settings["delete-profile-label"]}`}</Button>
                     </Group>
                 </Accordion.Item>
             </Accordion>
-            <Text size="xs">UI</Text>
-            <Text size="xs">Language (Beta)</Text>
-            <Select value="English" data={languages}/>
-            <Text size="xs">Dark mode</Text>
+            <Text size="xs">{`${getLocale(loc).Settings["ui"]}`}</Text>
+            <Text size="xs">{`${getLocale(loc).Settings["language-label"]}`}</Text>
+            <Select value={locale} data={languages} onChange={newLocale}/>
+            <Text size="xs">{`${getLocale(loc).Settings["dark-mode"]}`}</Text>
             <Switch checked={colorScheme === 'dark'} onChange={toggleColorScheme}
                     label={colorScheme === 'dark' ? "On" : "Off"}/>
-            <Text size="xs">Accent color</Text>
+            <Text size="xs">{`${getLocale(loc).Settings["accent-color"]}`}</Text>
             <Group>
                 <Button sx={{transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)"}}
                         onClick={() => newAccentColor("blue")} color="blue" radius="xl">

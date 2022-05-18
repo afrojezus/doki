@@ -10,7 +10,7 @@ import {GetServerSidePropsContext} from 'next';
 import {getCookie} from 'cookies-next';
 import {useEffect, useState} from 'react';
 import {useColorScheme} from "@mantine/hooks";
-import {NextIntlProvider} from "next-intl";
+import {LocaleContext, messages} from "@src/locale";
 
 NProgress.configure({showSpinner: false});
 
@@ -38,9 +38,12 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
             <Head>
                 <title>Doki</title>
                 <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width"/>
+                <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+                <link rel="manifest" href="/manifest.webmanifest" />
+                <meta name="theme-color" content="#000000" />
             </Head>
 
-            <NextIntlProvider messages={pageProps.messages}>
+            <LocaleContext.Provider value={{locale, messages}}>
             <MantineProvider
                 withGlobalStyles
                 withNormalizeCSS
@@ -53,7 +56,7 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
                     <Component {...pageProps} />
                 </NotificationsProvider>
             </MantineProvider>
-            </NextIntlProvider>
+            </LocaleContext.Provider>
         </>
     );
 }

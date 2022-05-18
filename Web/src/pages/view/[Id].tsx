@@ -3,7 +3,7 @@
     Aside,
     Box,
     Button,
-    Card, Divider,
+    Card,
     Group,
     Modal,
     Paper,
@@ -28,7 +28,7 @@ import {
     Volume3
 } from 'tabler-icons-react';
 import {showNotification} from '@mantine/notifications';
-import {useEffect, useState} from 'react';
+import {useContext, useEffect, useState} from 'react';
 import {checkCookies, getCookie, setCookies} from 'cookies-next';
 import {CommentBox} from '../../components/comments';
 import Layout, {Menubar, Tabbar} from '../../components/layout';
@@ -38,10 +38,10 @@ import {
     displayFilename,
     getExt,
     onlyGetMedia,
-    onlyGetVideo,
+    onlyGetVideo, pictureFormats,
     playableFormats,
     random,
-    random2, retrieveAllFileTypes, retrieveAllTags
+    random2, videoFormats,
 } from "../../../utils/file";
 import dynamic from 'next/dynamic';
 import FileRepository from "@server/repositories/FileRepository";
@@ -53,6 +53,7 @@ import {useMediaQuery} from '@mantine/hooks';
 import {useLongPress} from "../../../utils/react";
 import {QuickDetails, ContentSlide} from "@src/components/player-elements";
 import Link from "next/link";
+import {getLocale, LocaleContext} from "@src/locale";
 
 interface PageProps {
     post: File;
@@ -91,7 +92,7 @@ export async function getServerSideProps(nextPage: NextPageContext) {
                 loop: checkCookies('player-loop', nextPage) ? getCookie('player-loop', nextPage) : true,
                 firstTime: checkCookies('first-time', nextPage) ? getCookie('first-time', nextPage) : true,
                 filter: checkCookies('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : [],
-                messages: (await import(`../../../${nextPage.locale}.json`)).default
+            //    messages: (await import(`../../../${nextPage.locale}nodemon.json`)).default
             }
         };
     } catch (e) {
@@ -106,7 +107,7 @@ export async function getServerSideProps(nextPage: NextPageContext) {
 
 function Page(props: PageProps) {
     const router = useRouter();
-
+    const locale = useContext(LocaleContext);
     const theme = useMantineTheme();
     const desktop = useMediaQuery('(min-width: 760px)', false);
 
@@ -138,10 +139,10 @@ function Page(props: PageProps) {
         if (previous.length === _m.length) {
             // reset seen
             setPrevious([]);
-            return router.push(`/files/${random2(_m).Id}`);
+            return router.push(`/view/${random2(_m).Id}`);
         }
         const _n = _m.filter(x => !previous.includes(x.Id));
-        return router.push(`/files/${random2(_n).Id}`);
+        return router.push(`/view/${random2(_n).Id}`);
     }
 
     useEffect(() => {
@@ -192,7 +193,7 @@ function Page(props: PageProps) {
         debounce(() => trigger(event));
     }*/
 
-    function handleMouseActivity(event) {
+    function handleMouseActivity() {
         if (lastTimeout) clearTimeout(lastTimeout);
         setHoveringPlayer(true);
         if (hidden && isPlayable && !audioFormats.includes(getExt(current.FileURL))) {
@@ -221,7 +222,11 @@ function Page(props: PageProps) {
         paddingRight: hidden ? 16 : undefined,
         transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)"
     }}>
-        <SEO video={current.FileURL} image={current.Thumbnail} type="video"
+        <SEO video={`/${current.FileURL}`} image={`/${current.Thumbnail}`}
+             audio={`/${current.FileURL}`}
+             type={videoFormats.includes(getExt(current.FileURL)) ? "video" :
+                audioFormats.includes(getExt(current.FileURL)) ? "audio" :
+                    pictureFormats.includes(getExt(current.FileURL)) ? "image" : "website"}
             title={current ? displayFilename(current) : "Viewer"} siteTitle="Doki"
             description={current ? current.Description : "Sneed"} />
         <div className="content-wrapper"
@@ -323,15 +328,15 @@ function Page(props: PageProps) {
                             step={0.01} sx={{ minWidth: 100 }} />
                     </Group>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label="Go back to previous medium"><ActionIcon
+                        withArrow label={getLocale(locale).Viewer["prev"]}><ActionIcon
                             onClick={() => router.back()}><PlayerSkipBack size={24} /></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label="Play/pause the current medium"><ActionIcon
+                        withArrow label={getLocale(locale).Viewer["play"]}><ActionIcon
                             onClick={() => setPlaying(!playing)}>{playing ? <PlayerPause size={24} /> :
                                 <PlayerPlay size={24} />}</ActionIcon>
                     </Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label="Repeat/autoplay"><ActionIcon onClick={() => {
+                        withArrow label={getLocale(locale).Viewer["repeat"]}><ActionIcon onClick={() => {
                             showNotification({
                                 message: repeat ? "No longer repeating. Autoplay enabled." : "Autoplay disabled. The media will repeat.",
                                 icon: repeat ? <Repeat size={24} /> : <RepeatOff size={24} />,
@@ -342,13 +347,13 @@ function Page(props: PageProps) {
                             setRepeat(!repeat);
                         }}>{repeat ? <Repeat size={24} /> : <RepeatOff size={24} />}</ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label="Go to next medium"><ActionIcon onClick={handleNewFile}><PlayerSkipForward
+                        withArrow label={getLocale(locale).Viewer["skip"]}><ActionIcon onClick={handleNewFile}><PlayerSkipForward
                             size={24} /></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label="Picture-in-picture mode"><ActionIcon onClick={handlePiP}><PictureInPicture
+                        withArrow label={getLocale(locale).Viewer["pip"]}><ActionIcon onClick={handlePiP}><PictureInPicture
                             size={24} /></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label="Contain/cover the medium"><ActionIcon onClick={handleObjectFit}><Resize
+                        withArrow label={getLocale(locale).Viewer["contain"]}><ActionIcon onClick={handleObjectFit}><Resize
                             size={24} /></ActionIcon></Tooltip>
                     <ActionIcon color={firstTime ? "blue" : undefined} onClick={showHelp}><Help size={24} /></ActionIcon>
                 </Stack>
@@ -370,47 +375,47 @@ function Page(props: PageProps) {
                 }), ...(hidden && { opacity: 0, right: -100 })
             }} width={{ lg: 300 }}>
             <Menubar closeFunc={() => setHidden(true)} />
-            <Text size="xs" weight="500">details</Text>
+            <Text size="xs" weight="500">{getLocale(locale).Viewer["nc-details"]}</Text>
             <Aside.Section my="xs" mb="xs">
                 <Stack>
                     <Stack spacing="xs">
                         <Text size="sm">{(current.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>Filesize</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-filesize"]}</Text>
                     </Stack>
                     <Stack spacing="xs">
                         <Text size="sm">{formatDate(ParseUnixTime(current.UnixTime))}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>Upload date</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-upload-date"]}</Text>
                     </Stack>
                     <Stack spacing="xs">
                         <Text size="sm">{current.Author.Name}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>Uploader</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-uploader"]}</Text>
                     </Stack>
                     <Stack spacing="xs">
                         <Text size="sm">{current.Views}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>Views</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-views"]}</Text>
                     </Stack>
                     {current.Folder && <Stack spacing="xs">
                         <Text size="sm">{current.Folder}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>Category</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-category"]}</Text>
                     </Stack>}
                     <Stack spacing="xs">
                         <Text size="sm">{getExt(current.FileURL)}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>File type</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-file-type"]}</Text>
                     </Stack>
                 </Stack>
             </Aside.Section>
-            <Text mt="xs" size="xs" weight="500">tags</Text>
+            <Text mt="xs" size="xs" weight="500">{getLocale(locale).Viewer["nc-tags"]}</Text>
             <Aside.Section mt="xs" mb="md">
                 <Stack spacing={0}>
                     {current.Tags ? current.Tags.split(",").map((t, i) =>
                         <Link href={`/browser?t=${t}`} key={i} passHref>
                             <Text size="xs" color={theme.colors.blue[4]} sx={{textDecoration: "none", cursor: "pointer", "&:hover": {textDecoration: "underline"}}}>{t}</Text>
-                        </Link>) : <Text size="xs">None</Text>}
+                        </Link>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
                 </Stack>
             </Aside.Section>
             <Card mb="sm">
-                <Text size="xs" weight={500}>Current comment policy</Text>
-                <Text size="xs">Don't be a cunt</Text>
+                <Text size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
+                <Text size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
             </Card>
             <CommentBox />
             <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
@@ -419,7 +424,7 @@ function Page(props: PageProps) {
         </Aside>
 
 
-        <Modal title="How to use Doki" opened={helpOpen} onClose={() => setHelpOpen(false)}>
+        <Modal title={getLocale(locale).Viewer["help-title"]} opened={helpOpen} onClose={() => setHelpOpen(false)}>
             <Paper mb="md" shadow="md" sx={{ display: "flex", padding: 16 }}>
                 <Stack sx={{
                     margin: "auto"
@@ -459,10 +464,7 @@ function Page(props: PageProps) {
                 </Stack>
             </Paper>
             <Text size="xs">
-                Player controls (when applicable) are located in the top-left corner, the repeat button can switch
-                between continuous or looped playback.
-                <br />
-                Found a funny moment? The play/pause button lets you pause the content.
+                {getLocale(locale).Viewer["help-controls"]}
             </Text>
             <Paper my="md" shadow="md" sx={{ display: "flex", padding: 16 }}>
                 {current && <QuickDetails current={current} isPlayable={isPlayable} progress={progress} sx={{
@@ -470,9 +472,7 @@ function Page(props: PageProps) {
                 }} />}
             </Paper>
             <Text size="xs">
-                Bottom-left corner contains quick details of what you're looking at.
-                <br />
-                Title of the file, description, uploader, file-type and view count is stored here.
+                {getLocale(locale).Viewer["help-quickdetails"]}
             </Text>
             <Paper my="md" shadow="md" sx={{ display: "flex", overflow: "hidden" }}>
                 <Box sx={{ flex: 1, background: "rgba(0,0,0,.1)" }}>
@@ -504,17 +504,13 @@ function Page(props: PageProps) {
                 </Paper>
             </Paper>
             <Text mb="md" size="xs">
-                Right side of the site is the navigation card, this comes out of sight when you're watching content, but
-                can be retrieved through either moving your mouse to the right edge,
-                right-clicking anywhere, or scrolling downwards.
-                <br />
-                In this page it contains full details and comments for the content. The sitemap is located here.
+                {getLocale(locale).Viewer["help-navcard"]}
             </Text>
             <Button fullWidth onClick={() => {
                 setFirstTime(false);
                 setHelpOpen(false);
             }}>
-                Understood
+                {getLocale(locale).Viewer["help-accept"]}
             </Button>
         </Modal>
     </Layout>;

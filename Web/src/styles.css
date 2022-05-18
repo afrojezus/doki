@@ -57,6 +57,10 @@
     height: 100vh !important;
 }
 
+.fancy-transition1 {
+    animation: flowDown .375s var(--animation-ease);
+}
+
 .rainbow {
     background: linear-gradient(to right, #CF0000 0%, #FFF700 18%, #2BFF00 38%, #00FFDD 55%, #5D00FF 76%, #E600FF 90%, #CF0000 100%);
     background-size: 200% auto;

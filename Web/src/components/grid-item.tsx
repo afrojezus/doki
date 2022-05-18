@@ -9,7 +9,7 @@ import {
     ThemeIcon,
     Image,
     useMantineTheme,
-    Center, Stack
+    Stack
 } from "@mantine/core";
 import {File as FileIcon, Folder} from "tabler-icons-react";
 import Link from "next/link";
@@ -73,7 +73,7 @@ function GridItem({
                 onSelect(data);
             return;
         } else {
-            router.push(`/files/${data.Id}`);
+            router.push(`/view/${data.Id}`);
         }
     }} shadow="md" withBorder>
 

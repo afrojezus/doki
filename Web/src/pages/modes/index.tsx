@@ -1,10 +1,9 @@
 import Layout from "@src/components/layout";
 import SEO from "@src/components/seo";
 import {
-    ActionIcon, Button,
+    ActionIcon,
     Center,
     Container,
-    Group,
     Paper,
     SimpleGrid,
     Stack,
@@ -12,21 +11,16 @@ import {
     Title, UnstyledButton,
     useMantineTheme
 } from "@mantine/core";
-import {ArrowBack, DeviceTv, Friends, Photo} from "tabler-icons-react";
+import {ArrowBack, DeviceTv, Friends} from "tabler-icons-react";
 import {useRouter} from "next/router";
 import useSound from "use-sound";
-
-export async function getStaticProps({locale}) {
-    return {
-        props: {
-            messages: (await import(`../../../${locale}.json`)).default
-        }
-    }
-}
+import {useContext} from "react";
+import {getLocale, LocaleContext} from "@src/locale";
 
 function Page() {
     const router = useRouter();
     const theme = useMantineTheme();
+    const locale = useContext(LocaleContext);
     const [play] = useSound("/assets/mode_select.wav", {volume: 0.5});
 
     function handleTV() {
@@ -65,10 +59,10 @@ function Page() {
 
             </Paper>
             <Center inline>
-                <Title sx={{fontFamily: "Manrope, sans-serif;", fontWeight: 800, animation: "flowDown 6s var(--animation-ease)", fontSize: "4em", zIndex: 3}}>Modes</Title>
+                <Title sx={{fontFamily: "Manrope, sans-serif;", fontWeight: 800, animation: "flowDown 6s var(--animation-ease)", fontSize: "4em", zIndex: 3}}>{getLocale(locale).Modes["modes"]}</Title>
             </Center>
             <Stack>
-                <Title className="use-m-font" sx={{animation: "flowDown 7s var(--animation-ease)"}} order={4}>Welcome to modes, this is where you can choose a specialized mode of Doki to enhance your experience.</Title>
+                <Title className="use-m-font" sx={{animation: "flowDown 7s var(--animation-ease)"}} order={4}>{getLocale(locale).Modes["modes-desc"]}</Title>
 
                 <SimpleGrid cols={3} sx={{animation: "flowDown 4s var(--animation-ease)"}}>
                     <UnstyledButton onClick={handleTV}>
@@ -77,14 +71,10 @@ function Page() {
                             <DeviceTv size={150} style={{margin: "auto", color: "black"}} />
                         </Paper>
                         <Text size="xl" className="use-m-font">
-                            TV
+                            {getLocale(locale).Modes["tv"]}
                         </Text>
                         <Text className="use-m-font">
-                            Experience
-                            a binge-worthy
-                            stream of content
-                            with a layout
-                            tailored for your TV
+                            {getLocale(locale).Modes["tv-desc"]}
                         </Text>
                     </Stack>
                     </UnstyledButton>
@@ -96,14 +86,10 @@ function Page() {
                             </Paper>
                         </Paper>
                         <Text size="xl" className="use-m-font">
-                            VR
+                            {getLocale(locale).Modes["vr"]}
                         </Text>
                         <Text className="use-m-font">
-                            Transcend
-                            all dimensions
-                            with this layout
-                            exclusively designed
-                            to work with VR headsets
+                            {getLocale(locale).Modes["vr-desc"]}
                         </Text>
                     </Stack>
                     </UnstyledButton>
@@ -113,10 +99,10 @@ function Page() {
                             <Friends size={150} style={{margin: "auto", color: "black"}} />
                         </Paper>
                         <Text size="xl" className="use-m-font">
-                            Streamshare
+                            {getLocale(locale).Modes["ss"]}
                         </Text>
                         <Text className="use-m-font">
-                            Stream your session to your friends and watch together
+                            {getLocale(locale).Modes["ss-desc"]}
                         </Text>
                     </Stack>
                     </UnstyledButton>

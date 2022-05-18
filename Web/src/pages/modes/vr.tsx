@@ -1,30 +1,15 @@
 import {useRouter} from "next/router";
 import {
-    ActionIcon,
-    Center,
-    Container,
-    Paper,
-    SimpleGrid,
-    Stack, Text,
-    Title,
-    UnstyledButton,
-    useMantineTheme
+    ActionIcon
 } from "@mantine/core";
 import Layout from "@src/components/layout";
 import SEO from "@src/components/seo";
-import {ArrowBack, DeviceTv, Photo} from "tabler-icons-react";
+import {ArrowBack} from "tabler-icons-react";
 
-export async function getStaticProps({locale}) {
-    return {
-        props: {
-            messages: (await import(`../../../${locale}.json`)).default
-        }
-    }
-}
 
 function Page() {
     const router = useRouter();
-    const theme = useMantineTheme();
+    // const theme = useMantineTheme();
 
     return <Layout>
         <SEO title="VR" siteTitle="Doki"

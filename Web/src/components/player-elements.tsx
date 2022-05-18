@@ -13,26 +13,27 @@ import {
     Title
 } from "@mantine/core";
 import {audioFormats, displayFilename, getExt, pictureFormats, playableFormats} from "../../utils/file";
-import {createRef, useEffect, useState} from "react";
+import {createRef, useContext, useEffect, useState} from "react";
 import ReactPlayer from "react-player";
 import {showNotification} from "@mantine/notifications";
 import {File as FileIcon} from "tabler-icons-react";
 import {LinkButton} from "@src/components/buttons";
+import {getLocale, LocaleContext} from "@src/locale";
 
 export function QuickDetails({ sx, full = false, current, isPlayable, progress, children = undefined }) {
+    const locale = useContext(LocaleContext);
     return <Stack sx={sx}>
         <Title order={5} className="rainbow">{displayFilename(current)}</Title>
         {current.Description && <Text color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text>}
         <Group>
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>Uploaded
-                by {current.Author.Name}</Text>
+            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{`${getLocale(locale).Viewer["uploaded-by"]} `}{current.Author.Name}</Text>
             <Space />
             <Text size="xs" color={isPlayable && full ? "white" : undefined}
-                  weight={500}>{getExt(current.FileURL)}-file</Text>
+                  weight={500}>{getExt(current.FileURL)}{getLocale(locale).Viewer["file"]}</Text>
             <Space />
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{current.Views} views</Text>
+            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{current.Views}{` ${getLocale(locale).Viewer["views"]}`}</Text>
             <Space />
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{current.Likes} likes</Text>
+            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{current.Likes}{` ${getLocale(locale).Viewer["likes"]}`}</Text>
         </Group>
         <Progress radius={0} size="sm" value={progress.played * 100} styles={{
             root: {
@@ -60,8 +61,7 @@ export function ContentSlide({
                           onProgress,
                           pip,
                           pipCallback,
-                          objFit,
-                            TV = false
+                          objFit
                       }) {
     const [player, setPlayer] = useState<ReactPlayer>(null);
     const audioVisualizer = createRef<HTMLVideoElement>();

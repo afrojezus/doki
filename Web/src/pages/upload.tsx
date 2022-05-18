@@ -1,7 +1,6 @@
 import {
     ActionIcon,
     Aside,
-    Badge,
     Button,
     Card,
     Divider,
@@ -9,7 +8,6 @@ import {
     MantineTheme,
     MediaQuery,
     ScrollArea,
-    Space,
     Stack,
     Text,
     Title,
@@ -31,10 +29,11 @@ import {useRouter} from 'next/router';
 interface PageProps {
     id: number;
     posts: OBJ[];
+    locale: string;
 }
 
 
-export async function getServerSideProps({req, res, locale}) {
+export async function getServerSideProps({req, res}) {
     const posts = await FileRepository.findAll({
         include: {
             model: Author,
@@ -45,7 +44,7 @@ export async function getServerSideProps({req, res, locale}) {
         props: {
             id: getCookie('DokiIdentification', {req, res}) || null,
             posts,
-            messages: (await import(`../../../${locale}.json`)).default
+         //   messages: (await import(`../../../${locale}nodemon.json`)).default
         }
     }
 }
@@ -108,7 +107,7 @@ function Page(props: PageProps) {
         let _r = [];
         f.forEach(f => {
             _r.push({
-                Title: "",
+                Title: f.name,
                 Description: "",
                 NSFW: false,
                 File: f,
@@ -153,7 +152,7 @@ function Page(props: PageProps) {
             console.log(user);
             showNotification({
                 title: `Uploaded all ${ready.length} file(s)`,
-                message: "They should show up when you browse for files now.",
+                message: "They should show up when you browse for view now.",
                 color: "green"
             })
             if (props.id === null || props.id === undefined) {
@@ -200,10 +199,8 @@ function Page(props: PageProps) {
                 <Divider label="Upload queue" my="md" size="xs"/>
                 <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
                     {files.map((e, i) => <Card mb="md" key={i}>
-                        <Text size="xs" weight={500}>{e.name}</Text>
                         <Group position="apart">
-                            {ready.find(x => x.File === e) && <Badge color="green">Ready</Badge>}
-                            <Space/>
+                        <Text size="xs" weight={500}>{e.name}</Text>
                             <ActionIcon onClick={() => {
                                 setFiles([...files.filter(x => x !== e)]);
                                 setReady([...ready.filter(x => x.File !== e)])

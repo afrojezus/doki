@@ -1,41 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Doki.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/en.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/no.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/public/assets/mode_press.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/public/assets/mode_select.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/src/components/filter-elements.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/src/components/player-elements.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/booru.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/index.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/tv.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Web/src/pages/modes/vr.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/Web/.gitignore" afterDir="false" />
+    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="added modes, restored random-algorithm from original&#10;&#10;alongside many incremental changes">
+      <change afterPath="$PROJECT_DIR$/Web/src/locale/cn.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/locale/de.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/locale/fr.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/locale/index.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/locale/jp.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/locale/ru.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Web/src/locale/ua.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/locale/en.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/Web/next.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/no.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/locale/no.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/models/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/server/models/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/components/grid-item.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/grid-item.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/components/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/components/upload-forms.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/upload-forms.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/components/player-elements.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/player-elements.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/components/seo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/seo.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/_app.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/_app.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/about.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/about.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/api/upload.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/api/upload.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/api/posts.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/api/posts.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/browser.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/browser.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/files/[Id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/files/[Id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/files/[Id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/view/[Id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/license.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/license.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/modes/booru.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/modes/booru.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/modes/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/modes/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/modes/tv.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/modes/tv.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/modes/vr.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/modes/vr.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/policies.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/policies.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/settings.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/updates.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/updates.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/upload.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/upload.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/utils/date.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/date.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/utils/file.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/file.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/tsconfig.server.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/tsconfig.server.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/utils/language.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/language.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/utils/name.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/utils/name.ts" afterDir="false" />
     </list>
@@ -70,10 +73,15 @@
     "last_opened_file_path": "D:/neko/Documents/dev/Doki",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "editor.preferences.fonts.default",
-    "ts.external.directory.path": "D:\\neko\\Documents\\dev\\Doki\\Mobile\\node_modules\\typescript\\lib",
+    "ts.external.directory.path": "D:\\neko\\Documents\\dev\\Doki\\Web\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\neko\Documents\dev\Doki\Web\src\locale" />
+    </key>
+  </component>
   <component name="RunManager" selected="npm.Web - dev">
     <configuration name="Web - dev JavaScript" type="JavascriptDebugType" uri="http://localhost:3000">
       <method v="2" />
@@ -114,7 +122,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1652721231525</updated>
-      <workItem from="1652721233848" duration="28134000" />
+      <workItem from="1652721233848" duration="28520000" />
+      <workItem from="1652878673418" duration="18696000" />
     </task>
     <servers />
   </component>
@@ -131,6 +140,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="added modes, restored random-algorithm from original&#10;&#10;alongside many incremental changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="added modes, restored random-algorithm from original&#10;&#10;alongside many incremental changes" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

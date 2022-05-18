@@ -7,9 +7,10 @@ interface SEOProps {
     type?: string;
     image?: string;
     video?: string;
+    audio?: string;
 }
 
-export default function SEO({description, title, siteTitle, type = "website", image = "", video = ""}: SEOProps) {
+export default function SEO({description, title, siteTitle, type = "website", image = "", video = "", audio = ""}: SEOProps) {
     return <Head>
         <title>{`${title} - ${siteTitle}`}</title>
         <meta name="description" content={description}/>
@@ -17,6 +18,7 @@ export default function SEO({description, title, siteTitle, type = "website", im
         <meta property="og:title" content={title}/>
         <meta property="og:image" content={image}/>
         <meta property="og:video" content={video}/>
+        <meta property="og:audio" content={audio}/>
         <meta property="og:description" content={description}/>
         <meta property="og:site_name" content={siteTitle}/>
         <meta property="twitter:card" content="summary"/>

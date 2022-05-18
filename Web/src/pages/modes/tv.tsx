@@ -1,21 +1,18 @@
 import {useRouter} from "next/router";
 import {
-    ActionIcon, Aside, Autocomplete, Badge, Box, Button, Card,
-    Center,
-    Container, Group, Image, Modal,
-    Paper, ScrollArea,
-    SimpleGrid, Slider,
-    Stack, Text, Textarea, TextInput,
+    ActionIcon, Aside, Badge, Box,Group, Image,
+     ScrollArea,
+    Slider,
+    Stack, Text,
     Title, Tooltip,
     UnstyledButton,
     useMantineTheme
 } from "@mantine/core";
-import Layout, {Menubar, Tabbar} from "@src/components/layout";
+import Layout from "@src/components/layout";
 import SEO from "@src/components/seo";
 import {
     ArrowBack,
-    DeviceTv, Help,
-    Photo, PictureInPicture,
+    PictureInPicture,
     PlayerPause,
     PlayerPlay,
     PlayerSkipBack, PlayerSkipForward,
@@ -31,7 +28,6 @@ import {audioFormats, getExt, onlyGetMedia, onlyGetVideo, playableFormats, rando
 import {ContentSlide, QuickDetails} from "@src/components/player-elements";
 import {showNotification} from "@mantine/notifications";
 import {useEffect, useState} from "react";
-import {useLongPress} from "../../../utils/react";
 
 interface PageProps {
     posts: File[];
@@ -59,7 +55,7 @@ export async function getServerSideProps(nextPage: NextPageContext) {
                 loop: checkCookies('player-loop', nextPage) ? getCookie('player-loop', nextPage) : true,
                 firstTime: checkCookies('first-time', nextPage) ? getCookie('first-time', nextPage) : true,
                 filter: checkCookies('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : [],
-                messages: (await import(`../../../${nextPage.locale}.json`)).default
+               // messages: (await import(`../../../${nextPage.locale}nodemon.json`)).default
             }
         };
     } catch (e) {
@@ -82,11 +78,8 @@ function Page(props: PageProps) {
 
     const [hidden, setHidden] = useState(true);
     const [hoveringPlayer, setHoveringPlayer] = useState(false);
-    const longPress = useLongPress(() => setHidden(true), 500);
     const [lastTimeout, setNewTimeout] = useState<NodeJS.Timeout>(null);
-    const [isPlayable, setPlayable] = useState(true);
-    const [helpOpen, setHelpOpen] = useState(false);
-    const [firstTime, setFirstTime] = useState(props.firstTime);
+    const [isPlayable] = useState(true);
 
     const [volume, setVolume] = useState<number>(parseFloat(String(props.volume)));
     const [muted, setMuted] = useState(props.muted);
@@ -118,7 +111,7 @@ function Page(props: PageProps) {
         setPlaying(!playing);
         setCurrent(e);
         setVisualizer(random(props.posts,onlyGetVideo));
-        // router.push(`/files/${random(props.posts, onlyGetMedia).Id}`);
+        // router.push(`/view/${random(props.posts, onlyGetMedia).Id}`);
     }
 
     useEffect(() => {
@@ -141,10 +134,6 @@ function Page(props: PageProps) {
         setCookies('player-loop', repeat, { maxAge: 60 * 60 * 24 * 30 });
     }, [repeat]);
 
-    useEffect(() => {
-        setCookies('first-time', firstTime, { maxAge: 60 * 60 * 24 * 30 });
-    }, [firstTime]);
-
 
     /*function handleScroll(event) {
         function trigger(e) {
@@ -158,7 +147,7 @@ function Page(props: PageProps) {
         debounce(() => trigger(event));
     }*/
 
-    function handleMouseActivity(event) {
+    function handleMouseActivity() {
         if (lastTimeout) clearTimeout(lastTimeout);
         setHoveringPlayer(true);
         if (hidden && isPlayable && !audioFormats.includes(getExt(current.FileURL))) {
@@ -209,7 +198,7 @@ function Page(props: PageProps) {
                  }
              }}
         >
-            {current && <ContentSlide TV visualizer={visualizer} objFit={objFit} pipCallback={handlePiP} pip={pip}
+            {current && <ContentSlide visualizer={visualizer} objFit={objFit} pipCallback={handlePiP} pip={pip}
                                  onProgress={(p) => setProgress(p)} onClick={handleNewFile} data={`/${current.FileURL}`}
                                  isSelected={playing} muted={muted} volume={volume}
                                  repeat={repeat} onEnded={handleNewFile}
