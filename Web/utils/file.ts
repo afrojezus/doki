@@ -50,3 +50,6 @@ export function retrieveAllFolders(files: File[]) {
 export function retrieveAllFileTypes(files: File[]) {
     return files.map(x => getExt(x.FileURL)).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).map(x => x);
 }
+
+export const toMatrix = (arr: any[], width: number) => arr.reduce((rows: any[], key: any[], index: number) => (index % width === 0 ? rows.push([key])
+    : rows[rows.length - 1].push(key)) && rows, []);

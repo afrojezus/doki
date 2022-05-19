@@ -31,7 +31,7 @@ import {showNotification} from '@mantine/notifications';
 import {useContext, useEffect, useState} from 'react';
 import {checkCookies, getCookie, setCookies} from 'cookies-next';
 import {CommentBox} from '../../components/comments';
-import Layout, {Menubar, Tabbar} from '../../components/layout';
+import Layout, {BottomNavBar, Menubar, Tabbar} from '../../components/layout';
 import SEO from '../../components/seo';
 import {
     audioFormats,
@@ -110,13 +110,14 @@ function Page(props: PageProps) {
     const locale = useContext(LocaleContext);
     const theme = useMantineTheme();
     const desktop = useMediaQuery('(min-width: 760px)', false);
+    const mobile = useMediaQuery('only screen and (max-width: 768px)', false);
 
     const [previous, setPrevious] = useState<number[]>([]);
     const [current, setCurrent] = useState<File>(props.post);
     const [visualizer, setVisualizer] = useState<File>(random(props.ids, onlyGetVideo));
 
     const [hidden, setHidden] = useState(true);
-    const [hoveringPlayer, setHoveringPlayer] = useState(false);
+    const [hoveringPlayer, setHoveringPlayer] = useState(true);
     const longPress = useLongPress(() => setHidden(true), 500);
     const [lastTimeout, setNewTimeout] = useState<NodeJS.Timeout>(null);
     const [isPlayable, setPlayable] = useState(true);
@@ -180,6 +181,12 @@ function Page(props: PageProps) {
         }
     }, [current, isPlayable]);
 
+    useEffect(() => {
+        if (mobile) {
+            setHoveringPlayer(mobile);
+        }
+    }, [mobile]);
+
 
     /*function handleScroll(event) {
         function trigger(e) {
@@ -194,6 +201,10 @@ function Page(props: PageProps) {
     }*/
 
     function handleMouseActivity() {
+        if (mobile) {
+            setHoveringPlayer(true);
+            return;
+        }
         if (lastTimeout) clearTimeout(lastTimeout);
         setHoveringPlayer(true);
         if (hidden && isPlayable && !audioFormats.includes(getExt(current.FileURL))) {
@@ -214,14 +225,63 @@ function Page(props: PageProps) {
         setObjFit(!objFit);
     }
 
-    return <Layout additionalMainStyle={{
+    return <Layout footer={<></>} hiddenCallback={(h) => setHidden(h)} padding={0} additionalMainStyle={{
         background: isPlayable ? "black" : undefined, ...(!objFit && {
             overflow: "hidden",
             padding: "0 !important"
         }),
-        paddingRight: hidden ? 16 : undefined,
         transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)"
-    }}>
+    }}
+                   hiddenAside={hidden}
+                   permanent={!isPlayable}
+                   asideContent={
+        <>
+            <Text size="xs" weight="500">{getLocale(locale).Viewer["nc-details"]}</Text>
+            <Aside.Section my="xs" mb="xs">
+                <Stack>
+                    <Stack spacing="xs">
+                        <Text size="sm">{(current.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-filesize"]}</Text>
+                    </Stack>
+                    <Stack spacing="xs">
+                        <Text size="sm">{formatDate(ParseUnixTime(current.UnixTime))}</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-upload-date"]}</Text>
+                    </Stack>
+                    <Stack spacing="xs">
+                        <Text size="sm">{current.Author.Name}</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-uploader"]}</Text>
+                    </Stack>
+                    <Stack spacing="xs">
+                        <Text size="sm">{current.Views}</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-views"]}</Text>
+                    </Stack>
+                    {current.Folder && <Stack spacing="xs">
+                        <Text size="sm">{current.Folder}</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-category"]}</Text>
+                    </Stack>}
+                    <Stack spacing="xs">
+                        <Text size="sm">{getExt(current.FileURL)}</Text>
+                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-file-type"]}</Text>
+                    </Stack>
+                </Stack>
+            </Aside.Section>
+            <Text mt="xs" size="xs" weight="500">{getLocale(locale).Viewer["nc-tags"]}</Text>
+            <Aside.Section mt="xs" mb="md">
+                <Stack spacing={0}>
+                    {current.Tags ? current.Tags.split(",").map((t, i) =>
+                        <Link href={`/browser?t=${t}`} key={i} passHref>
+                            <Text size="xs" color={theme.colors.blue[4]} sx={{textDecoration: "none", cursor: "pointer", "&:hover": {textDecoration: "underline"}}}>{t}</Text>
+                        </Link>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
+                </Stack>
+            </Aside.Section>
+            <Card mb="sm">
+                <Text size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
+                <Text size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
+            </Card>
+            <CommentBox />
+        </>
+                   }
+    >
         <SEO video={`/${current.FileURL}`} image={`/${current.Thumbnail}`}
              audio={`/${current.FileURL}`}
              type={videoFormats.includes(getExt(current.FileURL)) ? "video" :
@@ -269,7 +329,6 @@ function Page(props: PageProps) {
                 background: isPlayable ? 'linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,27,0.5) 35%, rgba(0,0,0,0) 100%)' : undefined,
                 height: 150,
                 opacity: 0,
-                pointerEvents: "none",
                 ...(hoveringPlayer && {
                     opacity: 1
                 }),
@@ -285,7 +344,9 @@ function Page(props: PageProps) {
                     zIndex: 5,
                     width: `calc(100% - ${audioFormats.includes(getExt(current.FileURL)) ? 64 : 16}px)`,
                     transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)"
-                }} />}
+                }}>
+                    <BottomNavBar setHidden={(f) => setHidden(f)} hidden={hidden} />
+                </QuickDetails>}
             </Box>
             <Box
                 sx={{
@@ -360,69 +421,6 @@ function Page(props: PageProps) {
             </Box>
 
         </div>
-
-        <Aside p="md"
-            onMouseEnter={() => isPlayable && setHidden(false)} onMouseLeave={() => isPlayable && setHidden(true)}
-            sx={{
-                transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
-                position: 'fixed',
-                right: 0,
-                top: 0,
-                background: theme.colorScheme === 'dark' ? 'rgba(26,27,30,.98)' : 'rgba(255,255,255,.98)',
-                backdropFilter: 'blur(30px)', ...(hidden && ':hover' && {
-                    opacity: 0.2,
-                    backdropFilter: 'blur(0px)'
-                }), ...(hidden && { opacity: 0, right: -100 })
-            }} width={{ lg: 300 }}>
-            <Menubar closeFunc={() => setHidden(true)} />
-            <Text size="xs" weight="500">{getLocale(locale).Viewer["nc-details"]}</Text>
-            <Aside.Section my="xs" mb="xs">
-                <Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{(current.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-filesize"]}</Text>
-                    </Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{formatDate(ParseUnixTime(current.UnixTime))}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-upload-date"]}</Text>
-                    </Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{current.Author.Name}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-uploader"]}</Text>
-                    </Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{current.Views}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-views"]}</Text>
-                    </Stack>
-                    {current.Folder && <Stack spacing="xs">
-                        <Text size="sm">{current.Folder}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-category"]}</Text>
-                    </Stack>}
-                    <Stack spacing="xs">
-                        <Text size="sm">{getExt(current.FileURL)}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-file-type"]}</Text>
-                    </Stack>
-                </Stack>
-            </Aside.Section>
-            <Text mt="xs" size="xs" weight="500">{getLocale(locale).Viewer["nc-tags"]}</Text>
-            <Aside.Section mt="xs" mb="md">
-                <Stack spacing={0}>
-                    {current.Tags ? current.Tags.split(",").map((t, i) =>
-                        <Link href={`/browser?t=${t}`} key={i} passHref>
-                            <Text size="xs" color={theme.colors.blue[4]} sx={{textDecoration: "none", cursor: "pointer", "&:hover": {textDecoration: "underline"}}}>{t}</Text>
-                        </Link>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
-                </Stack>
-            </Aside.Section>
-            <Card mb="sm">
-                <Text size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
-                <Text size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
-            </Card>
-            <CommentBox />
-            <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
-            </Aside.Section>
-            <Tabbar />
-        </Aside>
-
 
         <Modal title={getLocale(locale).Viewer["help-title"]} opened={helpOpen} onClose={() => setHelpOpen(false)}>
             <Paper mb="md" shadow="md" sx={{ display: "flex", padding: 16 }}>

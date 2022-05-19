@@ -1,29 +1,33 @@
-import {ReactElement, useContext} from 'react';
+import {ReactElement, useContext, useEffect, useState} from 'react';
 import {
     ActionIcon,
     AppShell,
     Aside,
     Badge,
-    Button,
+    Button, Card, Center,
     CSSObject,
-    Divider,
+    Divider, Footer, Group, Header,
     LoadingOverlay,
     MediaQuery,
-    Menu,
+    Menu, ScrollArea, Stack,
     Text,
-    Tooltip,
+    Tooltip, UnstyledButton,
     useMantineTheme
 } from '@mantine/core';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import Link from 'next/link';
-import {Folder, Home, InfoCircle, Settings, Upload, X} from 'tabler-icons-react';
+import {Folder, Home, InfoCircle, Menu2, Settings, Upload, X} from 'tabler-icons-react';
 import useSound from "use-sound";
 
 import Emoji from './emoji';
 import {useRouter} from 'next/router';
 import {useMediaQuery} from '@mantine/hooks';
 import {getLocale, LocaleContext} from "@src/locale";
+import {formatDate, ParseUnixTime} from "../../utils/date";
+import {getExt} from "../../utils/file";
+import {CommentBox} from "@src/components/comments";
+import {MenuIcon} from "@mantine/core/lib/components/Menu/MenuIcon";
 
 interface Disk {
     freeSpace: number;
@@ -36,7 +40,12 @@ interface Layout {
     aside?: ReactElement;
     header?: ReactElement;
     navbar?: ReactElement;
-    additionalMainStyle?: CSSObject
+    additionalMainStyle?: CSSObject;
+    asideContent?: any;
+    hiddenAside?: boolean;
+    permanent?: boolean;
+    padding?: any;
+    hiddenCallback?: (h: boolean) => void;
 }
 
 const fetcher = async (url) => {
@@ -54,7 +63,6 @@ function Mbar({
                   }
               }) {
     const {data, error} = useSWR(() => `/api/disk`, fetcher);
-    const desktop = useMediaQuery('(min-width: 760px)', false);
     const router = useRouter();
     const locale = useContext(LocaleContext);
     const [play] = useSound("/assets/mode_press.wav", {volume: 0.5});
@@ -64,23 +72,10 @@ function Mbar({
     </Aside.Section>
 
     return <>
-        <Aside.Section style={{flexFlow: 'row wrap', display: 'inline-flex'}}>
+        <Aside.Section mb="sm" style={{flexFlow: 'row wrap', display: 'inline-flex'}}>
             <LoadingOverlay visible={!data}/>
-            <Text weight="500" sx={{fontFamily: "Manrope, sans-serif;", fontWeight: 800, lineHeight: 1.75}}>doki</Text><Tooltip label="Work in progress" placement="end"><Badge ml="sm"
-                                                                                                   style={{marginTop: 3}}>M2</Badge></Tooltip>
+            <Text className="use-m-font">{router.asPath}</Text>
             <div style={{flex: 1}}/>
-            {desktop && <><Link href="/" passHref>
-                <ActionIcon><Home size={20}/></ActionIcon>
-            </Link>
-                <Link href="/browser" passHref>
-                    <ActionIcon><Folder size={20}/></ActionIcon>
-                </Link>
-                <Link href="/updates" passHref>
-                    <ActionIcon><InfoCircle size={20}/></ActionIcon>
-                </Link>
-                <Link href="/settings" passHref>
-                    <ActionIcon><Settings size={20}/></ActionIcon>
-                </Link></>}
             <Menu>
                 <Menu.Label>Sitemap</Menu.Label>
                 <Link href="/" passHref>
@@ -116,8 +111,7 @@ function Mbar({
             <MediaQuery largerThan="sm" styles={{display: "none"}}>
                 <ActionIcon ml="md" onClick={closeFunc}><X size={20}/></ActionIcon>
             </MediaQuery>
-        </Aside.Section>
-        <Divider mb="md" size="xs" label={router.asPath}/></>
+        </Aside.Section></>
 }
 
 export const Menubar = dynamic(() => Promise.resolve(Mbar), {ssr: false});
@@ -132,22 +126,162 @@ export function Tabbar() {
         </Aside.Section></>
 }
 
-export default function Layout({children, footer = null, aside, header = null, navbar = null, additionalMainStyle}: Layout) {
+export function BottomNavBar({setHidden, hidden}) {
+    const locale = useContext(LocaleContext);
+    const router = useRouter();
+    return <Group position="apart">
+        <MediaQuery smallerThan="sm" styles={{display: "none"}}><Group ml="md">
+            <Text weight="500" sx={{fontFamily: "Manrope, sans-serif;", fontWeight: 800, lineHeight: 1.75}}>doki</Text>
+            <Tooltip label="Work in progress" placement="end"><Badge sx={{marginBottom: 4}}>M2</Badge></Tooltip>
+        </Group></MediaQuery>
+        <Group spacing={0}>
+            <Link href="/" passHref>
+                <UnstyledButton sx={(theme) => ({
+                    display: 'block',
+                    padding: theme.spacing.xs,
+                    borderRadius: theme.radius.sm,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    transition: "all .375s var(--animation-ease)",
+
+                    '&:hover': {
+                        backgroundColor:
+                            theme.colorScheme === 'dark' ? theme.colors.dark[6] + "44" : theme.colors.gray[0] + "44",
+                    },
+
+                    ...(router.asPath.includes("viewer") && {
+                        backgroundColor: theme.colors[theme.primaryColor][1] + "22",
+                        borderRadius: 0
+                    })
+                })}>
+                    <Group>
+                        <Home size={20}/>
+                        <MediaQuery smallerThan="sm" styles={{display: "none"}}><Text mr="xs" size="xs">{getLocale(locale).Common["viewer"]}</Text></MediaQuery>
+                    </Group>
+                </UnstyledButton>
+            </Link>
+            <Link href="/browser" passHref>
+                <UnstyledButton sx={(theme) => ({
+                    display: 'block',
+                    padding: theme.spacing.xs,
+                    borderRadius: theme.radius.sm,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    transition: "all .375s var(--animation-ease)",
+
+                    '&:hover': {
+                        backgroundColor:
+                            theme.colorScheme === 'dark' ? theme.colors.dark[6] + "44" : theme.colors.gray[0] + "44",
+                    },
+
+                    ...(router.asPath.includes("browser") && {
+                        backgroundColor: theme.colors[theme.primaryColor][1] + "22",
+                        borderRadius: 0
+                    })
+                })}>
+                    <Group>
+                        <Folder size={20}/>
+                        <MediaQuery smallerThan="sm" styles={{display: "none"}}><Text mr="xs" size="xs">{getLocale(locale).Common["browser"]}</Text></MediaQuery>
+                    </Group>
+                </UnstyledButton>
+            </Link>
+            <Link href="/updates" passHref>
+                <UnstyledButton sx={(theme) => ({
+                    display: 'block',
+                    padding: theme.spacing.xs,
+                    borderRadius: theme.radius.sm,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    transition: "all .375s var(--animation-ease)",
+
+                    '&:hover': {
+                        backgroundColor:
+                            theme.colorScheme === 'dark' ? theme.colors.dark[6] + "44" : theme.colors.gray[0] + "44",
+                    },
+
+                    ...(router.asPath.includes("updates") && {
+                        backgroundColor: theme.colors[theme.primaryColor][1] + "22",
+                        borderRadius: 0
+                    })
+                })}>
+                    <Group>
+                        <InfoCircle size={20}/>
+                        <MediaQuery smallerThan="sm" styles={{display: "none"}}><Text mr="xs" size="xs">{getLocale(locale).Common["updates"]}</Text></MediaQuery>
+                    </Group>
+                </UnstyledButton>
+            </Link>
+            <Link href="/settings" passHref>
+                <UnstyledButton sx={(theme) => ({
+                    display: 'block',
+                    padding: theme.spacing.xs,
+                    borderRadius: theme.radius.sm,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    transition: "all .375s var(--animation-ease)",
+
+                    '&:hover': {
+                        backgroundColor:
+                            theme.colorScheme === 'dark' ? theme.colors.dark[6] + "44" : theme.colors.gray[0] + "44",
+                    },
+
+                    ...(router.asPath.includes("settings") && {
+                        backgroundColor: theme.colors[theme.primaryColor][1] + "22",
+                        borderRadius: 0
+                    })
+                })}>
+                    <Group>
+                        <Settings size={20}/>
+                        <MediaQuery smallerThan="sm" styles={{display: "none"}}><Text mr="xs" size="xs">{getLocale(locale).Common["settings"]}</Text></MediaQuery>
+                    </Group>
+                </UnstyledButton>
+            </Link>
+        </Group>
+        <ActionIcon mr="md" onClick={() => setHidden(!hidden)}><Menu2 /></ActionIcon>
+    </Group>
+}
+
+export default function Layout({children, footer = null, aside = null, header = null, navbar = null, additionalMainStyle, asideContent, hiddenAside, permanent = true, padding = "md", hiddenCallback}: Layout) {
     const theme = useMantineTheme();
+    const locale = useContext(LocaleContext);
+    const [hidden, setHidden] = useState<boolean>(hiddenAside);
+
+    useEffect(() => {
+        if (permanent) {
+            setHidden(false);
+        } else {
+            setHidden(hiddenAside);
+        }
+    }, [hiddenAside, permanent]);
+
     return <AppShell
         styles={{
             main: {
                 background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
                 transition: "all .375s var(--animation-ease)",
+                paddingRight: hidden ? 16 : undefined,
                 ...additionalMainStyle
             },
         }}
         asideOffsetBreakpoint="sm"
         fixed
+        padding={padding}
         header={header}
         navbar={navbar}
-        aside={aside}
-        footer={footer}
+        aside={aside ? aside : <Aside p="md"
+                      //onMouseEnter={() => !permanent && setHidden(false)} onMouseLeave={() => !permanent && setHidden(true)}
+                      sx={{
+                          transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
+                          background: theme.colorScheme === 'dark' ? 'rgba(26,27,30,.98)' : 'rgba(255,255,255,.98)',
+                          backdropFilter: 'blur(30px)', ...(hidden && ':hover' && {
+                              opacity: 0.2,
+                              backdropFilter: 'blur(0px)'
+                          }), ...(hidden && { opacity: 0, right: -(300 - 16), pointerEvents: "none" })
+                      }} width={{ lg: 300 }}>
+            <Menubar closeFunc={() => { setHidden(true); hiddenCallback && hiddenCallback(true); }} />
+            <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
+            {asideContent}
+            </Aside.Section>
+            <Tabbar />
+        </Aside>}
+        footer={footer ? footer : <Footer height={42}>
+            <BottomNavBar setHidden={(f) => setHidden(f)} hidden={hidden} />
+        </Footer>}
     >
         {children}
     </AppShell>

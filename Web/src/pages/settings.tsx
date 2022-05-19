@@ -109,48 +109,40 @@ function Page(props: PageProps) {
         if (props.filter !== filter) setFilter(props.filter);
     }, [props.accentColor, props.NSFW, props.colorScheme, props.filter]);
 
-    return <Layout aside={
-        <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
-            <Aside p="md" hiddenBreakpoint="sm" width={{lg: 300}}>
-                <Menubar/>
-                <Aside.Section mb="md">
-                    <Stack>
-                        {props.author ? <Card>
-                                <Card.Section>
+    return <Layout asideContent={<>
+            <Stack mb="md">
+                {props.author ? <Card>
+                        <Card.Section>
 
-                                </Card.Section>
-                                <Group position="apart" style={{marginBottom: 5, marginTop: theme.spacing.sm}}>
-                                    <Text weight="500">
-                                        {props.author.Name}
-                                    </Text>
-                                    <Badge>
-                                        ID
-                                    </Badge>
-                                </Group>
-                                <Text size="xs">
-                                    {`${getLocale(loc).Settings["first-uploaded"]} `}{formatDate(ParseUnixTime(props.author.CreationDate))}
-                                </Text>
-                                <Button variant="light" color="blue" fullWidth style={{marginTop: 14}}>
-                                    {`${getLocale(loc).Settings["download-profile"]}`}
-                                </Button>
-                                <Button variant="light" color="blue" fullWidth style={{marginTop: 14}}>
-                                    {`${getLocale(loc).Settings["import-profile"]}`}
-                                </Button>
-                            </Card> :
-                            <Card>
-                                <Text size="xs">{`${getLocale(loc).Settings["details-desc"]}`}</Text>
-                            </Card>
-                        }
-                    </Stack>
-                </Aside.Section>
-                <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
-                    <Stack>
-                        <Button variant="default">{`${getLocale(loc).Settings["content-settings"]}`}</Button>
-                        <Button variant="default">{`${getLocale(loc).Settings["ui-settings"]}`}</Button>
-                    </Stack>
-                </Aside.Section>
-                <Tabbar/>
-            </Aside></MediaQuery>}>
+                        </Card.Section>
+                        <Group position="apart" style={{marginBottom: 5, marginTop: theme.spacing.sm}}>
+                            <Text weight="500">
+                                {props.author.Name}
+                            </Text>
+                            <Badge>
+                                ID
+                            </Badge>
+                        </Group>
+                        <Text size="xs">
+                            {`${getLocale(loc).Settings["first-uploaded"]} `}{formatDate(ParseUnixTime(props.author.CreationDate))}
+                        </Text>
+                        <Button variant="light" color="blue" fullWidth style={{marginTop: 14}}>
+                            {`${getLocale(loc).Settings["download-profile"]}`}
+                        </Button>
+                        <Button variant="light" color="blue" fullWidth style={{marginTop: 14}}>
+                            {`${getLocale(loc).Settings["import-profile"]}`}
+                        </Button>
+                    </Card> :
+                    <Card>
+                        <Text size="xs">{`${getLocale(loc).Settings["details-desc"]}`}</Text>
+                    </Card>
+                }
+            </Stack>
+            <Stack>
+                <Button variant="default">{`${getLocale(loc).Settings["content-settings"]}`}</Button>
+                <Button variant="default">{`${getLocale(loc).Settings["ui-settings"]}`}</Button>
+            </Stack>
+    </>}>
         <SEO title="Settings" siteTitle="Doki" description="Sneed"/>
         <Group>
             <Title order={5}>

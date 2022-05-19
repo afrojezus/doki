@@ -3,3 +3,4 @@ node_modules
 public/files
 .env
 utils/name.ts
+dist

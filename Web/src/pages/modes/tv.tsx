@@ -28,6 +28,8 @@ import {audioFormats, getExt, onlyGetMedia, onlyGetVideo, playableFormats, rando
 import {ContentSlide, QuickDetails} from "@src/components/player-elements";
 import {showNotification} from "@mantine/notifications";
 import {useEffect, useState} from "react";
+import {FixedSizeList as List} from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 
 interface PageProps {
     posts: File[];
@@ -164,12 +166,51 @@ function Page(props: PageProps) {
         setObjFit(!objFit);
     }
 
+    function ItemRenderer({data, index, style}) {
+        const item = data[index];
+        return <UnstyledButton style={style} key={index} onClick={() => handleSelectedFile(item)} sx={{display: "inline-flex"}}>
+            <Image withPlaceholder placeholder={<Text size="xs" align="center">
+                {getExt(item.FileURL)}-format file
+            </Text>} radius={0} styles={{
+                root: {
+                    width: 200,
+                    height: 100,
+                    background: theme.primaryColor
+                },
+                imageWrapper: {
+                    height: "100%"
+                },
+                placeholder: {},
+                figure: {
+                    height: "100%"
+                },
+                image: {
+                    height: "100% !important",
+                    position: "absolute",
+                    top: 0,
+                    left: 0
+                }
+            }} src={`/${item.Thumbnail}`} alt="" />
+            <Stack style={{flex: 1}} ml="md">
+                <Text className="use-m-font" size="md" sx={{color: "white"}}>{item.Title}</Text>
+                <Text size="xs" sx={{color: "white", opacity: 0.5}}>{item.Description}</Text>
+                <Group position="apart">
+                    <Text size="xs" sx={{color: "white"}}>{(item.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
+                    <Badge>{getExt(item.FileURL)}</Badge>
+                    {item.NSFW ? <Badge color="red">NSFW</Badge> : undefined}
+                </Group>
+
+            </Stack>
+        </UnstyledButton>
+    }
+
     return <Layout additionalMainStyle={{background: isPlayable ? "black" : undefined, ...(!objFit && {
             overflow: "hidden",
             padding: "0 !important"
         }),
         paddingRight: hidden ? 16 : undefined,
-        transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)"}}>
+        transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)"}}
+        aside={<></>} footer={<></>}>
         <SEO title="TV" siteTitle="Doki"
              description="Content for days"/>
         <ActionIcon sx={{transition: "all .375s var(--animation-ease)", animation: "flowDown 7s var(--animation-ease)", position: "absolute", left: 16, top: 16, color: "white", zIndex: 10, opacity: hoveringPlayer ? 1 : 0}} onClick={() => router.back()}><ArrowBack /></ActionIcon>
@@ -319,43 +360,20 @@ function Page(props: PageProps) {
                    }), ...(hidden && { opacity: 0, right: -500 })
                }} width={{ lg: 500 }}>
             <Title my="md" className="use-m-font" sx={{color: "white"}}>Playlist</Title>
-            <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
-                <Stack>
-                    {onlyGetVideo(props.posts).map((e, i) => <UnstyledButton key={i} onClick={() => handleSelectedFile(e)} sx={{display: "inline-flex"}}>
-                            <Image withPlaceholder placeholder={<Text size="xs" align="center">
-                                {getExt(e.FileURL)}-format file
-                            </Text>} radius={0} styles={{
-                                root: {
-                                    width: 200,
-                                    height: 100,
-                                    background: theme.primaryColor
-                                },
-                                imageWrapper: {
-                                    height: "100%"
-                                },
-                                placeholder: {},
-                                figure: {
-                                    height: "100%"
-                                },
-                                image: {
-                                    height: "100% !important",
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0
-                                }
-                            }} src={`/${e.Thumbnail}`} alt="" />
-                        <Stack style={{flex: 1}} ml="md">
-                                <Text className="use-m-font" size="md" sx={{color: "white"}}>{e.Title}</Text>
-                                <Text size="xs" sx={{color: "white", opacity: 0.5}}>{e.Description}</Text>
-                                <Group position="apart">
-                                    <Text size="xs" sx={{color: "white"}}>{(e.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
-                                    <Badge>{getExt(e.FileURL)}</Badge>
-                                    {e.NSFW ? <Badge color="red">NSFW</Badge> : undefined}
-                                </Group>
-
-                        </Stack>
-                    </UnstyledButton>)}
-                </Stack>
+            <Aside.Section grow>
+                    <AutoSizer>
+                        {({height, width}) => (
+                            <List
+                                itemCount={onlyGetVideo(props.posts).length}
+                                itemSize={125}
+                                height={height}
+                                width={width}
+                                itemData={onlyGetVideo(props.posts)}
+                            >
+                                {ItemRenderer}
+                            </List>
+                        )}
+                    </AutoSizer>
             </Aside.Section>
         </Aside>
     </Layout>

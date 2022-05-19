@@ -39,12 +39,10 @@ async function startup() {
         const server = express();
 
         server.get("/files/*", (req, res) => {
-            let target = req.originalUrl.replace("..", "");
-
             if (process.env.NODE_ENV === "production") {
-                return res.sendFile(path.resolve('./') + "/public" + target);
+                return res.sendFile(path.resolve('./') + "/public" + req.originalUrl);
             }
-            return res.sendFile(__dirname + "/public" + target);
+            return res.sendFile(__dirname + "/public" + req.originalUrl);
         });
 
         server.all("*", (req, res) =>

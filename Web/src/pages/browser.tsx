@@ -1,8 +1,10 @@
 import {
     Accordion,
     Aside,
+    Box,
     Button,
     Checkbox,
+    Container,
     Divider,
     Group, LoadingOverlay,
     MediaQuery,
@@ -15,21 +17,23 @@ import {
     Title,
     useMantineTheme
 } from '@mantine/core';
-import GridItem, {SmallGridItem} from '../components/grid-item';
-import Layout, {Menubar, Tabbar} from '../components/layout';
+import GridItem from '../components/grid-item';
+import Layout, { Menubar, Tabbar } from '../components/layout';
 import SEO from '../components/seo';
-import {Author, File} from "@server/models";
-import {useContext, useEffect, useState} from "react";
-import {Edit} from 'tabler-icons-react';
-import {useRouter} from 'next/router';
-import {getExt, retrieveAllFileTypes, retrieveAllTags} from "../../utils/file";
+import { Author, File } from "@server/models";
+import { useContext, useEffect, useState } from "react";
+import { Edit } from 'tabler-icons-react';
+import { useRouter } from 'next/router';
+import { getExt, retrieveAllFileTypes, retrieveAllTags, toMatrix } from "../../utils/file";
 import Link from "next/link";
-import {checkCookies, getCookie} from "cookies-next";
-import {NextPageContext} from "next";
+import { checkCookies, getCookie } from "cookies-next";
+import { NextPageContext } from "next";
 import AuthorRepository from "@server/repositories/AuthorRepository";
 import useSWR from "swr";
-import {showNotification} from "@mantine/notifications";
-import {getLocale, LocaleContext} from "@src/locale";
+import { showNotification } from "@mantine/notifications";
+import { getLocale, LocaleContext } from "@src/locale";
+import { FixedSizeGrid as Grid } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 
 interface PageProps {
     // posts: File[];
@@ -68,13 +72,13 @@ export async function getServerSideProps(nextPage: NextPageContext) {
     };
 }
 
-function SearchInput({onSubmit}) {
+function SearchInput({ onSubmit }) {
     const locale = useContext(LocaleContext);
     const [searchTerm, setSearchTerm] = useState<string>('');
     return <form onSubmit={(e) => {
         e.preventDefault();
         onSubmit(searchTerm);
-    }}><TextInput value={searchTerm} placeholder={`${getLocale(locale).Browser["search"]}`} onChange={(v) => setSearchTerm(v.target.value)}/></form>
+    }}><TextInput value={searchTerm} placeholder={`${getLocale(locale).Browser["search"]}`} onChange={(v) => setSearchTerm(v.target.value)} /></form>
 }
 
 const fetcher = async (url) => {
@@ -166,19 +170,33 @@ function Page(props: PageProps) {
         setSearchF(search);
     }
 
-    return <Layout aside={
-        <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
-            <Aside p="md" hiddenBreakpoint="sm" width={{xs: 300, lg: 300}}>
-                <LoadingOverlay visible={noFiles}/>
-                <Menubar/>
-                <SearchInput onSubmit={handleSearch}/>
+    function RenderGridItem({ rowIndex, columnIndex, data, style }) {
+        const item = data[rowIndex][columnIndex];
+        if (!item) return <></>;
+        return <GridItem
+            style={{
+                ...style,
+                left: style.left + 16,
+                top: style.top + 16,
+                width: style.width - 16,
+                height: style.height - 16
+            }}
+            editMode={editMode} selected={selected.includes(item)}
+            onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
+            onSelect={(f) => setSelected(p => [...p, f])} data={item} key={`${columnIndex}-${rowIndex}`} />
+    }
+
+    return <Layout asideContent={
+        <>
+            <LoadingOverlay visible={noFiles} />
+                <SearchInput onSubmit={handleSearch} />
                 <Accordion mt="md" sx={{
                     backgroundColor: theme.colorScheme === "light" ? theme.white : theme.colors.dark[5],
                     borderRadius: 4
                 }} styles={{
-                    contentInner: {padding: 0}
+                    contentInner: { padding: 0 }
                 }} offsetIcon={false} onChange={toggleEditMode} disableIconRotation>
-                    <Accordion.Item sx={{border: "none"}} icon={<Edit size={16}/>} styles={{label: {fontSize: 12}}}
+                    <Accordion.Item sx={{ border: "none" }} icon={<Edit size={16} />} styles={{ label: { fontSize: 12 } }}
                                     label={`${getLocale(locale).Browser["edit-mode"]}`}>
                         <Stack>
                             <Text size="xs">{selected.length}{` ${getLocale(locale).Browser["selected"]}`}</Text>
@@ -187,58 +205,105 @@ function Page(props: PageProps) {
                         </Stack>
                     </Accordion.Item>
                 </Accordion>
-                <Divider label={`${getLocale(locale).Browser["view-options"]}`} mt="sm"/>
-                <Select label={`${getLocale(locale).Browser["sort"]}`} mt="xs" value={sort} onChange={handleSelect} data={["Time", "Size", "Views"]}/>
+                <Divider label={`${getLocale(locale).Browser["view-options"]}`} mt="sm" />
+                <Select label={`${getLocale(locale).Browser["sort"]}`} mt="xs" value={sort} onChange={handleSelect} data={["Time", "Size", "Views"]} />
                 <Checkbox disabled={!props.author} label={`${getLocale(locale).Browser["show-only"]}`} mt="sm" checked={onlyUsers}
-                          onChange={handleOnlyUser}/>
-                <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
-                    <Divider label={`${getLocale(locale).Browser["tags"]}`} mb="sm" my="sm"/>
-                    {data && <Stack spacing={0}>
-                        {retrieveAllTags(data).map((t, i) =>
-                            <Link href={`/browser?t=${t}`} key={i} passHref>
+                          onChange={handleOnlyUser} />
+                <Divider label={`${getLocale(locale).Viewer["nc-category"]}`} mb="sm" my="sm" />
+                {data && <Stack spacing={0}>
+                    {data.sort(_sort)
+                        .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
+                        .filter((x) => x.Folder !== null).filter(f => !props.filter.includes(f.Folder)).map((x) => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter((x) => x !== null).map((elem, index) =>
+                            <Link href={`/browser?f=${elem}`} key={index} passHref>
                                 <Text size="xs" color={theme.colors.blue[4]} sx={{
                                     textDecoration: "none",
                                     cursor: "pointer",
-                                    "&:hover": {textDecoration: "underline"}
-                                }}>{t}</Text>
+                                    "&:hover": { textDecoration: "underline" }
+                                }}>{elem}</Text>
                             </Link>)}
-                    </Stack>}
-                    <Divider label={`${getLocale(locale).Browser["file-types"]}`}mb="sm" my="sm"/>
-                    {data && <Stack spacing={0}>
-                        {retrieveAllFileTypes(data).map((t, i) =>
-                            <Link href={`/browser?type=${t}`} key={i} passHref>
-                                <Text size="xs" color={theme.colors.blue[4]} sx={{
-                                    textDecoration: "none",
-                                    cursor: "pointer",
-                                    "&:hover": {textDecoration: "underline"}
-                                }}>{t}</Text>
-                            </Link>)}
-                    </Stack>}
-                </Aside.Section>
-                <Tabbar/>
-            </Aside></MediaQuery>}>
-        <SEO title="Browser" siteTitle="Doki" description="Sneed"/>
+                </Stack>}
+                <Divider label={`${getLocale(locale).Browser["tags"]}`} mb="sm" my="sm" />
+                {data && <Stack spacing={0}>
+                    {retrieveAllTags(data).map((t, i) =>
+                        <Link href={`/browser?t=${t}`} key={i} passHref>
+                            <Text size="xs" color={theme.colors.blue[4]} sx={{
+                                textDecoration: "none",
+                                cursor: "pointer",
+                                "&:hover": { textDecoration: "underline" }
+                            }}>{t}</Text>
+                        </Link>)}
+                </Stack>}
+                <Divider label={`${getLocale(locale).Browser["file-types"]}`} mb="sm" my="sm" />
+                {data && <Stack spacing={0}>
+                    {retrieveAllFileTypes(data).map((t, i) =>
+                        <Link href={`/browser?type=${t}`} key={i} passHref>
+                            <Text size="xs" color={theme.colors.blue[4]} sx={{
+                                textDecoration: "none",
+                                cursor: "pointer",
+                                "&:hover": { textDecoration: "underline" }
+                            }}>{t}</Text>
+                        </Link>)}
+                </Stack>}
+        </>
+    }>
+        <SEO title="Browser" siteTitle="Doki" description="Sneed" />
         <Group>
             {category && <Title mb="md" order={5}>{category}</Title>}
         </Group>
-            {!error && <LoadingOverlay visible={noFiles}/>}
-            {noFiles && <>
-                <Stack>
-                    <Title className="use-m-font fancy-transition1">O.O'</Title>
-                    <Text className="use-m-font fancy-transition1">There's no files here!</Text>
-                </Stack>
-            </>}
-        {!category && data && data.find(x => x.Folder) && <SimpleGrid cols={5} mb="md">
-            {data.sort(_sort)
-                .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                .filter((x) => x.Folder !== null).filter(f => !props.filter.includes(f.Folder)).map((x) => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter((x) => x !== null).map((elem, index) =>
-                    <SmallGridItem data={elem} key={index}/>)}
-        </SimpleGrid>}
-        <SimpleGrid cols={5} breakpoints={[
-            {maxWidth: 'lg', cols: 4, spacing: 'md'},
-            {maxWidth: 'md', cols: 3, spacing: 'md'},
-            {maxWidth: 'sm', cols: 2, spacing: 'sm'},
-            {maxWidth: 'xs', cols: 1, spacing: 'sm'},
+        {!error && <LoadingOverlay visible={noFiles} />}
+        {noFiles && <>
+            <Stack>
+                <Title className="use-m-font fancy-transition1">O.O'</Title>
+                <Text className="use-m-font fancy-transition1">There's no files here!</Text>
+            </Stack>
+        </>}
+        {/*data && <AutoSizer>
+            {({ height, width }) => (
+                <Grid
+                    height={height}
+                    width={width}
+                    rowHeight={300}
+                    columnWidth={(width / 5)}
+                    itemData={
+                        toMatrix(
+                            data
+                                .sort(_sort)
+                                .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
+                                .filter(f => f.Folder ? !props.filter.includes(f.Folder) : f)
+                                .filter(f => category ? f.Folder === category : f)
+                                .filter(f => tag && f.Tags ? f.Tags.includes(tag) : f)
+                                .filter(f => type ? getExt(f.FileURL) === type : f)
+                                .filter(f => f.Tags ? f.Tags.split(",").map(l => l.match(searchF)) : f)
+                                .filter(f => f.Title ? f.Title.match(searchF) : f)
+                                .filter(f => f.FileURL.match(searchF)),
+                            5
+                        )
+                    }
+                    columnCount={5}
+                    rowCount={
+                        toMatrix(
+                            data
+                                .sort(_sort)
+                                .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
+                                .filter(f => f.Folder ? !props.filter.includes(f.Folder) : f)
+                                .filter(f => category ? f.Folder === category : f)
+                                .filter(f => tag && f.Tags ? f.Tags.includes(tag) : f)
+                                .filter(f => type ? getExt(f.FileURL) === type : f)
+                                .filter(f => f.Tags ? f.Tags.split(",").map(l => l.match(searchF)) : f)
+                                .filter(f => f.Title ? f.Title.match(searchF) : f)
+                                .filter(f => f.FileURL.match(searchF)),
+                            5
+                        ).length}
+                >
+                    {RenderGridItem}
+                </Grid>
+            )}
+                        </AutoSizer>*/}
+        {data && <SimpleGrid cols={5} breakpoints={[
+            { maxWidth: 'lg', cols: 4, spacing: 'md' },
+            { maxWidth: 'md', cols: 3, spacing: 'md' },
+            { maxWidth: 'sm', cols: 2, spacing: 'sm' },
+            { maxWidth: 'xs', cols: 1, spacing: 'sm' },
         ]}>
             {data && data
                 .sort(_sort)
@@ -252,9 +317,9 @@ function Page(props: PageProps) {
                 .filter(f => f.FileURL.match(searchF))
                 .map((elem, index) =>
                     <GridItem editMode={editMode} selected={selected.includes(elem)}
-                              onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
-                              onSelect={(f) => setSelected(p => [...p, f])} data={elem} key={index}/>)}
-        </SimpleGrid>
+                        onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
+                        onSelect={(f) => setSelected(p => [...p, f])} data={elem} key={index} />)}
+        </SimpleGrid>}
     </Layout>;
 }
 

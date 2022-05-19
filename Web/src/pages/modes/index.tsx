@@ -38,7 +38,7 @@ function Page() {
         router.push("/modes/booru");
     }
 
-    return <Layout>
+    return <Layout aside={<></>}>
         <SEO title="Modes" siteTitle="Doki"
              description="Content for days"/>
         <ActionIcon sx={{animation: "flowDown 7s var(--animation-ease)"}} onClick={() => router.back()}><ArrowBack /></ActionIcon>

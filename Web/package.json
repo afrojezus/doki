@@ -53,6 +53,8 @@
     "react-responsive-carousel": "^3.2.23",
     "react-three-fiber": "^6.0.13",
     "react-transition-group": "^4.4.2",
+    "react-virtualized": "^9.22.3",
+    "react-virtualized-auto-sizer": "^1.0.6",
     "react-window": "^1.8.7",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^6.19.0",
