@@ -6,14 +6,13 @@ import {
     Divider,
     Group,
     MantineTheme,
-    MediaQuery,
     ScrollArea,
     Stack,
     Text,
     Title,
     useMantineTheme
 } from '@mantine/core';
-import Layout, {Menubar} from '../components/layout';
+import Layout from '../components/layout';
 import {getCookie, setCookies} from 'cookies-next';
 import useSound from 'use-sound';
 import {FormFile, UploadBox} from "@src/components/upload-forms";
@@ -38,7 +37,8 @@ export async function getServerSideProps({req, res}) {
         include: {
             model: Author,
             required: true
-        }
+        },
+        attributes: ["AuthorId", "Folder", "Tags"]
     });
     return {
         props: {
@@ -80,7 +80,7 @@ function dropzoneChildren(status: DropzoneStatus, theme: MantineTheme) {
         <ImageUploadIcon status={status} style={{color: getIconColor(status, theme)}} size={80}/>
 
         <div>
-            <Text size="xl" inline>
+            <Text size="xl" className="use-m-font" inline>
                 Drag files here or click to select files
             </Text>
             <Text size="sm" color="dimmed" inline mt={7}>
@@ -100,8 +100,8 @@ function Page(props: PageProps) {
     });
     const theme = useMantineTheme();
     const openRef = useRef<() => void>();
-    const [files, setFiles] = useState<File[]>([]);
-    const [ready, setReady] = useState<FormFile[]>([]);
+    const [uploading, setUploading] = useState<boolean>(false);
+    const [files, setFiles] = useState<FormFile[]>([]);
 
     function onDrop(f: File[]) {
         let _r = [];
@@ -115,8 +115,7 @@ function Page(props: PageProps) {
                 Folder: ""
             });
         })
-        setFiles(f);
-        setReady(_r);
+        setFiles(_r);
     }
 
     function createNewID() {
@@ -125,6 +124,7 @@ function Page(props: PageProps) {
     }
 
     async function upload() {
+        setUploading(true);
         let id = props.id;
         if (id === null) {
             id = createNewID();
@@ -132,13 +132,13 @@ function Page(props: PageProps) {
         }
         const form = new FormData();
 
-        for (let k = 0; k < ready.length; k++) {
-            form.append('File', ready[k].File);
-            form.append('Folder', ready[k].Folder);
-            form.append('NSFW', ready[k].NSFW ? "1" : "0");
-            form.append('Tags', ready[k].Tags.join(",").trim().replaceAll(" ", "_"));
-            form.append('Title', ready[k].Title);
-            form.append('Description', ready[k].Description);
+        for (let k = 0; k < files.length; k++) {
+            form.append('File', files[k].File);
+            form.append('Folder', files[k].Folder);
+            form.append('NSFW', files[k].NSFW ? "1" : "0");
+            form.append('Tags', files[k].Tags.join(",").trim().replaceAll(" ", "_"));
+            form.append('Title', files[k].Title);
+            form.append('Description', files[k].Description);
             form.append('Id', id.toString());
         }
 
@@ -149,9 +149,8 @@ function Page(props: PageProps) {
             });
             const user = await res.json();
 
-            console.log(user);
             showNotification({
-                title: `Uploaded all ${ready.length} file(s)`,
+                title: `Uploaded all ${files.length} file(s)`,
                 message: "They should show up when you browse for view now.",
                 color: "green"
             })
@@ -162,9 +161,8 @@ function Page(props: PageProps) {
                 })
             }
             playSuccess();
-            setReady([]);
             setFiles([]);
-            router.push("/browser");
+            await router.push("/browser");
         } catch (e) {
             console.error(e);
             showNotification({
@@ -176,10 +174,7 @@ function Page(props: PageProps) {
         }
     }
 
-    return <Layout aside={
-        <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
-            <Aside p="md" hiddenBreakpoint="sm" width={{lg: 300}}>
-                <Menubar/>
+    return <Layout hideTabbar noScrollArea asideContent={<>
                 <Aside.Section>
                     <Stack>
                         <Title order={6} id="#clause">
@@ -200,33 +195,35 @@ function Page(props: PageProps) {
                 <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
                     {files.map((e, i) => <Card mb="md" key={i}>
                         <Group position="apart">
-                        <Text size="xs" weight={500}>{e.name}</Text>
+                        <Text size="xs" weight={500}>{e.Title}</Text>
                             <ActionIcon onClick={() => {
                                 setFiles([...files.filter(x => x !== e)]);
-                                setReady([...ready.filter(x => x.File !== e)])
                             }}><X size={14}/></ActionIcon>
                         </Group>
                     </Card>)}
                 </Aside.Section>
                 <Divider my="md" size="xs"/>
                 <Aside.Section style={{flexFlow: 'row wrap', display: 'inline-flex'}}>
-                    <Button onClick={upload} variant="light" fullWidth leftIcon={<Upload size={14}/>}>Upload
+                    <Button disabled={files.length === 0} loading={uploading} onClick={upload} variant="light" fullWidth leftIcon={<Upload size={14}/>}>Upload
                         now</Button>
-                </Aside.Section>
-            </Aside></MediaQuery>}>
+                </Aside.Section></>}>
         <SEO title="Upload" siteTitle="Doki"
              description="Content for days"/>
         <Group position="apart" mb="md">
             <Title order={5}>
                 Upload
             </Title>
-            <Button variant="light" onClick={() => openRef.current()}>Add file(s)</Button>
+            <Group>
+                <Button variant="light" disabled>Import from Twitter</Button>
+                <Button variant="light" disabled>Import from Youtube</Button>
+                <Button variant="light" onClick={() => openRef.current()}>Add file(s)</Button>
+            </Group>
         </Group>
         <Dropzone onDrop={onDrop} openRef={openRef}>
             {(status) => dropzoneChildren(status, theme)}
         </Dropzone>
         <Stack mt="md">
-            {files.map((e, i) => <UploadBox rawFile={e} key={i} file={ready[i]} posts={props.posts} />)}
+            {files.map((e, i) => <UploadBox key={i} file={e} posts={props.posts} />)}
         </Stack>
     </Layout>;
 }

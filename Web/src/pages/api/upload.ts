@@ -103,12 +103,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         } else {
             console.log("Singular file mode");
             let author = await AuthorRepository.findOne({
-                where: {AuthorId: fields.Id[0]}
+                where: {AuthorId: fields.Id}
             }, true);
 
             if (author === null) {
                 author = await AuthorRepository.create({
-                    AuthorId: fields.Id[0],
+                    AuthorId: fields.Id,
                     Name: fakeNames[~~(Math.random() * fakeNames.length)],
                     CreationDate: Date.now() / 1e3
                 })

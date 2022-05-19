@@ -1,10 +1,11 @@
 ﻿import {
     Autocomplete,
     Badge,
-    Button,
     Card,
+    Checkbox,
     Group,
-    Image, MultiSelect,
+    Image,
+    MultiSelect,
     Text,
     Textarea,
     TextInput,
@@ -23,17 +24,17 @@ export interface FormFile {
     Folder: string;
 }
 
-export function UploadBox({rawFile, file, posts}: { rawFile: File, file: FormFile, posts: MFile[] }) {
+export function UploadBox({file, posts}: { file: FormFile, posts: MFile[] }) {
     const theme = useMantineTheme();
 
     const form = useForm({
         initialValues: {
-            Title: rawFile.name,
-            Description: "",
-            NSFW: false,
-            File: rawFile,
-            Tags: [],
-            Folder: ""
+            Title: file.Title,
+            Description: file.Description,
+            NSFW: file.NSFW,
+            File: file.File,
+            Tags: file.Tags,
+            Folder: file.Folder
         },
         validate: {
             Title: (value: string) => value.length > 0 ? null : "Please enter a title",
@@ -41,15 +42,16 @@ export function UploadBox({rawFile, file, posts}: { rawFile: File, file: FormFil
         }
     });
 
-    return <Card sx={{display: "inline-flex"}}>
-        <Card.Section mr="md" mb={-16}>
+    return <Card sx={{display: "inline-flex", transition: "all .375s var(--animation-ease)"}}>
+        <Card.Section mr="md" mb={-16} sx={{transition: "all .375s var(--animation-ease)"}}>
             <Image withPlaceholder placeholder={<Text size="xs" align="center">
-                {getExt(rawFile.name)}-format file
+                {getExt(file.Title)}-format file
             </Text>} radius={0} styles={{
                 root: {
                     width: 300,
                     height: "100%",
-                    background: theme.primaryColor
+                    background: theme.primaryColor,
+                    transition: "all .375s var(--animation-ease)"
                 },
                 imageWrapper: {
                     height: "100%"
@@ -64,7 +66,7 @@ export function UploadBox({rawFile, file, posts}: { rawFile: File, file: FormFil
                     top: 0,
                     left: 0
                 }
-            }} src={URL.createObjectURL(rawFile)} alt="" sx={{color: theme.primaryColor}}/>
+            }} src={URL.createObjectURL(file.File)} alt="" sx={{color: theme.primaryColor}}/>
         </Card.Section>
         <form style={{flex: 1}} onChange={(e) => {
             e.preventDefault();
@@ -78,11 +80,11 @@ export function UploadBox({rawFile, file, posts}: { rawFile: File, file: FormFil
         }
         }>
             <Group position="apart">
-                <Text size="xs">{rawFile.name}</Text>
+                <Text size="xs">{file.Title}</Text>
                 <Group>
-                    <Text size="xs">{(rawFile.size / 1e3 / 1e3).toFixed(2)} MB</Text>
-                    <Badge>{getExt(rawFile.name)}</Badge>
-                    {form.getInputProps("NSFW").value ? <Badge color="red">NSFW</Badge> : undefined}
+                    <Checkbox size="xs" label="NSFW" {...form.getInputProps("NSFW")} />
+                    <Text size="xs">{(file.File.size / 1e3 / 1e3).toFixed(2)} MB</Text>
+                    <Badge>{getExt(file.File.name)}</Badge>
                 </Group>
             </Group>
             <TextInput label="Title" placeholder="Call it something easy to forget, like 'Sneed'!"
@@ -98,7 +100,7 @@ export function UploadBox({rawFile, file, posts}: { rawFile: File, file: FormFil
                 getCreateLabel={(t) => `+ ${t}`}
                          {...form.getInputProps("Tags")}
             />
-            <Autocomplete label="Category" placeholder="Enter category here"
+                <Autocomplete label="Category" placeholder="Enter category here"
                           data={retrieveAllFolders(posts)} {...form.getInputProps("Folder")} />
         </form>
     </Card>

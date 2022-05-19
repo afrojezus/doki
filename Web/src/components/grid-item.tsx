@@ -9,11 +9,11 @@ import {
     ThemeIcon,
     Image,
     useMantineTheme,
-    Stack
+    Stack, Tooltip
 } from "@mantine/core";
-import { File as FileIcon, Folder } from "tabler-icons-react";
+import {File as FileIcon, Folder, User} from "tabler-icons-react";
 import Link from "next/link";
-import { File } from "@server/models";
+import {Author, File} from "@server/models";
 import { displayFilename, getExt, pictureFormats, videoFormats } from "../../utils/file";
 import { formatDate, ParseUnixTime } from "../../utils/date";
 import { useRouter } from "next/router";
@@ -41,8 +41,9 @@ function GridItem({
     selected,
     onSelect,
     onUnselect,
-    style
-}: { data: File, editMode: boolean, selected: boolean, onSelect: (file: File) => void, onUnselect: (file: File) => void, style?: any }) {
+    style,
+    author
+}: { data: File, editMode: boolean, selected: boolean, onSelect: (file: File) => void, onUnselect: (file: File) => void, style?: any, author?: Author }) {
     const theme = useMantineTheme();
     const router = useRouter();
 
@@ -80,7 +81,7 @@ function GridItem({
 
         <Card.Section>
             {[...videoFormats, ...pictureFormats].includes(getExt(data.FileURL)) ?
-                <Image src={`/${videoFormats.includes(getExt(data.FileURL)) ? data.Thumbnail : data.FileURL}`}
+                <Image sx={{filter: data.NSFW ? "blur(10px)" : undefined}} src={`/${videoFormats.includes(getExt(data.FileURL)) ? data.Thumbnail : data.FileURL}`}
                     fit="cover" width="100%" height={130} alt="" />
                 : <ThemeIcon variant="gradient" sx={{ width: "100%", height: 160 }} radius={0}
                     gradient={{ from: 'teal', to: 'blue', deg: 60 }}>
@@ -101,13 +102,13 @@ function GridItem({
             <Group position="apart" style={{ marginBottom: 5, marginTop: theme.spacing.sm, flex: 1 }}>
                 <Text size="sm" sx={{ fontFamily: "Manrope, sans-serif;", fontWeight: 700 }}
                     weight={500}>{displayFilename(data)}</Text>
-                {data.NSFW && <Badge color="red">
-                    NSFW
-                </Badge>}
             </Group>
-            <Text size="xs" style={{ color: secondaryColor }}>
-                {data.Author.Name}
-            </Text>
+            <Group spacing={8}>
+                <Text size="xs" style={{ color: secondaryColor }}>
+                    {data.Author.Name}
+                </Text>
+                {author && author.AuthorId === data.AuthorId && <Tooltip label="Your upload"><User size={16} /></Tooltip>}
+            </Group>
             <Group position="apart">
                 <Text size="xs" style={{ color: secondaryColor }}>
                     {formatDate(ParseUnixTime(data.UnixTime))}
@@ -118,6 +119,12 @@ function GridItem({
                 <Text size="xs" style={{ color: secondaryColor }}>
                     {(data.Views)} views
                 </Text>
+            </Group>
+            <Group position="apart">
+                {data.Folder && <Badge color="yellow">{data.Folder}</Badge>}
+                {data.NSFW && <Tooltip label="This file is rated not safe for work"><Badge color="red">
+                    NSFW
+                </Badge></Tooltip>}
             </Group>
         </Stack>
     </Card>

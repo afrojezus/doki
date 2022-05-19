@@ -1,10 +1,16 @@
 import {useRouter} from "next/router";
 import {
-    ActionIcon, Aside, Badge, Box,Group, Image,
-     ScrollArea,
+    ActionIcon,
+    Aside,
+    Badge,
+    Box,
+    Group,
+    Image,
     Slider,
-    Stack, Text,
-    Title, Tooltip,
+    Stack,
+    Text,
+    Title,
+    Tooltip,
     UnstyledButton,
     useMantineTheme
 } from "@mantine/core";
@@ -15,8 +21,11 @@ import {
     PictureInPicture,
     PlayerPause,
     PlayerPlay,
-    PlayerSkipBack, PlayerSkipForward,
-    Repeat, RepeatOff, Resize,
+    PlayerSkipBack,
+    PlayerSkipForward,
+    Repeat,
+    RepeatOff,
+    Resize,
     Volume,
     Volume3
 } from "tabler-icons-react";
@@ -70,6 +79,20 @@ export async function getServerSideProps(nextPage: NextPageContext) {
     }
 }
 
+function Clock({hoveringPlayer, hidden})
+{
+    const [time, setTime] = useState(new Date());
+    useEffect(() => {
+        const i = setInterval(() => setTime(new Date()), 1000);
+
+        return function cleanup() {
+            clearInterval(i);
+        }
+    }, []);
+    return <Text sx={{transition: "all .375s var(--animation-ease)", animation: "flowDown 7s var(--animation-ease)", position: "absolute", top: 32, right: hidden ? 64 : 64 + 500, color: "white", zIndex: 10, opacity: hoveringPlayer ? 1 : 0.2, fontSize: 32, fontWeight: "800 !important"}} size="xl" className="use-m-font">{time.getHours()}:{time.getMinutes()}</Text>
+
+}
+
 function Page(props: PageProps) {
     const router = useRouter();
     const theme = useMantineTheme();
@@ -90,8 +113,6 @@ function Page(props: PageProps) {
     const [progress, setProgress] = useState<{ played: 0, loaded: 0 }>({ played: 0, loaded: 0 });
     const [pip, setPip] = useState(false);
     const [objFit, setObjFit] = useState(true);
-
-    const [time, setTime] = useState(new Date());
 
     function handleNewFile() {
         setVisualizer(random(props.posts,onlyGetVideo));
@@ -115,14 +136,6 @@ function Page(props: PageProps) {
         setVisualizer(random(props.posts,onlyGetVideo));
         // router.push(`/view/${random(props.posts, onlyGetMedia).Id}`);
     }
-
-    useEffect(() => {
-        const i = setInterval(() => setTime(time), 1000);
-
-        return function cleanup() {
-            clearInterval(i);
-        }
-    }, []);
 
     useEffect(() => {
         setCookies('player-volume', volume, { maxAge: 60 * 60 * 24 * 30 });
@@ -214,7 +227,7 @@ function Page(props: PageProps) {
         <SEO title="TV" siteTitle="Doki"
              description="Content for days"/>
         <ActionIcon sx={{transition: "all .375s var(--animation-ease)", animation: "flowDown 7s var(--animation-ease)", position: "absolute", left: 16, top: 16, color: "white", zIndex: 10, opacity: hoveringPlayer ? 1 : 0}} onClick={() => router.back()}><ArrowBack /></ActionIcon>
-        <Text sx={{transition: "all .375s var(--animation-ease)", animation: "flowDown 7s var(--animation-ease)", position: "absolute", top: 32, right: hidden ? 64 : 64 + 500, color: "white", zIndex: 10, opacity: hoveringPlayer ? 1 : 0.2, fontSize: 32, fontWeight: "800 !important"}} size="xl" className="use-m-font">{time.getHours()}:{time.getMinutes()}</Text>
+        <Clock hidden={hidden} hoveringPlayer={hoveringPlayer} />
         <div className="content-wrapper"
              style={{ cursor: hoveringPlayer ? undefined : "none" }}
              onMouseMove={handleMouseActivity}

@@ -40,8 +40,6 @@ function Page() {
         }}>
             <Title align="center" m="auto" sx={{zIndex: 1000, textShadow: "0 2px 6px rgba(0,0,0,.2)", color: "white"}}>Content
                 for days</Title>
-            <img src="/assets/uoh.gif"
-                 style={{objectFit: "contain", width: "100%", height: "100%", position: "absolute", opacity: 0.15}}/>
         </div>
 
         <Stack my="md">

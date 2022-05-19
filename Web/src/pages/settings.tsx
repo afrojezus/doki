@@ -1,24 +1,22 @@
 import {
     Accordion,
-    Aside,
     Badge,
     Button,
     Card,
-    ColorScheme,
     Group,
     MantineColor,
-    MediaQuery, MultiSelect,
-    ScrollArea,
+    MultiSelect,
     Select,
     Stack,
     Switch,
     Text,
     Title,
+    useMantineColorScheme,
     useMantineTheme
 } from '@mantine/core';
 import {checkCookies, getCookie, setCookies} from 'cookies-next';
 import {Check} from 'tabler-icons-react';
-import Layout, {Menubar, Tabbar} from '../components/layout';
+import Layout from '../components/layout';
 import SEO from '../components/seo';
 import {useContext, useEffect, useState} from "react";
 import FileRepository from "@server/repositories/FileRepository";
@@ -28,9 +26,9 @@ import AuthorRepository from '@server/repositories/AuthorRepository';
 import {formatDate, ParseUnixTime} from 'utils/date';
 import {Item, Value} from "@src/components/filter-elements";
 import {getLocale, LocaleContext} from "@src/locale";
+import {useRouter} from "next/router";
 
 interface PageProps {
-    colorScheme: ColorScheme;
     accentColor: MantineColor;
     NSFW: boolean;
     posts: File[];
@@ -57,9 +55,8 @@ export async function getServerSideProps({req, res}) {
     }
     return {
         props: {
-            colorScheme: checkCookies('color-scheme') ? getCookie('color-scheme', {req, res}) : "dark",
-            accentColor: checkCookies('accent-color') ? getCookie('accent-color', {req, res}) : "blue",
-            nsfw: checkCookies('allow-nsfw-content') ? getCookie('allow-nsfw-content', {req, res}) : true,
+            accentColor: checkCookies('accent-color', {req, res}) ? getCookie('accent-color', {req, res}) : "blue",
+            nsfw: checkCookies('allow-nsfw-content', {req, res}) ? getCookie('allow-nsfw-content', {req, res}) : true,
             locale: checkCookies('locale', {req,res}) ? getCookie('locale', {req,res}) : "en",
             filter: checkCookies('filtered', {req, res}) ? JSON.parse(getCookie('filtered', {req, res}) as string) : [],
             posts,
@@ -70,44 +67,44 @@ export async function getServerSideProps({req, res}) {
 
 function Page(props: PageProps) {
     const theme = useMantineTheme();
+    const router = useRouter();
     const loc = useContext(LocaleContext);
-    const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme);
+    const { colorScheme, toggleColorScheme } = useMantineColorScheme();
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [nsfwOn, setNsfw] = useState<boolean>(props.NSFW);
     const [filter, setFilter] = useState<string[]>(props.filter);
     const [locale, setLocale] = useState<string>(props.locale);
 
-    function toggleColorScheme() {
+    function tCS () {
         const newColorScheme = colorScheme === 'dark' ? 'light' : 'dark';
-        setColorScheme(newColorScheme);
+        toggleColorScheme(newColorScheme);
         setCookies('color-scheme', newColorScheme, {maxAge: 60 * 60 * 24 * 30});
         //router.reload();
     }
 
-    function newAccentColor(color: string) {
+    async function newAccentColor(color: string) {
         setAccentColor(color);
         setCookies('accent-color', color, {maxAge: 60 * 60 * 24 * 30});
-        //router.reload();
+        await router.replace(router.asPath);
     }
 
-    function newLocale(loc: string) {
+    async function newLocale(loc: string) {
         setLocale(loc);
         setCookies('locale', loc, {maxAge: 60 * 60 * 24 * 30});
-        //router.reload();
+        await router.replace(router.asPath);
     }
 
-    function toggleNSFW(event) {
+    async function toggleNSFW(event) {
         const newNSFW = event.currentTarget.checked;
         setCookies('allow-nsfw-content', newNSFW, {maxAge: 60 * 60 * 24 * 30});
-        //router.reload();
+        await router.replace(router.asPath);
     }
 
     useEffect(() => {
         if (props.accentColor !== accentColor) setAccentColor(props.accentColor);
         if (props.NSFW !== nsfwOn) setNsfw(props.NSFW);
-        if (props.colorScheme !== colorScheme) setColorScheme(props.colorScheme);
         if (props.filter !== filter) setFilter(props.filter);
-    }, [props.accentColor, props.NSFW, props.colorScheme, props.filter]);
+    }, [props.accentColor, props.NSFW, props.filter]);
 
     return <Layout asideContent={<>
             <Stack mb="md">
@@ -181,7 +178,7 @@ function Page(props: PageProps) {
             <Text size="xs">{`${getLocale(loc).Settings["language-label"]}`}</Text>
             <Select value={locale} data={languages} onChange={newLocale}/>
             <Text size="xs">{`${getLocale(loc).Settings["dark-mode"]}`}</Text>
-            <Switch checked={colorScheme === 'dark'} onChange={toggleColorScheme}
+            <Switch checked={colorScheme === 'dark'} onChange={tCS}
                     label={colorScheme === 'dark' ? "On" : "Off"}/>
             <Text size="xs">{`${getLocale(loc).Settings["accent-color"]}`}</Text>
             <Group>

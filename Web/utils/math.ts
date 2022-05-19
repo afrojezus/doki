@@ -1,0 +1,1 @@
+export const normalise = (value: number, min: number, max: number) => ((value - min) * 100) / (max - min);

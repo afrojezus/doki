@@ -7,7 +7,6 @@
     Group,
     Modal,
     Paper,
-    ScrollArea,
     Slider,
     Stack,
     Text,
@@ -30,8 +29,8 @@ import {
 import {showNotification} from '@mantine/notifications';
 import {useContext, useEffect, useState} from 'react';
 import {checkCookies, getCookie, setCookies} from 'cookies-next';
-import {CommentBox} from '../../components/comments';
-import Layout, {BottomNavBar, Menubar, Tabbar} from '../../components/layout';
+import {CommentBox} from '@src/components/comments';
+import Layout, {BottomNavBar} from '../../components/layout';
 import SEO from '../../components/seo';
 import {
     audioFormats,
@@ -131,6 +130,9 @@ function Page(props: PageProps) {
     const [progress, setProgress] = useState<{ played: 0, loaded: 0 }>({ played: 0, loaded: 0 });
     const [pip, setPip] = useState(false);
     const [objFit, setObjFit] = useState(true);
+    const [duration, setDuration] = useState(0);
+    const [seek, setSeek] = useState(-1);
+    const [willSeek, setWillSeek] = useState(false);
 
     function handleNewFile() {
         // check current as seen
@@ -224,6 +226,11 @@ function Page(props: PageProps) {
     function handleObjectFit() {
         setObjFit(!objFit);
     }
+    
+    function seekTo(s){
+        setSeek(s);
+        setWillSeek(true);
+    }
 
     return <Layout footer={<></>} hiddenCallback={(h) => setHidden(h)} padding={0} additionalMainStyle={{
         background: isPlayable ? "black" : undefined, ...(!objFit && {
@@ -313,7 +320,7 @@ function Page(props: PageProps) {
             }}
             {...(!desktop && longPress)}
         >
-            <DynamicContentSlide visualizer={visualizer} objFit={objFit} pipCallback={handlePiP} pip={pip}
+            <DynamicContentSlide seek={seek} willSeek={willSeek} seekCallback={() => setWillSeek(false)} onDuration={(n: number) => setDuration(n)} visualizer={visualizer} objFit={objFit} pipCallback={handlePiP} pip={pip}
                 onProgress={(p) => setProgress(p)} onClick={handleNewFile} data={`/${current.FileURL}`}
                 isSelected={playing} muted={muted} volume={volume}
                 repeat={repeat} onEnded={handleNewFile}
@@ -330,11 +337,12 @@ function Page(props: PageProps) {
                 height: 150,
                 opacity: 0,
                 ...(hoveringPlayer && {
-                    opacity: 1
+                    opacity: 1,
+                    pointerEvents: "all"
                 }),
                 zIndex: 5
             }}>
-                {current && <QuickDetails current={current} isPlayable={isPlayable} progress={progress} full sx={{
+                {current && <QuickDetails duration={duration} seekTo={seekTo} current={current} isPlayable={isPlayable} progress={progress} full sx={{
                     position: 'fixed',
                     bottom: 0,
                     paddingLeft: audioFormats.includes(getExt(current.FileURL)) ? 64 : 16,
@@ -345,7 +353,7 @@ function Page(props: PageProps) {
                     width: `calc(100% - ${audioFormats.includes(getExt(current.FileURL)) ? 64 : 16}px)`,
                     transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)"
                 }}>
-                    <BottomNavBar setHidden={(f) => setHidden(f)} hidden={hidden} />
+                    <BottomNavBar white setHidden={(f) => setHidden(f)} hidden={hidden} />
                 </QuickDetails>}
             </Box>
             <Box
@@ -371,7 +379,7 @@ function Page(props: PageProps) {
                     zIndex: 5
                 }}>
                     <Group>
-                        <ActionIcon onClick={() => {
+                        <ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={() => {
                             showNotification({
                                 message: muted ? "Unmuted!" : "Muted!",
                                 icon: muted ? <Volume size={24} /> : <Volume3 size={24} />,
@@ -389,15 +397,15 @@ function Page(props: PageProps) {
                             step={0.01} sx={{ minWidth: 100 }} />
                     </Group>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["prev"]}><ActionIcon
+                        withArrow label={getLocale(locale).Viewer["prev"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})}
                             onClick={() => router.back()}><PlayerSkipBack size={24} /></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["play"]}><ActionIcon
+                        withArrow label={getLocale(locale).Viewer["play"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})}
                             onClick={() => setPlaying(!playing)}>{playing ? <PlayerPause size={24} /> :
                                 <PlayerPlay size={24} />}</ActionIcon>
                     </Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["repeat"]}><ActionIcon onClick={() => {
+                        withArrow label={getLocale(locale).Viewer["repeat"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={() => {
                             showNotification({
                                 message: repeat ? "No longer repeating. Autoplay enabled." : "Autoplay disabled. The media will repeat.",
                                 icon: repeat ? <Repeat size={24} /> : <RepeatOff size={24} />,
@@ -408,15 +416,15 @@ function Page(props: PageProps) {
                             setRepeat(!repeat);
                         }}>{repeat ? <Repeat size={24} /> : <RepeatOff size={24} />}</ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["skip"]}><ActionIcon onClick={handleNewFile}><PlayerSkipForward
+                        withArrow label={getLocale(locale).Viewer["skip"]}><ActionIcon sx={(theme) => ({color: theme.colors.dark[0]})} onClick={handleNewFile}><PlayerSkipForward
                             size={24} /></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["pip"]}><ActionIcon onClick={handlePiP}><PictureInPicture
+                        withArrow label={getLocale(locale).Viewer["pip"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={handlePiP}><PictureInPicture
                             size={24} /></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["contain"]}><ActionIcon onClick={handleObjectFit}><Resize
+                        withArrow label={getLocale(locale).Viewer["contain"]}><ActionIcon sx={(theme) => ({color: theme.colors.dark[0]})} onClick={handleObjectFit}><Resize
                             size={24} /></ActionIcon></Tooltip>
-                    <ActionIcon color={firstTime ? "blue" : undefined} onClick={showHelp}><Help size={24} /></ActionIcon>
+                    <ActionIcon color={firstTime ? "blue" : undefined}  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={showHelp}><Help size={24} /></ActionIcon>
                 </Stack>
             </Box>
 

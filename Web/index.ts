@@ -1,6 +1,7 @@
 ﻿import "dotenv/config";
 import next from "next";
 import express from "express";
+import * as QueryString from "querystring";
 import figlet from "figlet";
 
 import {initDB} from "./server/models";
@@ -39,10 +40,11 @@ async function startup() {
         const server = express();
 
         server.get("/files/*", (req, res) => {
+            const target = QueryString.unescape(req.originalUrl);
             if (process.env.NODE_ENV === "production") {
-                return res.sendFile(path.resolve('./') + "/public" + req.originalUrl);
+                return res.sendFile(path.resolve('./') + "/public" + target);
             }
-            return res.sendFile(__dirname + "/public" + req.originalUrl);
+            return res.sendFile(__dirname + "/public" + target);
         });
 
         server.all("*", (req, res) =>

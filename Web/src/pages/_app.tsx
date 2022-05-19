@@ -1,4 +1,4 @@
-import {ColorScheme, MantineColor, MantineProvider} from '@mantine/core';
+import {ColorScheme, ColorSchemeProvider, MantineColor, MantineProvider} from '@mantine/core';
 import {NotificationsProvider} from '@mantine/notifications';
 import {AppProps} from 'next/app';
 import Head from 'next/head';
@@ -33,6 +33,10 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
         if (props.locale !== locale) setLocale(props.locale);
     }, [props.accentColor, props.colorScheme, props.locale]);
 
+    // https://mantine.dev/theming/dark-theme/#colorschemeprovider
+    const toggleColorScheme = (value?: ColorScheme) =>
+        setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+
     return (
         <>
             <Head>
@@ -42,7 +46,8 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
                 <link rel="manifest" href="/manifest.webmanifest" />
                 <meta name="theme-color" content="#000000" />
             </Head>
-
+            
+            <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
             <LocaleContext.Provider value={{locale, messages}}>
             <MantineProvider
                 withGlobalStyles
@@ -57,6 +62,7 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
                 </NotificationsProvider>
             </MantineProvider>
             </LocaleContext.Provider>
+            </ColorSchemeProvider>
         </>
     );
 }

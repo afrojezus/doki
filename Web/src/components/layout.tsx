@@ -4,30 +4,28 @@ import {
     AppShell,
     Aside,
     Badge,
-    Button, Card, Center,
+    Button,
     CSSObject,
-    Divider, Footer, Group, Header,
+    Divider,
+    Footer,
+    Group,
     LoadingOverlay,
     MediaQuery,
-    Menu, ScrollArea, Stack,
+    Menu,
+    ScrollArea,
     Text,
-    Tooltip, UnstyledButton,
+    Tooltip,
+    UnstyledButton,
     useMantineTheme
 } from '@mantine/core';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import Link from 'next/link';
 import {Folder, Home, InfoCircle, Menu2, Settings, Upload, X} from 'tabler-icons-react';
-import useSound from "use-sound";
 
 import Emoji from './emoji';
 import {useRouter} from 'next/router';
-import {useMediaQuery} from '@mantine/hooks';
 import {getLocale, LocaleContext} from "@src/locale";
-import {formatDate, ParseUnixTime} from "../../utils/date";
-import {getExt} from "../../utils/file";
-import {CommentBox} from "@src/components/comments";
-import {MenuIcon} from "@mantine/core/lib/components/Menu/MenuIcon";
 
 interface Disk {
     freeSpace: number;
@@ -46,6 +44,8 @@ interface Layout {
     permanent?: boolean;
     padding?: any;
     hiddenCallback?: (h: boolean) => void;
+    hideTabbar?: boolean;
+    noScrollArea?: boolean;
 }
 
 const fetcher = async (url) => {
@@ -65,7 +65,6 @@ function Mbar({
     const {data, error} = useSWR(() => `/api/disk`, fetcher);
     const router = useRouter();
     const locale = useContext(LocaleContext);
-    const [play] = useSound("/assets/mode_press.wav", {volume: 0.5});
 
     if (error) return <Aside.Section>
         <Text>The server is down.</Text>
@@ -92,7 +91,7 @@ function Mbar({
                 </Link>
                 <Divider/>
                 <Link href="/modes" passHref>
-                    <Menu.Item onClick={play}>{getLocale(locale).Common["modes"]}</Menu.Item>
+                    <Menu.Item>{getLocale(locale).Common["modes"]}</Menu.Item>
                 </Link>
                 {/*<Link href="/policies" passHref>
                     <Menu.Item>Policies</Menu.Item>
@@ -126,12 +125,12 @@ export function Tabbar() {
         </Aside.Section></>
 }
 
-export function BottomNavBar({setHidden, hidden}) {
+export function BottomNavBar({setHidden, hidden, white = false}) {
     const locale = useContext(LocaleContext);
     const router = useRouter();
     return <Group position="apart">
         <MediaQuery smallerThan="sm" styles={{display: "none"}}><Group ml="md">
-            <Text weight="500" sx={{fontFamily: "Manrope, sans-serif;", fontWeight: 800, lineHeight: 1.75}}>doki</Text>
+            <Text weight="500" sx={(theme) => ({fontFamily: "Manrope, sans-serif;", fontWeight: 800, lineHeight: 1.75, color: white ? theme.colors.dark[0] : undefined})}>doki</Text>
             <Tooltip label="Work in progress" placement="end"><Badge sx={{marginBottom: 4}}>M2</Badge></Tooltip>
         </Group></MediaQuery>
         <Group spacing={0}>
@@ -140,7 +139,7 @@ export function BottomNavBar({setHidden, hidden}) {
                     display: 'block',
                     padding: theme.spacing.xs,
                     borderRadius: theme.radius.sm,
-                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : white ? theme.colors.dark[0] : theme.black,
                     transition: "all .375s var(--animation-ease)",
 
                     '&:hover': {
@@ -164,7 +163,7 @@ export function BottomNavBar({setHidden, hidden}) {
                     display: 'block',
                     padding: theme.spacing.xs,
                     borderRadius: theme.radius.sm,
-                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : white ? theme.colors.dark[0] : theme.black,
                     transition: "all .375s var(--animation-ease)",
 
                     '&:hover': {
@@ -188,7 +187,7 @@ export function BottomNavBar({setHidden, hidden}) {
                     display: 'block',
                     padding: theme.spacing.xs,
                     borderRadius: theme.radius.sm,
-                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : white ? theme.colors.dark[0] : theme.black,
                     transition: "all .375s var(--animation-ease)",
 
                     '&:hover': {
@@ -212,7 +211,7 @@ export function BottomNavBar({setHidden, hidden}) {
                     display: 'block',
                     padding: theme.spacing.xs,
                     borderRadius: theme.radius.sm,
-                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : white ? theme.colors.dark[0] : theme.black,
                     transition: "all .375s var(--animation-ease)",
 
                     '&:hover': {
@@ -232,18 +231,17 @@ export function BottomNavBar({setHidden, hidden}) {
                 </UnstyledButton>
             </Link>
         </Group>
-        <ActionIcon mr="md" onClick={() => setHidden(!hidden)}><Menu2 /></ActionIcon>
+        <ActionIcon sx={(theme) => ({color: white ? theme.colors.dark[0] : undefined})} mr="md" onClick={() => setHidden(!hidden)}><Menu2 /></ActionIcon>
     </Group>
 }
 
-export default function Layout({children, footer = null, aside = null, header = null, navbar = null, additionalMainStyle, asideContent, hiddenAside, permanent = true, padding = "md", hiddenCallback}: Layout) {
+export default function Layout({children, footer = null, aside = null, header = null, navbar = null, additionalMainStyle, asideContent, hiddenAside, permanent = true, padding = "md", hiddenCallback, noScrollArea = false, hideTabbar = false}: Layout) {
     const theme = useMantineTheme();
-    const locale = useContext(LocaleContext);
-    const [hidden, setHidden] = useState<boolean>(hiddenAside);
+    const [hidden, setHidden] = useState<boolean>(false);
 
     useEffect(() => {
         if (permanent) {
-            setHidden(false);
+            setHidden(hiddenAside);
         } else {
             setHidden(hiddenAside);
         }
@@ -258,6 +256,7 @@ export default function Layout({children, footer = null, aside = null, header = 
                 ...additionalMainStyle
             },
         }}
+        navbarOffsetBreakpoint="sm"
         asideOffsetBreakpoint="sm"
         fixed
         padding={padding}
@@ -274,10 +273,10 @@ export default function Layout({children, footer = null, aside = null, header = 
                           }), ...(hidden && { opacity: 0, right: -(300 - 16), pointerEvents: "none" })
                       }} width={{ lg: 300 }}>
             <Menubar closeFunc={() => { setHidden(true); hiddenCallback && hiddenCallback(true); }} />
-            <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
+            {noScrollArea ? asideContent : <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
             {asideContent}
-            </Aside.Section>
-            <Tabbar />
+            </Aside.Section>}
+            {hideTabbar ? undefined : <Tabbar />}
         </Aside>}
         footer={footer ? footer : <Footer height={42}>
             <BottomNavBar setHidden={(f) => setHidden(f)} hidden={hidden} />

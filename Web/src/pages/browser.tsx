@@ -1,14 +1,10 @@
 import {
     Accordion,
-    Aside,
-    Box,
     Button,
     Checkbox,
-    Container,
     Divider,
-    Group, LoadingOverlay,
-    MediaQuery,
-    ScrollArea,
+    Group,
+    LoadingOverlay,
     Select,
     SimpleGrid,
     Stack,
@@ -18,37 +14,38 @@ import {
     useMantineTheme
 } from '@mantine/core';
 import GridItem from '../components/grid-item';
-import Layout, { Menubar, Tabbar } from '../components/layout';
+import Layout from '../components/layout';
 import SEO from '../components/seo';
-import { Author, File } from "@server/models";
-import { useContext, useEffect, useState } from "react";
-import { Edit } from 'tabler-icons-react';
-import { useRouter } from 'next/router';
-import { getExt, retrieveAllFileTypes, retrieveAllTags, toMatrix } from "../../utils/file";
+import {Author, File} from "@server/models";
+import {useContext, useEffect, useState} from "react";
+import {Edit} from 'tabler-icons-react';
+import {useRouter} from 'next/router';
+import {getExt, retrieveAllFileTypes, retrieveAllTags} from "../../utils/file";
 import Link from "next/link";
-import { checkCookies, getCookie } from "cookies-next";
-import { NextPageContext } from "next";
+import {checkCookies, getCookie} from "cookies-next";
+import {NextPageContext} from "next";
 import AuthorRepository from "@server/repositories/AuthorRepository";
 import useSWR from "swr";
-import { showNotification } from "@mantine/notifications";
-import { getLocale, LocaleContext } from "@src/locale";
-import { FixedSizeGrid as Grid } from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer";
+import {showNotification} from "@mantine/notifications";
+import {getLocale, LocaleContext} from "@src/locale";
 
 interface PageProps {
-    // posts: File[];
+    posts: File[];
     author: Author;
     filter: string[];
 }
 
 export async function getServerSideProps(nextPage: NextPageContext) {
+    // TODO: Implement pagination as an alternative
+
     // this is slow as fuck.
     /*const posts = await FileRepository.findAll({
         include: {
             model: Author,
             required: true
-        }
-    }); */
+        },
+        limit: 10
+    });*/
 
     let author: Author | null;
     try {
@@ -127,8 +124,6 @@ function Page(props: PageProps) {
     }, [router.query]);
 
     useEffect(() => {
-
-        console.log(data, error);
         if (error) {
             showNotification({
                 color: "red",
@@ -170,7 +165,7 @@ function Page(props: PageProps) {
         setSearchF(search);
     }
 
-    function RenderGridItem({ rowIndex, columnIndex, data, style }) {
+    /*function RenderGridItem({ rowIndex, columnIndex, data, style }) {
         const item = data[rowIndex][columnIndex];
         if (!item) return <></>;
         return <GridItem
@@ -184,7 +179,7 @@ function Page(props: PageProps) {
             editMode={editMode} selected={selected.includes(item)}
             onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
             onSelect={(f) => setSelected(p => [...p, f])} data={item} key={`${columnIndex}-${rowIndex}`} />
-    }
+    }*/
 
     return <Layout asideContent={
         <>
@@ -316,7 +311,7 @@ function Page(props: PageProps) {
                 .filter(f => f.Title ? f.Title.match(searchF) : f)
                 .filter(f => f.FileURL.match(searchF))
                 .map((elem, index) =>
-                    <GridItem editMode={editMode} selected={selected.includes(elem)}
+                    <GridItem author={props.author} editMode={editMode} selected={selected.includes(elem)}
                         onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
                         onSelect={(f) => setSelected(p => [...p, f])} data={elem} key={index} />)}
         </SimpleGrid>}

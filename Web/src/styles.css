@@ -112,7 +112,7 @@
 @keyframes navigation-demo {
     from {
         opacity: 0;
-        min-width: 0px;
+        min-width: 0;
         transform: translateX(50%);
     }
 
