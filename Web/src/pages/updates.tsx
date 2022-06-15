@@ -1,10 +1,34 @@
-import {Accordion, Aside, Button, Group, MediaQuery, ScrollArea, Stack, Text, Title} from '@mantine/core';
+import {Accordion, Aside, Badge, Button, Group, MediaQuery, ScrollArea, Stack, Text, Title} from '@mantine/core';
 import Layout, {Menubar, Tabbar} from '../components/layout';
 import SEO from '../components/seo';
 
 const M2 = [
     {
         current: true,
+        version: 'M2.02',
+        details: () => (
+            <>
+                <p>
+                    - Added internationalization. (UI language can now be changed to Norwegian, Ukranian, etc.)
+                    <br/>
+                    - Re-added several core features from M1, including editing files.
+                    <br/>
+                    - Fixed video player seeker
+                    <br/>
+                    - SEO-optimization, links to files can now be previewed.
+                    <br/>
+                    - Middle-mouse clicking issue patched.
+                    <br/>
+                    - Upload page improvements.
+                    <br/>
+                    - Styling improvements.
+                </p>
+            </>
+
+        ),
+    },
+    {
+        current: false,
         version: 'M2.01',
         details: () => (
             <>
@@ -453,7 +477,9 @@ function Page() {
             <Text size="xs">M2 Builds</Text>
             <Accordion>
                 {M2.map((elem, index) =>
-                    <Accordion.Item key={index} label={elem.version}>
+                    <Accordion.Item key={index}
+                                    label={<Group><Text>{elem.version}</Text>{elem.current && <Badge>Current</Badge>}
+                                    </Group>}>
                         <elem.details/>
                     </Accordion.Item>)}
             </Accordion>

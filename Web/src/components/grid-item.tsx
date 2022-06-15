@@ -3,22 +3,25 @@ import {
     Card,
     Checkbox,
     Group,
+    Image,
     Paper,
     Space,
+    Stack,
     Text,
     ThemeIcon,
-    Image,
-    useMantineTheme,
-    Stack, Tooltip
+    Tooltip,
+    useMantineTheme
 } from "@mantine/core";
 import {File as FileIcon, Folder, User} from "tabler-icons-react";
 import Link from "next/link";
 import {Author, File} from "@server/models";
-import { displayFilename, getExt, pictureFormats, videoFormats } from "../../utils/file";
-import { formatDate, ParseUnixTime } from "../../utils/date";
-import { useRouter } from "next/router";
+import {displayFilename, getExt, pictureFormats, videoFormats} from "../../utils/file";
+import {formatDate, ParseUnixTime} from "../../utils/date";
+import {useRouter} from "next/router";
+import {useState} from "react";
+import {Palette} from "node-vibrant/lib/color";
 
-export function SmallGridItem({ data }) {
+export function SmallGridItem({data}) {
     const theme = useMantineTheme();
 
     return <Link href={`/browser?f=${data}`} passHref><Paper sx={{
@@ -46,10 +49,19 @@ function GridItem({
 }: { data: File, editMode: boolean, selected: boolean, onSelect: (file: File) => void, onUnselect: (file: File) => void, style?: any, author?: Author }) {
     const theme = useMantineTheme();
     const router = useRouter();
+    const [palette] = useState<Palette>(null);
 
     const secondaryColor = theme.colorScheme === 'dark'
         ? theme.colors.dark[1]
         : theme.colors.gray[7];
+
+    /*useEffect(() => {
+        if (data && locatePreview(data)) {
+
+            const v = new Vibrant(locatePreview(data));
+            v.getPalette().then((pal) => setPalette(pal));
+        }
+    }, [data]);*/
 
     return <Card
         style={style}
@@ -57,15 +69,19 @@ function GridItem({
             transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
             border: selected ? `4px solid ${theme.colors.blue[6]}` : undefined,
             ':hover': {
-                border: `${selected ? 4 : 1}px solid ${editMode ? theme.colors.blue[6] : theme.colors.dark[0]}`,
-                boxShadow: theme.shadows[3]
+                border: `${selected ? 4 : 1}px solid ${editMode ? theme.colors.blue[6] : palette ? theme.colorScheme === "dark" ? palette.Muted.hex : palette.DarkMuted.hex : theme.colors.dark[0]}`,
+                boxShadow: theme.shadows[3],
+                '> * > .mantine-Image-root': {
+                    opacity: 0.5
+                }
             },
             display: "flex",
             flexDirection: "column",
             '&>div': {
                 flex: 1
             },
-            cursor: "pointer"
+            cursor: "pointer",
+            background: palette ? theme.colorScheme === "dark" ? palette.DarkMuted.hex : palette.Muted.hex : undefined
         }} onClick={() => {
 
             if (editMode) {
@@ -81,11 +97,13 @@ function GridItem({
 
         <Card.Section>
             {[...videoFormats, ...pictureFormats].includes(getExt(data.FileURL)) ?
-                <Image sx={{filter: data.NSFW ? "blur(10px)" : undefined}} src={`/${videoFormats.includes(getExt(data.FileURL)) ? data.Thumbnail : data.FileURL}`}
-                    fit="cover" width="100%" height={130} alt="" />
-                : <ThemeIcon variant="gradient" sx={{ width: "100%", height: 160 }} radius={0}
-                    gradient={{ from: 'teal', to: 'blue', deg: 60 }}>
-                    <FileIcon size={48} />
+                <Image sx={{
+                    filter: data.NSFW ? "blur(10px)" : undefined,
+                    transition: "all .375s cubic-bezier(.07, .95, 0, 1)"
+                }} src={`/${videoFormats.includes(getExt(data.FileURL)) ? data.Thumbnail : data.FileURL}`}
+                       fit="cover" width="100%" height={130} alt=""/>
+                : <ThemeIcon variant="filled" sx={{width: "100%", height: 130}} radius={0}>
+                    <FileIcon size={48}/>
                 </ThemeIcon>}
 
 
@@ -99,24 +117,33 @@ function GridItem({
             }} checked={selected} />
         </Card.Section>
         <Stack spacing="xs">
-            <Group position="apart" style={{ marginBottom: 5, marginTop: theme.spacing.sm, flex: 1 }}>
-                <Text size="sm" sx={{ fontFamily: "Manrope, sans-serif;", fontWeight: 700 }}
-                    weight={500}>{displayFilename(data)}</Text>
+            <Group position="apart" style={{marginBottom: 5, marginTop: theme.spacing.sm, flex: 1}}>
+                <Text size="sm" sx={{
+                    fontFamily: "Manrope, sans-serif;",
+                    fontWeight: 700,
+                    color: palette ? theme.colorScheme === "dark" ? palette.LightVibrant.hex : palette.Vibrant.hex : undefined
+                }}
+                      weight={500}>{displayFilename(data)}</Text>
             </Group>
             <Group spacing={8}>
-                <Text size="xs" style={{ color: secondaryColor }}>
+                <Text size="xs"
+                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
                     {data.Author.Name}
                 </Text>
-                {author && author.AuthorId === data.AuthorId && <Tooltip label="Your upload"><User size={16} /></Tooltip>}
+                {author && author.AuthorId === data.AuthorId &&
+                    <Tooltip label="Your upload"><User size={16}/></Tooltip>}
             </Group>
             <Group position="apart">
-                <Text size="xs" style={{ color: secondaryColor }}>
+                <Text size="xs"
+                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
                     {formatDate(ParseUnixTime(data.UnixTime))}
                 </Text>
-                <Text size="xs" style={{ color: secondaryColor }}>
+                <Text size="xs"
+                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
                     {((data.Size) / 1e3 / 1e3).toFixed(2)} MB {getExt(data.FileURL)}
                 </Text>
-                <Text size="xs" style={{ color: secondaryColor }}>
+                <Text size="xs"
+                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
                     {(data.Views)} views
                 </Text>
             </Group>

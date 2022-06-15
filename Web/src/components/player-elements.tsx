@@ -1,17 +1,4 @@
-import {
-    Box,
-    Button,
-    Card,
-    Container,
-    Group,
-    Image, Paper,
-    Progress,
-    Space,
-    Stack,
-    Text,
-    ThemeIcon,
-    Title
-} from "@mantine/core";
+import {Box, Card, Container, Group, Image, Paper, Progress, Space, Stack, Text, ThemeIcon, Title} from "@mantine/core";
 import {audioFormats, displayFilename, getExt, pictureFormats, playableFormats} from "../../utils/file";
 import {createRef, useContext, useEffect, useRef, useState} from "react";
 import ReactPlayer from "react-player";
@@ -36,7 +23,7 @@ function format(seconds: number) {
     return `${mm}:${ss}`;
 }
 
-export function Duration({ className, seconds }:{className?: string, seconds: number}) {
+export function Duration({className, seconds}: { className?: string, seconds: number }) {
     return (
         <time dateTime={`P${Math.round(seconds)}S`} className={className}>
             {format(seconds)}
@@ -55,8 +42,8 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
 
     function handleTrack(e) {
         setSeeking(true);
-        setSeek(normalise(e.clientX, 0, e.currentTarget.clientWidth));
-        setRawSeek(normalise(e.clientX, 0, e.currentTarget.clientWidth) / 100);
+        setSeek(normalise(e.clientX - 16, 0, e.currentTarget.clientWidth));
+        setRawSeek(normalise(e.clientX - 16, 0, e.currentTarget.clientWidth) / 100);
     }
 
     function handleSeek() {
@@ -65,21 +52,60 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
     }
 
     return <Stack sx={sx}>
-        <Title order={5} className="rainbow">{displayFilename(current)}</Title>
-        {current.Description && <Text color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text>}
+        <Title order={5} className="file-title"
+               color={isPlayable && full ? "white" : undefined}>{displayFilename(current)}</Title>
+        {current.Description &&
+            <Text color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text>}
         <Group>
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{`${getLocale(locale).Viewer["uploaded-by"]} `}{current.Author.Name}</Text>
-            <Space />
+            <Text size="xs" color={isPlayable && full ? "white" : undefined}
+                  weight={500}>{`${getLocale(locale).Viewer["uploaded-by"]} `}{current.Author.Name}</Text>
+            <Space/>
             <Text size="xs" color={isPlayable && full ? "white" : undefined}
                   weight={500}>{getExt(current.FileURL)}{getLocale(locale).Viewer["file"]}</Text>
-            <Space />
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{current.Views}{` ${getLocale(locale).Viewer["views"]}`}</Text>
-            <Space />
-            <Text size="xs" color={isPlayable && full ? "white" : undefined} weight={500}>{current.Likes}{` ${getLocale(locale).Viewer["likes"]}`}</Text>
+            <Space/>
+            <Text size="xs" color={isPlayable && full ? "white" : undefined}
+                  weight={500}>{current.Views}{` ${getLocale(locale).Viewer["views"]}`}</Text>
+            <Space/>
+            <Text size="xs" color={isPlayable && full ? "white" : undefined}
+                  weight={500}>{current.Likes}{` ${getLocale(locale).Viewer["likes"]}`}</Text>
         </Group>
         {duration && seekTo ?
-        <Box sx={{position: "relative"}} py="sm" onMouseDown={handleSeek} onMouseMove={handleTrack} onMouseLeave={() => setSeeking(false)}>
-            <Progress radius={0} size="sm" value={progress.played * 100} styles={{
+            <Box sx={{position: "relative"}} py="sm" onMouseDown={handleSeek} onMouseMove={handleTrack}
+                 onMouseLeave={() => setSeeking(false)}>
+                <Progress radius={0} size="sm" value={progress.played * 100} styles={{
+                    root: {
+                        opacity: 0.5,
+                        display: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
+                    },
+                    bar: {
+                        transition: 'all 0.375s cubic-bezier(.07, .95, 0, 1)'
+                    }
+                }}/>
+                <Progress radius={0} size="sm" value={seek} ref={seeker} styles={{
+                    root: {
+                        opacity: seeking ? 0.3 : 0,
+                        display: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none",
+                        background: "transparent",
+                        transition: "all .375s var(--animation-ease)",
+                        marginTop: -5,
+                    },
+                    bar: {
+                        transition: "none",
+                        color: "white",
+                        backgroundColor: "white",
+                    }
+                }}/>
+                <Paper pl="xs" pr="xs" pt={1} pb={1} sx={{
+                    position: "absolute",
+                    left: `calc(${seek}% - 24px)`,
+                    zIndex: 2,
+                    bottom: 24,
+                    opacity: seeking ? 0.9 : 0,
+                    transition: "opacity .375s var(--animation-ease)"
+                }}>
+                    <Text size="xs"><Duration seconds={rawSeek * duration}/></Text>
+                </Paper>
+            </Box> : <Progress radius={0} size="sm" value={progress.played * 100} styles={{
                 root: {
                     opacity: 0.5,
                     display: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
@@ -87,63 +113,30 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
                 bar: {
                     transition: 'all 0.375s cubic-bezier(.07, .95, 0, 1)'
                 }
-            }} />
-        <Progress radius={0} size="sm" value={seek} ref={seeker} styles={{
-            root: {
-                opacity: seeking ? 0.3 : 0,
-                display: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none",
-                background: "transparent",
-                transition: "all .375s var(--animation-ease)",
-                marginTop: -5,
-            },
-            bar: {
-                transition: "none",
-                color: "white",
-                backgroundColor: "white",
-            }
-        }} />
-                <Paper pl="xs" pr="xs" pt={1} pb={1} sx={{
-                    position: "absolute",
-                    left: `calc(${seek}% - 32px)`,
-                    zIndex: 2,
-                    bottom: 24,
-                    opacity: seeking ? 0.9 : 0,
-                    transition: "opacity .375s var(--animation-ease)"
-                }}>
-                    <Text size="xs"><Duration seconds={rawSeek * duration} /></Text>
-                </Paper>
-        </Box> : <Progress radius={0} size="sm" value={progress.played * 100} styles={{
-            root: {
-            opacity: 0.5,
-            display: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
-        },
-            bar: {
-            transition: 'all 0.375s cubic-bezier(.07, .95, 0, 1)'
-        }
-        }} />}
+            }}/>}
         {children}
     </Stack>;
 }
 
 export function ContentSlide({
-                          visualizer,
-                          data,
-                          isSelected,
-                          muted,
-                          volume,
-                          repeat,
-                          onEnded,
-                          onClick,
-                          href = "/",
-                          onProgress,
-                          pip,
-                          pipCallback,
-                          objFit,
-    onDuration = null,
-    seek = -1,
-    willSeek = false,
-    seekCallback = null,
-                      }) {
+                                 visualizer,
+                                 data,
+                                 isSelected,
+                                 muted,
+                                 volume,
+                                 repeat,
+                                 onEnded,
+                                 onClick,
+                                 href = "/",
+                                 onProgress,
+                                 pip,
+                                 pipCallback,
+                                 objFit,
+                                 onDuration = null,
+                                 seek = -1,
+                                 willSeek = false,
+                                 seekCallback = null,
+                             }) {
     const [player, setPlayer] = useState<ReactPlayer>(null);
     const audioVisualizer = createRef<HTMLVideoElement>();
 
@@ -190,39 +183,36 @@ export function ContentSlide({
 
     return <div className="player-wrapper">
         {playableFormats.includes(getExt(data)) ?
-            <Box sx={{ "& > * > video": { objectFit: objFit ? "contain" : "cover" } }}
-                 style={{ width: "inherit", height: "inherit", position: "inherit" }} onClick={onClick}>
-                <ReactPlayer onDuration={onDuration} onReady={handleReady} progressInterval={0.001} stopOnUnmount playing={isSelected}
+            <Box sx={{"& > * > video": {objectFit: objFit ? "contain" : "cover"}}}
+                 style={{width: "inherit", height: "inherit", position: "inherit"}} onClick={onClick}>
+                <ReactPlayer onDuration={onDuration} onReady={handleReady} progressInterval={0.001} stopOnUnmount
+                             playing={isSelected}
                              onProgress={onProgress} muted={muted} volume={volume} loop={repeat} onEnded={onEnded}
                              className="react-player"
-                             url={data} width="100%" height="100%" />
+                             url={data} width="100%" height="100%"/>
                 {audioFormats.includes(getExt(data)) &&
                     <video src={`/${visualizer.FileURL}`} autoPlay loop muted width="100%" height="100%"
                            ref={audioVisualizer}
-                           style={{ objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh" }} />}
+                           style={{objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh"}}/>}
             </Box> :
             pictureFormats.includes(getExt(data)) ?
                 <Image onClick={onClick} src={data} alt="" width="100%" height="100vh"
-                       fit={objFit ? "contain" : "cover"} sx={{ margin: "auto" }} />
+                       fit={objFit ? "contain" : "cover"} sx={{margin: "auto"}}/>
                 :
-                    <Container sx={{ height: "100vh", display: "inline-flex" }}>
-                        <Card sx={{ margin: "auto", minWidth: 200 }}>
-                            <Card.Section>
-                                <ThemeIcon variant="gradient" sx={{ width: "100%", height: 160 }} radius={0}
-                                           gradient={{ from: 'teal', to: 'blue', deg: 60 }}>
-                                    <FileIcon size={48} />
-                                </ThemeIcon>
-                            </Card.Section>
-                            <Text my="md">
-                                Binary {getExt(data)} file
-                            </Text>
-                            <Button mb="md" fullWidth variant="light">
-                                Download
-                            </Button>
-                            <LinkButton href={href} fullWidth variant="light">
-                                Continue
-                            </LinkButton>
-                        </Card>
-                    </Container>}
+                <Container sx={{height: "100vh", display: "inline-flex"}}>
+                    <Card sx={{margin: "auto", minWidth: 200}}>
+                        <Card.Section>
+                            <ThemeIcon variant="light" sx={{width: "100%", height: 160}} radius={0}>
+                                <FileIcon size={48}/>
+                            </ThemeIcon>
+                        </Card.Section>
+                        <Text my="md">
+                            Binary {getExt(data)} file
+                        </Text>
+                        <LinkButton href={href} fullWidth variant="light">
+                            Continue
+                        </LinkButton>
+                    </Card>
+                </Container>}
     </div>
 }

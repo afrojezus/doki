@@ -4,7 +4,7 @@
     --animation-ease: cubic-bezier(.07, .95, 0, 1);
 }
 
-::-webkit-scrollbar {
+/*::-webkit-scrollbar {
     width: 1px;
 }
 
@@ -18,7 +18,38 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, .3);
+}*/
+
+#nprogress .bar {
+    background: transparent;
 }
+
+#nprogress .peg {
+    display: none;
+}
+
+#nprogress .spinner {
+    display: block;
+    position: fixed;
+    z-index: 1031;
+    top: 15px;
+    right: 15px;
+}
+
+#nprogress .spinner-icon {
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+
+    border: solid 2px transparent;
+    border-top-color: #29d;
+    border-left-color: #29d;
+    border-radius: 50%;
+
+    -webkit-animation: nprogress-spinner 400ms linear infinite;
+    animation: nprogress-spinner 400ms linear infinite;
+}
+
 
 .use-m-font {
     font-family: Manrope, sans-serif;
@@ -61,6 +92,7 @@
     animation: flowDown .375s var(--animation-ease);
 }
 
+/*noinspection CssInvalidPropertyValue*/
 .rainbow {
     background: linear-gradient(to right, #CF0000 0%, #FFF700 18%, #2BFF00 38%, #00FFDD 55%, #5D00FF 76%, #E600FF 90%, #CF0000 100%);
     background-size: 200% auto;
@@ -74,6 +106,27 @@
     font-size: 1.5em;
     font-family: Manrope, sans-serif;
     font-weight: 800;
+}
+
+/*noinspection CssInvalidPropertyValue*/
+.doki-vfx {
+    background: linear-gradient(to right, #777 0%, #999 18%, #eee 38%, #fff 55%, #444 76%, #333 90%, #555 100%);
+    background-size: 200% auto;
+    color: #000;
+    background-clip: text;
+    text-fill-color: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-animation: shine 6s linear infinite;
+    animation: shine 6s linear infinite;
+}
+
+.file-title {
+    font-size: 1.5em;
+    font-family: Manrope, sans-serif;
+    font-weight: 800;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, .5);
+    color: white;
 }
 
 .rainbow-box {

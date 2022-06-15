@@ -12,15 +12,8 @@ import {useEffect, useState} from 'react';
 import {useColorScheme} from "@mantine/hooks";
 import {LocaleContext, messages} from "@src/locale";
 
-NProgress.configure({showSpinner: false});
-
-Router.events.on("routeChangeStart", () => NProgress.start());
-Router.events.on("routeChangeComplete", () => NProgress.done());
-Router.events.on("routeChangeError", () => NProgress.done());
-
 export default function App(props: AppProps & { colorScheme: ColorScheme, accentColor: MantineColor, locale: string }) {
     const {Component, pageProps} = props;
-
     const preferredColorScheme = useColorScheme();
 
     const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme ?? preferredColorScheme);
@@ -33,6 +26,28 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
         if (props.locale !== locale) setLocale(props.locale);
     }, [props.accentColor, props.colorScheme, props.locale]);
 
+    useEffect(() => {
+        NProgress.configure({
+            showSpinner: false,
+            template: `<div class="bar" style="background: ${accentColor === "blue" ? "#29d" : accentColor}" role="bar"><div class="peg"></div></div><div class="spinner" role="spinner"><div class="spinner-icon"></div></div>`
+        });
+
+        const handleRouteStart = () => NProgress.start();
+        const handleRouteDone = () => NProgress.done();
+
+        Router.events.on("routeChangeStart", handleRouteStart);
+        Router.events.on("routeChangeComplete", handleRouteDone);
+        Router.events.on("routeChangeError", handleRouteDone);
+
+        return () => {
+            // Make sure to remove the event handler on unmount!
+            Router.events.off("routeChangeStart", handleRouteStart);
+            Router.events.off("routeChangeComplete", handleRouteDone);
+            Router.events.off("routeChangeError", handleRouteDone);
+        };
+    }, [accentColor]);
+
+
     // https://mantine.dev/theming/dark-theme/#colorschemeprovider
     const toggleColorScheme = (value?: ColorScheme) =>
         setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
@@ -42,26 +57,26 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
             <Head>
                 <title>Doki</title>
                 <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width"/>
-                <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-                <link rel="manifest" href="/manifest.webmanifest" />
+                <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+                <link rel="manifest" href="/manifest.webmanifest"/>
                 <meta name="theme-color" content="#000000" />
             </Head>
-            
+
             <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-            <LocaleContext.Provider value={{locale, messages}}>
-            <MantineProvider
-                withGlobalStyles
-                withNormalizeCSS
-                theme={{
-                    colorScheme: colorScheme,
-                    primaryColor: accentColor
-                }}
-            >
-                <NotificationsProvider>
-                    <Component {...pageProps} />
-                </NotificationsProvider>
-            </MantineProvider>
-            </LocaleContext.Provider>
+                <LocaleContext.Provider value={{locale, messages}}>
+                    <MantineProvider
+                        withGlobalStyles
+                        withNormalizeCSS
+                        theme={{
+                            colorScheme: colorScheme,
+                            primaryColor: accentColor
+                        }}
+                    >
+                        <NotificationsProvider>
+                            <Component {...pageProps} />
+                        </NotificationsProvider>
+                    </MantineProvider>
+                </LocaleContext.Provider>
             </ColorSchemeProvider>
         </>
     );

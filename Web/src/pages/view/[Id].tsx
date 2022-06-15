@@ -4,6 +4,7 @@
     Box,
     Button,
     Card,
+    Divider,
     Group,
     Modal,
     Paper,
@@ -14,6 +15,7 @@
     useMantineTheme
 } from '@mantine/core';
 import {
+    Download,
     Help,
     PictureInPicture,
     PlayerPause,
@@ -37,10 +39,12 @@ import {
     displayFilename,
     getExt,
     onlyGetMedia,
-    onlyGetVideo, pictureFormats,
+    onlyGetVideo,
+    pictureFormats,
     playableFormats,
     random,
-    random2, videoFormats,
+    random2,
+    videoFormats,
 } from "../../../utils/file";
 import dynamic from 'next/dynamic';
 import FileRepository from "@server/repositories/FileRepository";
@@ -50,7 +54,7 @@ import {NextPageContext} from 'next';
 import {useRouter} from 'next/router';
 import {useMediaQuery} from '@mantine/hooks';
 import {useLongPress} from "../../../utils/react";
-import {QuickDetails, ContentSlide} from "@src/components/player-elements";
+import {ContentSlide, QuickDetails} from "@src/components/player-elements";
 import Link from "next/link";
 import {getLocale, LocaleContext} from "@src/locale";
 
@@ -91,7 +95,7 @@ export async function getServerSideProps(nextPage: NextPageContext) {
                 loop: checkCookies('player-loop', nextPage) ? getCookie('player-loop', nextPage) : true,
                 firstTime: checkCookies('first-time', nextPage) ? getCookie('first-time', nextPage) : true,
                 filter: checkCookies('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : [],
-            //    messages: (await import(`../../../${nextPage.locale}nodemon.json`)).default
+                //    messages: (await import(`../../../${nextPage.locale}nodemon.json`)).default
             }
         };
     } catch (e) {
@@ -127,12 +131,14 @@ function Page(props: PageProps) {
     const [muted, setMuted] = useState(props.muted);
     const [repeat, setRepeat] = useState(props.loop);
     const [playing, setPlaying] = useState(true);
-    const [progress, setProgress] = useState<{ played: 0, loaded: 0 }>({ played: 0, loaded: 0 });
+    const [progress, setProgress] = useState<{ played: 0, loaded: 0 }>({played: 0, loaded: 0});
     const [pip, setPip] = useState(false);
     const [objFit, setObjFit] = useState(true);
     const [duration, setDuration] = useState(0);
     const [seek, setSeek] = useState(-1);
     const [willSeek, setWillSeek] = useState(false);
+
+    //const [palette, setPalette] = useState<Palette>(null);
 
     function handleNewFile() {
         // check current as seen
@@ -166,12 +172,29 @@ function Page(props: PageProps) {
     }, [muted]);
 
     useEffect(() => {
-        setCookies('player-loop', repeat, { maxAge: 60 * 60 * 24 * 30 });
+        setCookies('player-loop', repeat, {maxAge: 60 * 60 * 24 * 30});
     }, [repeat]);
 
     useEffect(() => {
-        setCookies('first-time', firstTime, { maxAge: 60 * 60 * 24 * 30 });
+        setCookies('first-time', firstTime, {maxAge: 60 * 60 * 24 * 30});
     }, [firstTime]);
+
+    useEffect(() => {
+        const updateViewCounter = async (id: number) => {
+            await fetch(`/api/updateViews/${id}`, {method: 'POST'});
+        }
+
+        if (current) {
+
+            if ([...videoFormats, ...pictureFormats].includes(getExt(current.FileURL))) {
+
+                /*const v = new Vibrant(locatePreview(current));
+                v.getPalette().then((pal) => setPalette(pal));*/
+            }
+
+            updateViewCounter(current.Id);
+        }
+    }, [current]);
 
     useEffect(() => {
         if (playableFormats.includes(getExt(current.FileURL))) {
@@ -226,123 +249,137 @@ function Page(props: PageProps) {
     function handleObjectFit() {
         setObjFit(!objFit);
     }
-    
-    function seekTo(s){
+
+    function seekTo(s) {
         setSeek(s);
         setWillSeek(true);
     }
 
     return <Layout footer={<></>} hiddenCallback={(h) => setHidden(h)} padding={0} additionalMainStyle={{
-        background: isPlayable ? "black" : undefined, ...(!objFit && {
-            overflow: "hidden",
-            padding: "0 !important"
-        }),
+        background: isPlayable ? "black" : undefined, overflow: "hidden",
+        padding: isPlayable ? "0 !important" : undefined,
         transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)"
     }}
                    hiddenAside={hidden}
                    permanent={!isPlayable}
                    asideContent={
-        <>
-            <Text size="xs" weight="500">{getLocale(locale).Viewer["nc-details"]}</Text>
-            <Aside.Section my="xs" mb="xs">
-                <Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{(current.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-filesize"]}</Text>
-                    </Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{formatDate(ParseUnixTime(current.UnixTime))}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-upload-date"]}</Text>
-                    </Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{current.Author.Name}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-uploader"]}</Text>
-                    </Stack>
-                    <Stack spacing="xs">
-                        <Text size="sm">{current.Views}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-views"]}</Text>
-                    </Stack>
-                    {current.Folder && <Stack spacing="xs">
-                        <Text size="sm">{current.Folder}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-category"]}</Text>
-                    </Stack>}
-                    <Stack spacing="xs">
-                        <Text size="sm">{getExt(current.FileURL)}</Text>
-                        <Text size="xs" sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-file-type"]}</Text>
-                    </Stack>
-                </Stack>
-            </Aside.Section>
-            <Text mt="xs" size="xs" weight="500">{getLocale(locale).Viewer["nc-tags"]}</Text>
-            <Aside.Section mt="xs" mb="md">
-                <Stack spacing={0}>
-                    {current.Tags ? current.Tags.split(",").map((t, i) =>
-                        <Link href={`/browser?t=${t}`} key={i} passHref>
-                            <Text size="xs" color={theme.colors.blue[4]} sx={{textDecoration: "none", cursor: "pointer", "&:hover": {textDecoration: "underline"}}}>{t}</Text>
-                        </Link>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
-                </Stack>
-            </Aside.Section>
-            <Card mb="sm">
-                <Text size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
-                <Text size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
-            </Card>
-            <CommentBox />
-        </>
+                       <>
+                           <Divider label={getLocale(locale).Viewer["nc-details"]}/>
+                           <Aside.Section my="xs" mb="xs">
+                               <Stack>
+                                   <Stack spacing="xs">
+                                       <Text size="sm">{(current.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
+                                       <Text size="xs"
+                                             sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-filesize"]}</Text>
+                                   </Stack>
+                                   <Stack spacing="xs">
+                                       <Text size="sm">{formatDate(ParseUnixTime(current.UnixTime))}</Text>
+                                       <Text size="xs"
+                                             sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-upload-date"]}</Text>
+                                   </Stack>
+                                   <Stack spacing="xs">
+                                       <Text size="sm">{current.Author.Name}</Text>
+                                       <Text size="xs"
+                                             sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-uploader"]}</Text>
+                                   </Stack>
+                                   <Stack spacing="xs">
+                                       <Text size="sm">{current.Views}</Text>
+                                       <Text size="xs"
+                                             sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-views"]}</Text>
+                                   </Stack>
+                                   {current.Folder && <Stack spacing="xs">
+                                       <Text size="sm">{current.Folder}</Text>
+                                       <Text size="xs"
+                                             sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-category"]}</Text>
+                                   </Stack>}
+                                   <Stack spacing="xs">
+                                       <Text size="sm">{getExt(current.FileURL)}</Text>
+                                       <Text size="xs"
+                                             sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-file-type"]}</Text>
+                                   </Stack>
+                               </Stack>
+                           </Aside.Section>
+                           <Divider label={getLocale(locale).Viewer["nc-tags"]}/>
+                           <Aside.Section mt="xs" mb="md">
+                               <Stack spacing={0}>
+                                   {current.Tags ? current.Tags.split(",").map((t, i) =>
+                                       <Link href={`/browser?t=${t}`} key={i} passHref>
+                                           <Text size="xs" color={theme.colors.blue[4]} sx={{
+                                               textDecoration: "none",
+                                               cursor: "pointer",
+                                               "&:hover": {textDecoration: "underline"}
+                                           }}>{t}</Text>
+                                       </Link>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
+                               </Stack>
+                           </Aside.Section>
+                           {current && <Button
+                               onClick={() => window.open(`https://${window.location.hostname}/${current.FileURL}`)}
+                               my="sm" variant="light" fullWidth leftIcon={<Download size={14}/>}>Download</Button>}
+                           <Card mb="sm">
+                               <Text size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
+                               <Text size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
+                           </Card>
+                           <CommentBox/>
+                       </>
                    }
     >
         <SEO video={`/${current.FileURL}`} image={`/${current.Thumbnail}`}
              audio={`/${current.FileURL}`}
              type={videoFormats.includes(getExt(current.FileURL)) ? "video" :
-                audioFormats.includes(getExt(current.FileURL)) ? "audio" :
-                    pictureFormats.includes(getExt(current.FileURL)) ? "image" : "website"}
-            title={current ? displayFilename(current) : "Viewer"} siteTitle="Doki"
-            description={current ? current.Description : "Sneed"} />
+                 audioFormats.includes(getExt(current.FileURL)) ? "audio" :
+                     pictureFormats.includes(getExt(current.FileURL)) ? "image" : "website"}
+             title={current ? displayFilename(current) : "Viewer"} siteTitle="Doki"
+             description={current ? current.Description : "Sneed"}/>
         <div className="content-wrapper"
-            style={{ cursor: hoveringPlayer ? undefined : "none" }}
-            onMouseMove={handleMouseActivity}
-            onContextMenu={(e) => {
-                e.preventDefault();
+             style={{cursor: hoveringPlayer ? undefined : "none"}}
+             onMouseMove={handleMouseActivity}
+             onContextMenu={(e) => {
+                 e.preventDefault();
+                 //if (isPlayable) {
+                 setHidden(!hidden);
+                 //setHoveringPlayer(hidden);
+                 //}
+             }}
+            /*onWheel={(e) => {
                 if (isPlayable) {
-                    setHidden(!hidden);
-                    //setHoveringPlayer(hidden);
-                }
-            }}
-            onWheel={(e) => {
-                if (isPlayable) {
-                    if (e.deltaY > 0) {
+                    if (e.deltaY > 0 || e.deltaX > 0) {
                         setHoveringPlayer(true);
                         setHidden(false);
                     }
-                    if (e.deltaY < 0) {
+                    if (e.deltaY < 0 || e.deltaX < 0) {
                         // setHoveringPlayer(false);
                         setHidden(true);
                     }
                 }
-            }}
-            {...(!desktop && longPress)}
+            }}*/
+             {...(!desktop && longPress)}
         >
-            <DynamicContentSlide seek={seek} willSeek={willSeek} seekCallback={() => setWillSeek(false)} onDuration={(n: number) => setDuration(n)} visualizer={visualizer} objFit={objFit} pipCallback={handlePiP} pip={pip}
-                onProgress={(p) => setProgress(p)} onClick={handleNewFile} data={`/${current.FileURL}`}
-                isSelected={playing} muted={muted} volume={volume}
-                repeat={repeat} onEnded={handleNewFile}
-                href={`/files/${random(props.ids, onlyGetMedia).Id}`} />
+            <DynamicContentSlide seek={seek} willSeek={willSeek} seekCallback={() => setWillSeek(false)}
+                                 onDuration={(n: number) => setDuration(n)} visualizer={visualizer} objFit={objFit}
+                                 pipCallback={handlePiP} pip={pip}
+                                 onProgress={(p) => setProgress(p)} onClick={handleNewFile} data={`/${current.FileURL}`}
+                                 isSelected={playing} muted={muted} volume={volume}
+                                 repeat={repeat} onEnded={handleNewFile}
+                                 href={`/view/${random(props.ids, onlyGetMedia).Id}`}/>
 
             <Box
                 sx={{
-                transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                width: '100%',
-                background: isPlayable ? 'linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,27,0.5) 35%, rgba(0,0,0,0) 100%)' : undefined,
-                height: 150,
-                opacity: 0,
-                ...(hoveringPlayer && {
-                    opacity: 1,
-                    pointerEvents: "all"
-                }),
-                zIndex: 5
-            }}>
-                {current && <QuickDetails duration={duration} seekTo={seekTo} current={current} isPlayable={isPlayable} progress={progress} full sx={{
+                    transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    background: isPlayable ? 'linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,27,0.5) 35%, rgba(0,0,0,0) 100%)' : undefined,
+                    height: 150,
+                    opacity: 0,
+                    ...(hoveringPlayer && {
+                        opacity: 1,
+                        pointerEvents: "all"
+                    }),
+                    zIndex: 5
+                }}>
+                {current && <QuickDetails duration={duration} seekTo={seekTo} current={current} isPlayable={isPlayable}
+                                          progress={progress} full sx={{
                     position: 'fixed',
                     bottom: 0,
                     paddingLeft: audioFormats.includes(getExt(current.FileURL)) ? 64 : 16,
@@ -353,25 +390,25 @@ function Page(props: PageProps) {
                     width: `calc(100% - ${audioFormats.includes(getExt(current.FileURL)) ? 64 : 16}px)`,
                     transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)"
                 }}>
-                    <BottomNavBar white setHidden={(f) => setHidden(f)} hidden={hidden} />
+                    <BottomNavBar white setHidden={(f) => setHidden(f)} hidden={hidden}/>
                 </QuickDetails>}
             </Box>
             <Box
                 sx={{
-                transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                background: 'linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,27,0.5) 35%, rgba(0,0,0,0) 100%)',
-                height: 150,
-                opacity: 0,
-                ...(hoveringPlayer && {
-                    opacity: playableFormats.includes(getExt(current.FileURL)) ? 1 : 0,
-                    pointerEvents: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
-                }),
-                zIndex: 5
-            }}>
+                    transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    background: 'linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,27,0.5) 35%, rgba(0,0,0,0) 100%)',
+                    height: 150,
+                    opacity: 0,
+                    ...(hoveringPlayer && {
+                        opacity: playableFormats.includes(getExt(current.FileURL)) ? 1 : 0,
+                        pointerEvents: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
+                    }),
+                    zIndex: 5
+                }}>
                 <Stack sx={{
                     position: 'fixed',
                     top: 16,
@@ -379,52 +416,59 @@ function Page(props: PageProps) {
                     zIndex: 5
                 }}>
                     <Group>
-                        <ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={() => {
+                        <ActionIcon sx={() => ({color: "white"})} onClick={() => {
                             showNotification({
                                 message: muted ? "Unmuted!" : "Muted!",
-                                icon: muted ? <Volume size={24} /> : <Volume3 size={24} />,
+                                icon: muted ? <Volume size={24}/> : <Volume3 size={24}/>,
                                 color: "dark",
                                 disallowClose: true,
                                 autoClose: 1000
                             });
                             setMuted(!muted);
-                        }}>{muted ? <Volume3 size={24} /> : <Volume size={24} />}</ActionIcon>
+                        }}>{muted ? <Volume3 size={24}/> : <Volume size={24}/>}</ActionIcon>
                         <Slider onChange={(value) => setVolume(value)} defaultValue={volume}
-                            min={0}
-                            size="xs"
-                            max={1}
-                            label={null}
-                            step={0.01} sx={{ minWidth: 100 }} />
+                                min={0}
+                                size="xs"
+                                max={1}
+                                label={null}
+                                step={0.01} sx={{minWidth: 100}}/>
                     </Group>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["prev"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})}
-                            onClick={() => router.back()}><PlayerSkipBack size={24} /></ActionIcon></Tooltip>
+                             withArrow label={getLocale(locale).Viewer["prev"]}><ActionIcon
+                        sx={() => ({color: "white"})}
+                        onClick={() => router.back()}><PlayerSkipBack size={24}/></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["play"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})}
-                            onClick={() => setPlaying(!playing)}>{playing ? <PlayerPause size={24} /> :
-                                <PlayerPlay size={24} />}</ActionIcon>
+                             withArrow label={getLocale(locale).Viewer["play"]}><ActionIcon
+                        sx={() => ({color: "white"})}
+                        onClick={() => setPlaying(!playing)}>{playing ? <PlayerPause size={24}/> :
+                        <PlayerPlay size={24}/>}</ActionIcon>
                     </Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["repeat"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={() => {
-                            showNotification({
-                                message: repeat ? "No longer repeating. Autoplay enabled." : "Autoplay disabled. The media will repeat.",
-                                icon: repeat ? <Repeat size={24} /> : <RepeatOff size={24} />,
-                                color: "dark",
-                                disallowClose: true,
-                                autoClose: 1000
-                            });
-                            setRepeat(!repeat);
-                        }}>{repeat ? <Repeat size={24} /> : <RepeatOff size={24} />}</ActionIcon></Tooltip>
+                             withArrow label={getLocale(locale).Viewer["repeat"]}><ActionIcon
+                        sx={() => ({color: "white"})} onClick={() => {
+                        showNotification({
+                            message: repeat ? "No longer repeating. Autoplay enabled." : "Autoplay disabled. The media will repeat.",
+                            icon: repeat ? <Repeat size={24}/> : <RepeatOff size={24}/>,
+                            color: "dark",
+                            disallowClose: true,
+                            autoClose: 1000
+                        });
+                        setRepeat(!repeat);
+                    }}>{repeat ? <Repeat size={24}/> : <RepeatOff size={24}/>}</ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["skip"]}><ActionIcon sx={(theme) => ({color: theme.colors.dark[0]})} onClick={handleNewFile}><PlayerSkipForward
-                            size={24} /></ActionIcon></Tooltip>
+                             withArrow label={getLocale(locale).Viewer["skip"]}><ActionIcon
+                        sx={() => ({color: "white"})} onClick={handleNewFile}><PlayerSkipForward
+                        size={24}/></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["pip"]}><ActionIcon  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={handlePiP}><PictureInPicture
-                            size={24} /></ActionIcon></Tooltip>
+                             withArrow label={getLocale(locale).Viewer["pip"]}><ActionIcon
+                        sx={() => ({color: "white"})} onClick={handlePiP}><PictureInPicture
+                        size={24}/></ActionIcon></Tooltip>
                     <Tooltip gutter={-100} position="right"
-                        withArrow label={getLocale(locale).Viewer["contain"]}><ActionIcon sx={(theme) => ({color: theme.colors.dark[0]})} onClick={handleObjectFit}><Resize
-                            size={24} /></ActionIcon></Tooltip>
-                    <ActionIcon color={firstTime ? "blue" : undefined}  sx={(theme) => ({color: theme.colors.dark[0]})} onClick={showHelp}><Help size={24} /></ActionIcon>
+                             withArrow label={getLocale(locale).Viewer["contain"]}><ActionIcon
+                        sx={() => ({color: "white"})} onClick={handleObjectFit}><Resize
+                        size={24}/></ActionIcon></Tooltip>
+                    <ActionIcon color={firstTime ? "blue" : undefined} sx={() => ({color: "white"})}
+                                onClick={showHelp}><Help size={24}/></ActionIcon>
                 </Stack>
             </Box>
 
