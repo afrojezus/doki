@@ -102,7 +102,7 @@ export default async ({query: {id}, body}: NextApiRequest, res: NextApiResponse)
                 UnixTime: Date.now() / 1e3,
                 FileURL: `files/${File}`,
                 Title: Title,
-                Description: Description.length > 0 ? Description : null,
+                Description: Description && Description.length > 0 ? Description : null,
                 Thumbnail: `files/${Thumbnail}`,
                 Author: author,
                 AuthorId: author.AuthorId,
