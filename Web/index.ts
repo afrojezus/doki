@@ -1,10 +1,10 @@
 ﻿import "dotenv/config";
 import next from "next";
-import nextConfig from "./next.config";
 import express from "express";
 import * as QueryString from "querystring";
 import figlet from "figlet";
 
+// shut the fuck up webstorm, no it can't be shortened.
 import {initDB} from "./server/models";
 import path from "path";
 
@@ -33,7 +33,7 @@ async function startup() {
         return -1;
     }
 
-    const app = next({dev, hostname, port, dir: __dirname, conf: nextConfig});
+    const app = next({dev, hostname, port});
     const handle = app.getRequestHandler();
 
 

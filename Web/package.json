@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "build": "next build && tsc --project tsconfig.server.json",
+    "build:server": "tsc --project tsconfig.server.json",
+    "build:next": "next build",
+    "build": "npm run build:next && npm run build:server",
     "start": "node dist/index.js",
     "lint": "next lint"
   },
@@ -64,13 +66,5 @@
     "use-sound": "^4.0.1",
     "worker-loader": "^3.0.8",
     "ytdl-core": "^4.11.0"
-  },
-  "bin": "dist/index.js",
-  "pkg": {
-    "assets": "dist/**/*",
-    "scripts": "dist/**/*.js",
-    "targets": [
-      "node16-linux-x64"
-    ]
   }
 }

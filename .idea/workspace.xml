@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="minor bugfix for yt importer">
-      <change beforePath="$PROJECT_DIR$/Web/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/index.js" afterDir="false" />
+    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="ensuring index.js gets built">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/Web/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/migrations/20220427013025-create-file.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/migrations/20220427013128-create-author.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/migrations/20220427013202-create-comment.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/seeders/20220427013251-files.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/seeders/20220427013312-file.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/seeders/20220427013318-comment.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/seeders/20220427013321-author.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/tsconfig.server.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/tsconfig.server.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,20 +39,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/neko/Documents/dev/Doki&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;D:\\neko\\Documents\\dev\\doki\\Web\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "D:/neko/Documents/dev/doki/Web",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "ts.external.directory.path": "D:\\neko\\Documents\\dev\\doki\\Web\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\neko\Documents\dev\doki\Web" />
+      <recent name="D:\neko\Documents\dev\doki\Web\dist" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\neko\Documents\dev\doki\Web" />
+      <recent name="D:\neko\Documents\dev\doki\Web\bin" />
+      <recent name="D:\neko\Documents\dev\doki\Web\server" />
       <recent name="D:\neko\Documents\dev\Doki\Web\src\locale" />
     </key>
   </component>
@@ -102,7 +119,7 @@
       <workItem from="1657482562378" duration="15449000" />
       <workItem from="1657502548608" duration="363000" />
       <workItem from="1657546775611" duration="7524000" />
-      <workItem from="1657570083718" duration="1232000" />
+      <workItem from="1657570083718" duration="3181000" />
     </task>
     <task id="LOCAL−00001" summary="web: internationalization, upload-correction, minor changes">
       <created>1652900844826</created>
@@ -128,7 +145,13 @@
       <option name="presentableId" value="LOCAL−00004" />
       <updated>1657571052492</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL−00005" summary="ensuring index.js gets built">
+      <created>1657571353050</created>
+      <option name="number" value="LOCAL−00005" />
+      <option name="presentableId" value="LOCAL−00005" />
+      <updated>1657571353050</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -152,7 +175,8 @@
     <MESSAGE value="web: youtube import, layout changes, filter bugfix, need further refactoring" />
     <MESSAGE value="removed mobile, bugfix for palette issue" />
     <MESSAGE value="minor bugfix for yt importer" />
-    <option name="LAST_COMMIT_MESSAGE" value="minor bugfix for yt importer" />
+    <MESSAGE value="ensuring index.js gets built" />
+    <option name="LAST_COMMIT_MESSAGE" value="ensuring index.js gets built" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
