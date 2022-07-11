@@ -3,6 +3,7 @@ import {
     Badge,
     Button,
     Card,
+    Divider,
     Group,
     MantineColor,
     MultiSelect,
@@ -10,11 +11,10 @@ import {
     Stack,
     Switch,
     Text,
-    Title,
     useMantineColorScheme,
     useMantineTheme
 } from '@mantine/core';
-import {checkCookies, getCookie, setCookies} from 'cookies-next';
+import {deleteCookie, getCookie, hasCookie, setCookies} from 'cookies-next';
 import {Check} from 'tabler-icons-react';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
@@ -22,11 +22,11 @@ import {useContext, useEffect, useState} from "react";
 import FileRepository from "@server/repositories/FileRepository";
 import {Author, File} from "@server/models";
 import {languages} from "../../utils/language";
-import AuthorRepository from '@server/repositories/AuthorRepository';
 import {formatDate, ParseUnixTime} from 'utils/date';
 import {Item, Value} from "@src/components/filter-elements";
 import {getLocale, LocaleContext} from "@src/locale";
 import {useRouter} from "next/router";
+import {SeekForAuthor} from "../../utils/id_management";
 
 interface PageProps {
     accentColor: MantineColor;
@@ -42,23 +42,13 @@ export async function getServerSideProps({req, res}) {
     const posts = await FileRepository.findAll({
         attributes: ["Folder", "Tags"]
     });
-    let author: Author | null;
-    try {
-        author = await AuthorRepository.findOne({
-            where: {
-                AuthorId: getCookie('DokiIdentification', {req, res})
-            }
-        });
-    } catch (error) {
-        console.error(error);
-        author = null;
-    }
+    const author = await SeekForAuthor(getCookie('DokiIdentification', {req, res}));
     return {
         props: {
-            accentColor: checkCookies('accent-color', {req, res}) ? getCookie('accent-color', {req, res}) : "blue",
-            nsfw: checkCookies('allow-nsfw-content', {req, res}) ? getCookie('allow-nsfw-content', {req, res}) : true,
-            locale: checkCookies('locale', {req,res}) ? getCookie('locale', {req,res}) : "en",
-            filter: checkCookies('filtered', {req, res}) ? JSON.parse(getCookie('filtered', {req, res}) as string) : [],
+            accentColor: hasCookie('accent-color', {req, res}) ? getCookie('accent-color', {req, res}) : "blue",
+            nsfw: hasCookie('allow-nsfw-content', {req, res}) ? getCookie('allow-nsfw-content', {req, res}) : true,
+            locale: hasCookie('locale', {req,res}) ? getCookie('locale', {req,res}) : "en",
+            filter: hasCookie('filtered', {req, res}) ? JSON.parse(getCookie('filtered', {req, res}) as string) : [],
             posts,
             author,
         }
@@ -138,26 +128,26 @@ function Page(props: PageProps) {
             <Stack>
                 <Button variant="default">{`${getLocale(loc).Settings["content-settings"]}`}</Button>
                 <Button variant="default">{`${getLocale(loc).Settings["ui-settings"]}`}</Button>
+                <Button variant="default">Third-party support</Button>
+                <Button variant="default">Mobile</Button>
             </Stack>
     </>}>
         <SEO title="Settings" siteTitle="Doki" description="Sneed"/>
-        <Group>
-            <Title order={5}>
-                {`${getLocale(loc).Settings["settings"]}`}
-            </Title>
-            <div style={{flex: 1}}/>
-        </Group>
-        <Stack>
-            <Text size="xs">{`${getLocale(loc).Settings["content"]}`}</Text>
-            <MultiSelect data={[...props.posts.map(x => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null).map(x => x)]}
+        <Stack ml="auto" mr="auto" sx={{maxWidth: 800}}>
+            <Divider size="xs" label={`${getLocale(loc).Settings["content"]}`} />
+            <MultiSelect data={[...props.posts.map(x => x.Folder).filter((value, index, self) => self.indexOf(value) === index).filter(x => x !== null && x !== '').map(x => x)]}
             valueComponent={Value}
             itemComponent={Item} defaultValue={props.filter}
             searchable
             placeholder="Pick a category"
             label={`${getLocale(loc).Settings["filter-label"]}`}
                          onChange={(e) => {
-                             setFilter(e)
-                             setCookies('filtered', JSON.stringify(e), {maxAge: 60 * 60 * 24 * 30});
+                             setFilter(e);
+                             if (e.length <= 0) {
+                                 deleteCookie('filtered');
+                             } else {
+                                 setCookies('filtered', JSON.stringify(e), {maxAge: 60 * 60 * 24 * 30});
+                             }
                          }
                          }
             />
@@ -174,7 +164,7 @@ function Page(props: PageProps) {
                     </Group>
                 </Accordion.Item>
             </Accordion>
-            <Text size="xs">{`${getLocale(loc).Settings["ui"]}`}</Text>
+            <Divider size="xs" label={`${getLocale(loc).Settings["ui"]}`} mt="md" />
             <Text size="xs">{`${getLocale(loc).Settings["language-label"]}`}</Text>
             <Select value={locale} data={languages} onChange={newLocale}/>
             <Text size="xs">{`${getLocale(loc).Settings["dark-mode"]}`}</Text>
@@ -231,6 +221,14 @@ function Page(props: PageProps) {
                     }}/>
                 </Button>
             </Group>
+            <Divider size="xs" label="Third-party support" mt="md" />
+            <Text size="xs">ShareX</Text>
+            <Text size="xs">Under construction!</Text>
+            <Text size="xs">Discord</Text>
+            <Text size="xs">Under construction!</Text>
+            <Divider size="xs" label="Mobile" mt="md" />
+            <Text size="xs">Official client</Text>
+            <Text size="xs">Under construction!</Text>
         </Stack>
     </Layout>;
 }

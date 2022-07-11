@@ -1,6 +1,20 @@
-import {Box, Card, Container, Group, Image, Paper, Progress, Space, Stack, Text, ThemeIcon, Title} from "@mantine/core";
+import {
+    Box,
+    Card,
+    Container,
+    Group,
+    Image, Modal,
+    Paper,
+    Progress,
+    Space,
+    Stack,
+    Text,
+    ThemeIcon,
+    Title,
+    UnstyledButton
+} from "@mantine/core";
 import {audioFormats, displayFilename, getExt, pictureFormats, playableFormats} from "../../utils/file";
-import {createRef, useContext, useEffect, useRef, useState} from "react";
+import {createRef, useCallback, useContext, useEffect, useRef, useState} from "react";
 import ReactPlayer from "react-player";
 import {showNotification} from "@mantine/notifications";
 import {File as FileIcon} from "tabler-icons-react";
@@ -34,11 +48,14 @@ export function Duration({className, seconds}: { className?: string, seconds: nu
 
 export function QuickDetails({ sx, full = false, current, isPlayable, progress, children = undefined, duration = undefined, seekTo = undefined }) {
     const locale = useContext(LocaleContext);
-
+    const [showFullDesc, setShowFullDesc] = useState(false);
     const [rawSeek, setRawSeek] = useState(0);
     const [seek, setSeek] = useState(0);
     const [seeking, setSeeking] = useState(false);
     const seeker = useRef(null);
+
+    const fullDescClose = useCallback(() => setShowFullDesc(false), [showFullDesc]);
+    const fullDescOpen = useCallback(() => setShowFullDesc(true), [showFullDesc]);
 
     function handleTrack(e) {
         setSeeking(true);
@@ -55,7 +72,7 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
         <Title order={5} className="file-title"
                color={isPlayable && full ? "white" : undefined}>{displayFilename(current)}</Title>
         {current.Description &&
-            <Text color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text>}
+            <UnstyledButton onClick={fullDescOpen}><Text className="fade" sx={{whiteSpace: "pre-wrap", maxHeight: 72, overflow: "hidden"}} color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text></UnstyledButton>}
         <Group>
             <Text size="xs" color={isPlayable && full ? "white" : undefined}
                   weight={500}>{`${getLocale(locale).Viewer["uploaded-by"]} `}{current.Author.Name}</Text>
@@ -115,6 +132,12 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
                 }
             }}/>}
         {children}
+
+        <Modal opened={showFullDesc} onClose={fullDescClose} title="Description">
+            <Text size="xs" sx={{whiteSpace: "pre-wrap"}}>
+                {current.Description}
+            </Text>
+        </Modal>
     </Stack>;
 }
 

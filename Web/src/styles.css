@@ -4,8 +4,8 @@
     --animation-ease: cubic-bezier(.07, .95, 0, 1);
 }
 
-/*::-webkit-scrollbar {
-    width: 1px;
+::-webkit-scrollbar {
+    width: 0;
 }
 
 ::-webkit-scrollbar-track {
@@ -18,7 +18,7 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, .3);
-}*/
+}
 
 #nprogress .bar {
     background: transparent;
@@ -50,6 +50,11 @@
     animation: nprogress-spinner 400ms linear infinite;
 }
 
+
+/*noinspection CssInvalidPropertyValue*/
+.fade {
+    -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
+}
 
 .use-m-font {
     font-family: Manrope, sans-serif;
@@ -119,6 +124,20 @@
     -webkit-text-fill-color: transparent;
     -webkit-animation: shine 6s linear infinite;
     animation: shine 6s linear infinite;
+    cursor: pointer;
+}
+
+/*noinspection CssInvalidPropertyValue*/
+.special-vfx-intro {
+    background: linear-gradient(to right, #777 0%, #999 18%, #eee 38%, #fff 55%, #444 76%, #333 90%, #555 100%);
+    background-size: 200% auto;
+    color: #000;
+    background-clip: text;
+    text-fill-color: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-animation: shine 2s linear infinite;
+    animation: shine 2s linear infinite;
 }
 
 .file-title {

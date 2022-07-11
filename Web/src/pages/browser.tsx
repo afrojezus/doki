@@ -1,13 +1,12 @@
 import {
     Accordion,
-    Box,
     Button,
     Checkbox,
     Divider,
     Group,
     LoadingOverlay,
     Modal,
-    Select,
+    Select, SimpleGrid,
     Stack,
     Text,
     TextInput,
@@ -18,20 +17,18 @@ import GridItem from '../components/grid-item';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
 import {Author, File} from "@server/models";
-import {memo, useCallback, useContext, useEffect, useState} from "react";
+import {useCallback, useContext, useEffect, useState} from "react";
 import {Edit} from 'tabler-icons-react';
 import {useRouter} from 'next/router';
-import {getExt, retrieveAllFileTypes, retrieveAllTags, toMatrix} from "../../utils/file";
+import {getExt, retrieveAllFileTypes, retrieveAllTags} from "../../utils/file";
 import Link from "next/link";
-import {checkCookies, getCookie} from "cookies-next";
+import {getCookie, hasCookie} from "cookies-next";
 import {NextPageContext} from "next";
-import AuthorRepository from "@server/repositories/AuthorRepository";
 import useSWR, {useSWRConfig} from "swr";
 import {showNotification} from "@mantine/notifications";
 import {getLocale, LocaleContext} from "@src/locale";
-import {areEqual, FixedSizeGrid as Grid, RenderComponent} from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer";
 import {EditBox} from '@src/components/upload-forms';
+import {SeekForAuthor} from "../../utils/id_management";
 
 interface PageProps {
     posts: File[];
@@ -51,24 +48,12 @@ export async function getServerSideProps(nextPage: NextPageContext) {
         limit: 10
     });*/
 
-    let author: Author | null;
-    try {
-        author = await AuthorRepository.findOne({
-            where: {
-                AuthorId: getCookie('DokiIdentification', nextPage)
-            }
-        });
-
-    } catch (error) {
-        console.error(error);
-        author = null;
-    }
+    const author = await SeekForAuthor(getCookie('DokiIdentification', nextPage));
     return {
         props: {
             // posts,
             author,
-            // messages: (await import(`../../../${nextPage.locale}nodemon.json`)).default,
-            filter: checkCookies('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : []
+            filter: hasCookie('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : []
         }
     };
 }
@@ -91,33 +76,6 @@ const fetcher = async (url) => {
     }
     return data as File[];
 }
-
-const RenderGridItem = memo(({
-                                 rowIndex,
-                                 columnIndex,
-                                 data,
-                                 style,
-                                 selected,
-                                 onSelect,
-                                 onUnselect,
-                                 editMode,
-                                 author
-                             }: RenderComponent & { selected: boolean, onSelect: (f: File) => void, onUnselect: (f: File) => void, editMode: boolean, author: Author }) => {
-    const item = data[rowIndex][columnIndex]
-    if (!item) return <></>;
-    return <GridItem
-        style={{
-            ...style,
-            left: style.left + 16,
-            top: style.top + 16,
-            width: style.width - 16,
-            height: style.height - 16,
-        }}
-        editMode={editMode} selected={selected}
-        onUnselect={onUnselect}
-        author={author}
-        onSelect={onSelect} data={item} key={`${columnIndex}-${rowIndex}`}/>
-}, areEqual)
 
 function Page(props: PageProps) {
     const theme = useMantineTheme();
@@ -172,7 +130,7 @@ function Page(props: PageProps) {
 
     useEffect(() => {
         if (selected.length === 0) setEditDetails(false);
-    }, [selected]);
+    }, [selected, editMode]);
 
     function handleSelect(value) {
         setSort(value);
@@ -195,21 +153,16 @@ function Page(props: PageProps) {
         }
     }
 
-    function toggleEditMode() {
+    const toggleEditMode = useCallback(() => {
+        if (editMode) {
+            setSelected([]);
+        }
         setEditMode(!editMode);
-    }
+    }, [editMode]);
 
     function handleSearch(search) {
         setSearchF(search);
     }
-
-    const onSelect = useCallback((f) => {
-        setSelected(p => [...p, f]);
-    }, [selected]);
-
-    const onUnselect = useCallback((f) => {
-        setSelected(p => p.filter(x => x !== f));
-    }, [selected]);
 
     async function deleteSelected() {
         try {
@@ -226,7 +179,7 @@ function Page(props: PageProps) {
                 message: json.message,
                 color: "green"
             });
-            mutate('/api/posts');
+            await mutate('/api/posts');
         } catch (error) {
             console.error(error);
             showNotification({
@@ -240,7 +193,7 @@ function Page(props: PageProps) {
         }
     }
 
-    return <Layout additionalMainStyle={{paddingLeft: 0, paddingTop: 0, paddingBottom: 0}} asideContent={
+    return <Layout asideContent={
         <>
             <LoadingOverlay visible={noFiles}/>
             <SearchInput onSubmit={handleSearch}/>
@@ -267,7 +220,9 @@ function Page(props: PageProps) {
             <Checkbox disabled={!props.author} label={`${getLocale(locale).Browser["show-only"]}`} mt="sm"
                       checked={onlyUsers}
                       onChange={handleOnlyUser}/>
-            <Divider label={`${getLocale(locale).Viewer["nc-category"]}`} mb="sm" my="sm"/>
+            {/*<Text size="xs" my="md">Scale</Text>
+            <Slider label={scale} value={scale} onChange={onScaleChange} min={1} max={8} mb="md" />*/}
+            <Divider label={`${getLocale(locale).Viewer["nc-category"]}`} mb="sm" my="md" />
             {data && <Stack spacing={0}>
                 {data.sort(_sort)
                     .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
@@ -305,11 +260,6 @@ function Page(props: PageProps) {
         </>
     }>
         <SEO title="Browser" siteTitle="Doki" description="Sneed"/>
-        <Group>
-            {category && <Title m="md" order={5}>Category:{category}</Title>}
-            {tag && <Title m="md" order={5}>Tag:{tag}</Title>}
-            {type && <Title m="md" order={5}>Filetype:{type}</Title>}
-        </Group>
         {!error && <LoadingOverlay visible={noFiles}/>}
         {noFiles && <>
             <Stack>
@@ -317,7 +267,7 @@ function Page(props: PageProps) {
                 <Text className="use-m-font fancy-transition1">There's no files here!</Text>
             </Stack>
         </>}
-        <Box sx={{width: '100%', height: 'calc(100vh - 40px)', overflowX: 'hidden'}}>
+        {/*<Box sx={{width: '100%', height: `calc(100vh - 40px ${(tag || category || type) ? "- 56px" : ""})`, overflowX: 'hidden'}}>
             {data && <AutoSizer>
                 {({height, width}) => (
                     <Grid
@@ -328,47 +278,20 @@ function Page(props: PageProps) {
                         height={height}
                         width={width}
                         rowHeight={300}
-                        columnWidth={(width / 5)}
-                        itemData={
-                            toMatrix(
-                                data
-                                    .sort(_sort)
-                                    .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                                    .filter(f => f.Folder ? !props.filter.includes(f.Folder) : f)
-                                    .filter(f => category ? f.Folder === category : f)
-                                    .filter(f => tag && f.Tags ? f.Tags.includes(tag) : f)
-                                    .filter(f => type ? getExt(f.FileURL) === type : f)
-                                    .filter(f => f.Tags ? f.Tags.split(",").map(l => l.match(searchF)) : f)
-                                    .filter(f => f.Title ? f.Title.match(searchF) : f)
-                                    .filter(f => f.FileURL.match(searchF)),
-                                5
-                            )
-                        }
-                        columnCount={5}
-                        rowCount={
-                            toMatrix(
-                                data
-                                    .sort(_sort)
-                                    .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                                    .filter(f => f.Folder ? !props.filter.includes(f.Folder) : f)
-                                    .filter(f => category ? f.Folder === category : f)
-                                    .filter(f => tag && f.Tags ? f.Tags.includes(tag) : f)
-                                    .filter(f => type ? getExt(f.FileURL) === type : f)
-                                    .filter(f => f.Tags ? f.Tags.split(",").map(l => l.match(searchF)) : f)
-                                    .filter(f => f.Title ? f.Title.match(searchF) : f)
-                                    .filter(f => f.FileURL.match(searchF)),
-                                5
-                            ).length}
+                        columnWidth={(width / scale)}
+                        itemData={matrixData}
+                        columnCount={scale}
+                        rowCount={matrixData.length}
                     >
                         {(props) => <RenderGridItem {...props}
-                                                    selected={selected.includes(props.data[props.rowIndex][props.columnIndex])}
+                                                    selected={editMode && selected.includes(props.data[props.rowIndex][props.columnIndex])}
                                                     editMode={editMode} onSelect={onSelect} onUnselect={onUnselect}
                                                     author={props.author}/>}
                     </Grid>
                 )}
             </AutoSizer>}
-        </Box>
-        {/*data && <SimpleGrid cols={5} breakpoints={[
+        </Box>*/}
+        {data && <SimpleGrid cols={5} breakpoints={[
             { maxWidth: 'lg', cols: 4, spacing: 'md' },
             { maxWidth: 'md', cols: 3, spacing: 'md' },
             { maxWidth: 'sm', cols: 2, spacing: 'sm' },
@@ -388,7 +311,7 @@ function Page(props: PageProps) {
                     <GridItem author={props.author} editMode={editMode} selected={selected.includes(elem)}
                         onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
                         onSelect={(f) => setSelected(p => [...p, f])} data={elem} key={index} />)}
-            </SimpleGrid>*/}
+            </SimpleGrid>}
 
         <Modal size="xl" opened={editDetails} title="Edit details" onClose={() => setEditDetails(false)}
                styles={{

@@ -19,7 +19,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === 'POST') {
         try {
             const {author, file} = await JSON.parse(req.body);
-            verifyAuthor(author);
+            await verifyAuthor(author);
             const result = await FileRepository.update(file, {
                 where: {
                     Id: file.Id

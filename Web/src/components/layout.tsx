@@ -3,27 +3,31 @@ import {
     ActionIcon,
     AppShell,
     Aside,
+    Burger,
     Button,
     CSSObject,
     Divider,
     Footer,
     Group,
+    Header,
     LoadingOverlay,
     MediaQuery,
     Menu,
     ScrollArea,
     Text,
+    Tooltip,
     UnstyledButton,
     useMantineTheme
 } from '@mantine/core';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import Link from 'next/link';
-import {Folder, Home, InfoCircle, Menu2, Settings, Upload, X} from 'tabler-icons-react';
+import {Folder, Home, InfoCircle, ServerOff, Settings, Upload} from 'tabler-icons-react';
 
 import {useRouter} from 'next/router';
 import {getLocale, LocaleContext} from "@src/locale";
 import Emoji from "@src/components/emoji";
+import {useMediaQuery} from "@mantine/hooks";
 
 interface Disk {
     freeSpace: number;
@@ -56,17 +60,54 @@ const fetcher = async (url) => {
     return data as Disk;
 }
 
-function Mbar({
-                  closeFunc = () => {
-                  }
-              }) {
+function Mbar({topBar = false}) {
     const {data, error} = useSWR(() => `/api/disk`, fetcher);
     const locale = useContext(LocaleContext);
     const router = useRouter();
 
     if (error) return <Aside.Section>
-        <Text>The server is down.</Text>
+        <Text className="use-m-font" mb="md">The server is down.</Text>
     </Aside.Section>
+
+    if (topBar) {
+        if (error) return <Tooltip label="The server is down"><ActionIcon><ServerOff color="red" /></ActionIcon></Tooltip>
+        return <>
+            <LoadingOverlay visible={!data}/>
+            <Menu>
+            <Menu.Label>Sitemap</Menu.Label>
+            <Link href="/" passHref>
+                <Menu.Item icon={<Home size={14}/>}>{getLocale(locale).Common["viewer"]}</Menu.Item>
+            </Link>
+            <Link href="/browser" passHref>
+                <Menu.Item icon={<Folder size={14}/>}>{getLocale(locale).Common["browser"]}</Menu.Item>
+            </Link>
+            <Link href="/updates" passHref>
+                <Menu.Item icon={<InfoCircle size={14}/>}>{getLocale(locale).Common["updates"]}</Menu.Item>
+            </Link>
+            <Link href="/settings" passHref>
+                <Menu.Item icon={<Settings size={14}/>}>{getLocale(locale).Common["settings"]}</Menu.Item>
+            </Link>
+            <Divider/>
+            <Link href="/streamshare" passHref>
+                <Menu.Item>{getLocale(locale).Modes["ss"]}</Menu.Item>
+            </Link>
+            {/*<Link href="/policies" passHref>
+                    <Menu.Item>Policies</Menu.Item>
+                </Link>
+                <Link href="/about" passHref>
+                    <Menu.Item>About</Menu.Item>
+                </Link>
+                <Link href="/license" passHref>
+                    <Menu.Item>License</Menu.Item>
+                </Link>*/}
+            <Divider/>
+            <Menu.Label>{`${getLocale(locale).Common["created-by"]} `}<Emoji
+                symbol={String.fromCodePoint(parseInt("2764", 16))}
+                label="Love"/>.<br/>{data && `Currently hosting ${((data.totalSpace - data.freeSpace) / 1e3 / 1e3 / 1e3).toFixed(2)} GB of files. ${(data.freeSpace / 1e3 / 1e3 / 1e3).toFixed(2)} GB available.`}
+            </Menu.Label>
+        </Menu>
+            </>
+    }
 
     return <>
         <Aside.Section mb="sm" style={{flexFlow: 'row wrap', display: 'inline-flex'}}>
@@ -107,9 +148,6 @@ function Mbar({
                     label="Love"/>.<br/>{data && `Currently hosting ${((data.totalSpace - data.freeSpace) / 1e3 / 1e3 / 1e3).toFixed(2)} GB of files. ${(data.freeSpace / 1e3 / 1e3 / 1e3).toFixed(2)} GB available.`}
                 </Menu.Label>
             </Menu>
-            <MediaQuery largerThan="sm" styles={{display: "none"}}>
-                <ActionIcon ml="md" onClick={closeFunc}><X size={20}/></ActionIcon>
-            </MediaQuery>
         </Aside.Section></>
 }
 
@@ -124,6 +162,58 @@ export function Tabbar() {
                         leftIcon={<Upload size={14}/>}>{getLocale(locale).Common["upload"]}</Button>
             </Link>
         </Aside.Section></>
+}
+
+export function TopNavBar({setHidden, hidden, white = false}) {
+    const router = useRouter();
+    return <Group sx={{height: '100%'}} position="apart">
+        <MediaQuery smallerThan="sm" styles={{display: "none"}}><Group ml="md">
+            <Link href="/" passHref><Text className="doki-vfx" sx={(theme) => ({
+                fontFamily: "Manrope, sans-serif;",
+                fontWeight: 800,
+                lineHeight: 1.75,
+                color: white ? theme.colors.dark[0] : undefined
+            })}>doki</Text></Link>
+            {/*<Tooltip label="Work in progress" placement="end"><Badge sx={{ marginBottom: 4 }}>M2</Badge></Tooltip>*/}
+            <Text
+                className="use-m-font">{router.asPath.replaceAll('/', '').replace(/\?([;\s\w\"\=\,\:\./\~\{\}\?\!\-\%\&\#\$\^\(\)]*?)\=/, "/")}</Text>
+        </Group></MediaQuery>
+        <Group>
+            <Link href="/" passHref>
+                <ActionIcon variant={router.asPath.includes("viewer") ? "filled" : "hover"} sx={() => ({
+                    transition: "all .375s var(--animation-ease)",
+                })}>
+                        <Home size={20}/>
+                </ActionIcon>
+            </Link>
+            <Link href="/browser" passHref>
+                <ActionIcon variant={router.asPath.includes("browser") ? "filled" : "hover"}  sx={() => ({
+                    transition: "all .375s var(--animation-ease)",
+                })}>
+                        <Folder size={20}/>
+                </ActionIcon>
+            </Link>
+            <Link href="/updates" passHref>
+                <ActionIcon variant={router.asPath.includes("updates") ? "filled" : "hover"} sx={() => ({
+                    transition: "all .375s var(--animation-ease)",
+                })}>
+                        <InfoCircle size={20}/>
+                </ActionIcon>
+            </Link>
+            <Link href="/settings" passHref>
+                <ActionIcon variant={router.asPath.includes("settings") ? "filled" : "hover"} sx={() => ({
+                    transition: "all .375s var(--animation-ease)",
+                })}>
+                        <Settings size={20}/>
+                </ActionIcon>
+            </Link>
+
+            <Menubar topBar />
+        <Burger sx={(theme) => ({color: white ? theme.colors.dark[0] : undefined})} mr="md"
+                    onClick={() => setHidden(!hidden)} opened={!hidden} size="sm"></Burger>
+
+        </Group>
+    </Group>
 }
 
 export function BottomNavBar({setHidden, hidden, white = false}) {
@@ -241,8 +331,8 @@ export function BottomNavBar({setHidden, hidden, white = false}) {
                 </UnstyledButton>
             </Link>
         </Group>
-        <ActionIcon sx={(theme) => ({color: white ? theme.colors.dark[0] : undefined})} mr="md"
-                    onClick={() => setHidden(!hidden)}><Menu2/></ActionIcon>
+        <Burger sx={(theme) => ({color: white ? theme.colors.dark[0] : undefined})} mr="md"
+                onClick={() => setHidden(!hidden)} opened={!hidden} size="sm"></Burger>
     </Group>
 }
 
@@ -250,19 +340,19 @@ export default function Layout({
                                    children,
                                    footer = null,
                                    aside = null,
-                                   header = null,
                                    navbar = null,
                                    additionalMainStyle,
                                    asideContent,
                                    hiddenAside,
                                    permanent = true,
                                    padding = "md",
-                                   hiddenCallback,
                                    noScrollArea = false,
                                    hideTabbar = false
                                }: Layout) {
     const theme = useMantineTheme();
+    const router = useRouter();
     const [hidden, setHidden] = useState<boolean>(false);
+    const isMobile = useMediaQuery('only screen and (max-width: 768px)');
 
     useEffect(() => {
         if (permanent) {
@@ -285,7 +375,9 @@ export default function Layout({
         asideOffsetBreakpoint="sm"
         fixed
         padding={padding}
-        header={header}
+        header={!isMobile ? footer ? footer : <Header height={52}>
+            <TopNavBar setHidden={(f) => setHidden(f)} hidden={hidden}/>
+        </Header> : null}
         navbar={navbar}
         aside={
             aside ? aside : <Aside p="md"
@@ -296,22 +388,19 @@ export default function Layout({
                                        backdropFilter: 'blur(30px)', ...(hidden && ':hover' && {
                                            opacity: 0.2,
                                            backdropFilter: 'blur(0px)'
-                                       }), ...(hidden && {opacity: 0, right: -(300 - 16), pointerEvents: "none"})
-                                   }} width={{lg: 300}}>
-                <Menubar closeFunc={() => {
-                    setHidden(true);
-                    hiddenCallback && hiddenCallback(true);
-                }}/>
+                                       }), ...(hidden && {opacity: 0, right: {sm: -(200 - 16), md: -(250 - 16), lg: -(300 - 16)}, pointerEvents: "none"})
+                                   }} width={{sm: 200, md: 250, lg: 300}}>
+                {isMobile || router.asPath.includes("view") ? <Menubar /> : null}
                 {noScrollArea ? asideContent : <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
                     {asideContent}
                 </Aside.Section>}
                 {hideTabbar ? undefined : <Tabbar/>}
             </Aside>
         }
-        footer={
+        footer={isMobile ?
             footer ? footer : <Footer height={42}>
                 <BottomNavBar setHidden={(f) => setHidden(f)} hidden={hidden}/>
-            </Footer>
+            </Footer> : null
         }
     >
         {children}

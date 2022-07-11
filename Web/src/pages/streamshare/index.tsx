@@ -8,16 +8,13 @@ function Page() {
 
     const [streams] = useState([1, 2, 3]);
 
-    return <Layout asideContent={<>
+    return <Layout hiddenAside={true} asideContent={<>
         <Aside.Section>
             <Text>Under construction!</Text>
         </Aside.Section>
     </>}>
         <SEO title="Streamshare" siteTitle="Doki"
              description="Content for days"/>
-        <Group position="apart">
-            <Title order={5}>Streamshare</Title>
-        </Group>
         <Text size="xs">Join or host a stream with friends on Doki</Text>
         <Group my="xl" spacing={8}><Button leftIcon={<Plus/>} size="xl">Host</Button><Button variant="outline"
                                                                                              size="xl">Join</Button></Group>
@@ -39,8 +36,7 @@ function Page() {
             These streams function just like the viewer, but includes a real-time feed of the participants and a
             real-time chat.
             <br/>
-            It is <b>required</b> to have WebRTC enabled for this to work as intended, but Doki will check if your
-            browser supports it.
+            Currently under construction! Come back at a later time!
         </Text>
     </Layout>
 }

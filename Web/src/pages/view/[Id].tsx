@@ -30,7 +30,7 @@ import {
 } from 'tabler-icons-react';
 import {showNotification} from '@mantine/notifications';
 import {useContext, useEffect, useState} from 'react';
-import {checkCookies, getCookie, setCookies} from 'cookies-next';
+import {getCookie, hasCookie, setCookies} from 'cookies-next';
 import {CommentBox} from '@src/components/comments';
 import Layout, {BottomNavBar} from '../../components/layout';
 import SEO from '../../components/seo';
@@ -90,11 +90,11 @@ export async function getServerSideProps(nextPage: NextPageContext) {
         return {
             props: {
                 post, ids,
-                volume: checkCookies('player-volume', nextPage) ? getCookie('player-volume', nextPage) : 0.25,
-                muted: checkCookies('player-muted', nextPage) ? getCookie('player-muted', nextPage) : false,
-                loop: checkCookies('player-loop', nextPage) ? getCookie('player-loop', nextPage) : true,
-                firstTime: checkCookies('first-time', nextPage) ? getCookie('first-time', nextPage) : true,
-                filter: checkCookies('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : [],
+                volume: hasCookie('player-volume', nextPage) ? getCookie('player-volume', nextPage) : 0.25,
+                muted: hasCookie('player-muted', nextPage) ? getCookie('player-muted', nextPage) : false,
+                loop: hasCookie('player-loop', nextPage) ? getCookie('player-loop', nextPage) : true,
+                firstTime: hasCookie('first-time', nextPage) ? getCookie('first-time', nextPage) : true,
+                filter: hasCookie('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : [],
                 //    messages: (await import(`../../../${nextPage.locale}nodemon.json`)).default
             }
         };
@@ -133,7 +133,7 @@ function Page(props: PageProps) {
     const [playing, setPlaying] = useState(true);
     const [progress, setProgress] = useState<{ played: 0, loaded: 0 }>({played: 0, loaded: 0});
     const [pip, setPip] = useState(false);
-    const [objFit, setObjFit] = useState(true);
+    const [objFit, setObjFit] = useState(false);
     const [duration, setDuration] = useState(0);
     const [seek, setSeek] = useState(-1);
     const [willSeek, setWillSeek] = useState(false);
@@ -340,7 +340,7 @@ function Page(props: PageProps) {
                  //setHoveringPlayer(hidden);
                  //}
              }}
-            /*onWheel={(e) => {
+            onWheel={(e) => {
                 if (isPlayable) {
                     if (e.deltaY > 0 || e.deltaX > 0) {
                         setHoveringPlayer(true);
@@ -351,7 +351,7 @@ function Page(props: PageProps) {
                         setHidden(true);
                     }
                 }
-            }}*/
+            }}
              {...(!desktop && longPress)}
         >
             <DynamicContentSlide seek={seek} willSeek={willSeek} seekCallback={() => setWillSeek(false)}

@@ -1,6 +1,8 @@
-import {Accordion, Aside, Badge, Button, Group, MediaQuery, ScrollArea, Stack, Text, Title} from '@mantine/core';
-import Layout, {Menubar, Tabbar} from '../components/layout';
+import {Accordion, Aside, Badge, Button, Card, Divider, Group, Stack, Text, Title} from '@mantine/core';
+import Layout from '../components/layout';
 import SEO from '../components/seo';
+
+// the changelog should really not be hard-coded...
 
 const M2 = [
     {
@@ -8,7 +10,7 @@ const M2 = [
         version: 'M2.02',
         details: () => (
             <>
-                <p>
+                    <p>
                     - Added internationalization. (UI language can now be changed to Norwegian, Ukranian, etc.)
                     <br/>
                     - Re-added several core features from M1, including editing files.
@@ -22,6 +24,8 @@ const M2 = [
                     - Upload page improvements.
                     <br/>
                     - Styling improvements.
+                        <br />
+                        - Bugfixes to filtering
                 </p>
             </>
 
@@ -454,28 +458,24 @@ const PreM2 = [
 ];
 
 function Page() {
-    return <Layout aside={
-        <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
-            <Aside p="md" hiddenBreakpoint="sm" width={{lg: 300}}>
-                <Menubar/>
-                <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
+    return <Layout hiddenAside={true} asideContent={
+                <Aside.Section>
                     <Stack>
-                        <Button variant="default">M2 builds</Button>
-                        <Button variant="default">Pre-M2 builds</Button>
+                        <Button variant="default">Milestone 2 builds</Button>
+                        <Button variant="default">Milestone 1 builds</Button>
                     </Stack>
-                </Aside.Section>
-                <Tabbar/>
-            </Aside></MediaQuery>}>
+                </Aside.Section>}>
         <SEO title="Updates" siteTitle="Doki" description="Sneed"/>
-        <Group>
-            <Title order={5}>
-                Updates
-            </Title>
-            <div style={{flex: 1}}/>
-        </Group>
-        <Stack>
-            <Text size="xs">M2 Builds</Text>
-            <Accordion>
+        <Stack ml="auto" mr="auto" sx={{maxWidth: 800}}>
+            <Card p="xl">
+                <Title order={3}>What's new?</Title>
+                <Text>You can now import videos directly from YouTube!</Text>
+                <Text>Delete files and edit files at ease in addition to a much more robust uploader!</Text>
+                <Text>A muuuuuch better responsive design!</Text>
+            </Card>
+            <Divider label="Changelogs" />
+            <Text size="xs">Milestone 2 Builds</Text>
+            <Accordion multiple>
                 {M2.map((elem, index) =>
                     <Accordion.Item key={index}
                                     label={<Group><Text>{elem.version}</Text>{elem.current && <Badge>Current</Badge>}
@@ -483,8 +483,8 @@ function Page() {
                         <elem.details/>
                     </Accordion.Item>)}
             </Accordion>
-            <Text size="xs">Pre-M2 Builds</Text>
-            <Accordion>
+            <Text size="xs">Milestone 1 Builds</Text>
+            <Accordion multiple>
                 {PreM2.map((elem, index) =>
                     <Accordion.Item key={index} label={elem.version}>
                         <elem.details/>

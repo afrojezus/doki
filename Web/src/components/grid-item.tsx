@@ -18,8 +18,6 @@ import {Author, File} from "@server/models";
 import {displayFilename, getExt, pictureFormats, videoFormats} from "../../utils/file";
 import {formatDate, ParseUnixTime} from "../../utils/date";
 import {useRouter} from "next/router";
-import {useState} from "react";
-import {Palette} from "node-vibrant/lib/color";
 
 export function SmallGridItem({data}) {
     const theme = useMantineTheme();
@@ -49,7 +47,6 @@ function GridItem({
 }: { data: File, editMode: boolean, selected: boolean, onSelect: (file: File) => void, onUnselect: (file: File) => void, style?: any, author?: Author }) {
     const theme = useMantineTheme();
     const router = useRouter();
-    const [palette] = useState<Palette>(null);
 
     const secondaryColor = theme.colorScheme === 'dark'
         ? theme.colors.dark[1]
@@ -69,7 +66,7 @@ function GridItem({
             transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
             border: selected ? `4px solid ${theme.colors.blue[6]}` : undefined,
             ':hover': {
-                border: `${selected ? 4 : 1}px solid ${editMode ? theme.colors.blue[6] : palette ? theme.colorScheme === "dark" ? palette.Muted.hex : palette.DarkMuted.hex : theme.colors.dark[0]}`,
+                border: `${selected ? 4 : 1}px solid ${editMode ? theme.colors.blue[6] : theme.colorScheme === "dark" ? theme.colors.dark[3] : theme.colors.dark[0]}`,
                 boxShadow: theme.shadows[3],
                 '> * > .mantine-Image-root': {
                     opacity: 0.5
@@ -80,10 +77,9 @@ function GridItem({
             '&>div': {
                 flex: 1
             },
-            cursor: "pointer",
-            background: palette ? theme.colorScheme === "dark" ? palette.DarkMuted.hex : palette.Muted.hex : undefined
-        }} onClick={() => {
-
+            cursor: "pointer"
+        }}
+        onClick={() => {
             if (editMode) {
                 if (selected)
                     onUnselect(data);
@@ -120,14 +116,13 @@ function GridItem({
             <Group position="apart" style={{marginBottom: 5, marginTop: theme.spacing.sm, flex: 1}}>
                 <Text size="sm" sx={{
                     fontFamily: "Manrope, sans-serif;",
-                    fontWeight: 700,
-                    color: palette ? theme.colorScheme === "dark" ? palette.LightVibrant.hex : palette.Vibrant.hex : undefined
+                    fontWeight: 700
                 }}
                       weight={500}>{displayFilename(data)}</Text>
             </Group>
             <Group spacing={8}>
                 <Text size="xs"
-                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
+                      style={{color: secondaryColor}}>
                     {data.Author.Name}
                 </Text>
                 {author && author.AuthorId === data.AuthorId &&
@@ -135,15 +130,15 @@ function GridItem({
             </Group>
             <Group position="apart">
                 <Text size="xs"
-                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
+                      style={{color: secondaryColor}}>
                     {formatDate(ParseUnixTime(data.UnixTime))}
                 </Text>
                 <Text size="xs"
-                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
+                      style={{color: secondaryColor}}>
                     {((data.Size) / 1e3 / 1e3).toFixed(2)} MB {getExt(data.FileURL)}
                 </Text>
                 <Text size="xs"
-                      style={{color: palette ? theme.colorScheme === "dark" ? palette.LightMuted.hex : palette.DarkMuted.hex : secondaryColor}}>
+                      style={{color: secondaryColor}}>
                     {(data.Views)} views
                 </Text>
             </Group>
