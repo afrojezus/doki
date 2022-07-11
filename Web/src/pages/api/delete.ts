@@ -19,7 +19,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === 'POST') {
         try {
             const {author, files} = await JSON.parse(req.body);
-            verifyAuthor(author);
+            await verifyAuthor(author);
             const num = await FileRepository.deleteAll(files);
             console.log(`${num} files deleted`);
             return res.status(200).json({message: `${num} files deleted.`});

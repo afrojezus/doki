@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="web: youtube import, layout changes, filter bugfix">
-      <change afterPath="$PROJECT_DIR$/Web/utils/id_management.ts" afterDir="false" />
+    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="web: youtube import, layout changes, filter bugfix, need further refactoring">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/App.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/Views/Browser.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/Views/Home.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/Views/Settings.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/babel.config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/tsconfig.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/Web/next.config.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/components/grid-item.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/grid-item.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/components/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/components/player-elements.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/components/player-elements.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/repositories/AuthorRepository.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/server/repositories/AuthorRepository.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/server/repositories/FileRepository.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/server/repositories/FileRepository.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Web/src/pages/_app.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/_app.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/api/update.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/api/update.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/browser.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/browser.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/settings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/streamshare/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/streamshare/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/updates.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/updates.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/view/[Id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/view/[Id].tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/src/pages/api/delete.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/api/delete.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Web/tsconfig.server.json" beforeDir="false" afterPath="$PROJECT_DIR$/Web/tsconfig.server.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +118,10 @@
       <workItem from="1655834952104" duration="10638000" />
       <workItem from="1656045857756" duration="3107000" />
       <workItem from="1657481511640" duration="1013000" />
-      <workItem from="1657482562378" duration="15206000" />
+      <workItem from="1657482562378" duration="15449000" />
+      <workItem from="1657502548608" duration="363000" />
+      <workItem from="1657546775611" duration="7524000" />
+      <workItem from="1657570083718" duration="825000" />
     </task>
     <task id="LOCAL−00001" summary="web: internationalization, upload-correction, minor changes">
       <created>1652900844826</created>
@@ -121,7 +129,13 @@
       <option name="presentableId" value="LOCAL−00001" />
       <updated>1652900844826</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL−00002" summary="web: youtube import, layout changes, filter bugfix, need further refactoring">
+      <created>1657501471588</created>
+      <option name="number" value="LOCAL−00002" />
+      <option name="presentableId" value="LOCAL−00002" />
+      <updated>1657501471588</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -142,7 +156,8 @@
     <MESSAGE value="added modes, restored random-algorithm from original&#10;&#10;alongside many incremental changes" />
     <MESSAGE value="web: internationalization, upload-correction, minor changes" />
     <MESSAGE value="web: youtube import, layout changes, filter bugfix" />
-    <option name="LAST_COMMIT_MESSAGE" value="web: youtube import, layout changes, filter bugfix" />
+    <MESSAGE value="web: youtube import, layout changes, filter bugfix, need further refactoring" />
+    <option name="LAST_COMMIT_MESSAGE" value="web: youtube import, layout changes, filter bugfix, need further refactoring" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

@@ -1,5 +1,6 @@
 ﻿import "dotenv/config";
 import next from "next";
+import nextConfig from "./next.config";
 import express from "express";
 import * as QueryString from "querystring";
 import figlet from "figlet";
@@ -21,7 +22,7 @@ async function startup() {
         }
         console.log(data);
         console.log("Milestone 2 :: Version 1");
-        console.log("Maintainer: th.eq.th@pm.me\n\n");
+        console.log("Maintainer: th.eq.th@protonmail.me\n\n");
     })
 
     try {
@@ -32,7 +33,7 @@ async function startup() {
         return -1;
     }
 
-    const app = next({dev, hostname, port});
+    const app = next({dev, hostname, port, dir: __dirname, conf: nextConfig});
     const handle = app.getRequestHandler();
 
 

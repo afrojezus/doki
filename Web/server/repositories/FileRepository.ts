@@ -1,5 +1,5 @@
 ﻿import {FindOptions} from "sequelize";
-import {File} from "@server/models";
+import {File} from "../models";
 
 export default class FileRepository extends File {
     public static async deleteAll(files: File[]) {

@@ -7,15 +7,15 @@ import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import '../styles.css'
 import {GetServerSidePropsContext} from 'next';
-import {getCookie} from 'cookies-next';
-import {useEffect, useMemo, useState} from 'react';
-import {useColorScheme} from "@mantine/hooks";
+import {getCookie, hasCookie} from 'cookies-next';
+import {useEffect, useState} from 'react';
+import {useColorScheme, useMediaQuery} from "@mantine/hooks";
 import {LocaleContext, messages} from "@src/locale";
-import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 
 export default function App(props: AppProps & { colorScheme: ColorScheme, accentColor: MantineColor, locale: string }) {
     const {Component, pageProps} = props;
-    const preferredColorScheme = useColorScheme();
+    const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+    const preferredColorScheme = useColorScheme(prefersDark ? "dark" : "light");
 
     const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme ?? preferredColorScheme);
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
@@ -51,14 +51,6 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
         };
     }, [accentColor]);
 
-    const theme = useMemo(() => {
-        return createTheme({
-            palette: {
-                mode: colorScheme
-            }
-        })
-    }, [colorScheme]);
-
     useEffect(() => {
         setTimeout(() => setShowFancyLoader(false), 750);
     }, []);
@@ -77,8 +69,6 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
                 <link rel="manifest" href="/manifest.webmanifest"/>
                 <meta name="theme-color" content="#000000" />
             </Head>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
             <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
                 <LocaleContext.Provider value={{locale, messages}}>
                     <MantineProvider
@@ -108,13 +98,12 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
                     </MantineProvider>
                 </LocaleContext.Provider>
             </ColorSchemeProvider>
-            </ThemeProvider>
             </>
     );
 }
 
 App.getInitialProps = ({ctx}: { ctx: GetServerSidePropsContext }) => ({
-    colorScheme: getCookie("color-scheme", ctx) || null,
-    accentColor: getCookie("accent-color", ctx) || 'blue',
-    locale: getCookie("locale", ctx) || "en",
+    colorScheme:  hasCookie("color-scheme", ctx) ? getCookie("color-scheme", ctx) : "light",
+    accentColor: hasCookie("accent-color", ctx) ? getCookie("accent-color", ctx) : 'blue',
+    locale: hasCookie("locale", ctx) ? getCookie("locale", ctx) : "en",
 });

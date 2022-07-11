@@ -1,5 +1,5 @@
 ﻿import {FindOptions} from "sequelize";
-import {Author} from "@server/models";
+import {Author} from "../models";
 
 export default class AuthorRepository extends Author {
     public static async findAll(options?: FindOptions) {
