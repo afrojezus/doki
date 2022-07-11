@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="removed mobile, bugfix for palette issue">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Web/src/pages/api/import/[id].ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/src/pages/api/import/[id].ts" afterDir="false" />
+    <list default="true" id="60039061-8bd8-413a-8579-f84985916126" name="Changes" comment="minor bugfix for yt importer">
+      <change beforePath="$PROJECT_DIR$/Web/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Web/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,7 +102,7 @@
       <workItem from="1657482562378" duration="15449000" />
       <workItem from="1657502548608" duration="363000" />
       <workItem from="1657546775611" duration="7524000" />
-      <workItem from="1657570083718" duration="946000" />
+      <workItem from="1657570083718" duration="1232000" />
     </task>
     <task id="LOCAL−00001" summary="web: internationalization, upload-correction, minor changes">
       <created>1652900844826</created>
@@ -123,7 +122,13 @@
       <option name="presentableId" value="LOCAL−00003" />
       <updated>1657570981524</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL−00004" summary="minor bugfix for yt importer">
+      <created>1657571052492</created>
+      <option name="number" value="LOCAL−00004" />
+      <option name="presentableId" value="LOCAL−00004" />
+      <updated>1657571052492</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -146,7 +151,8 @@
     <MESSAGE value="web: youtube import, layout changes, filter bugfix" />
     <MESSAGE value="web: youtube import, layout changes, filter bugfix, need further refactoring" />
     <MESSAGE value="removed mobile, bugfix for palette issue" />
-    <option name="LAST_COMMIT_MESSAGE" value="removed mobile, bugfix for palette issue" />
+    <MESSAGE value="minor bugfix for yt importer" />
+    <option name="LAST_COMMIT_MESSAGE" value="minor bugfix for yt importer" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
