@@ -1,2 +1,6 @@
-/.idea/httpRequests/http-client.cookies
-/.idea/httpRequests/http-requests-log.http
+node_modules
+.next
+public/files
+.env
+utils/name.ts
+dist

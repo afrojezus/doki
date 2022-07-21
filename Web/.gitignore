@@ -1,6 +1,0 @@
-node_modules
-.next
-public/files
-.env
-utils/name.ts
-dist
