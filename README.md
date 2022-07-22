@@ -1,5 +1,7 @@
 # doki
 
+![The viewer](./doki-viewer-img.png)
+
 This is the official repository for the doki project.
 
 ### Changes from the original branch
