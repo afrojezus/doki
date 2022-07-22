@@ -53,7 +53,7 @@ import {formatDate, ParseUnixTime} from "../../../utils/date";
 import {NextPageContext} from 'next';
 import {useRouter} from 'next/router';
 import {useMediaQuery} from '@mantine/hooks';
-import {useLongPress, useSessionStorage} from "../../../utils/react";
+import {useLongPress} from "../../../utils/react";
 import {ContentSlide, QuickDetails} from "@src/components/player-elements";
 import Link from "next/link";
 import {getLocale, LocaleContext} from "@src/locale";

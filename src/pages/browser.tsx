@@ -207,7 +207,7 @@ function Page(props: PageProps) {
             <Pagination mb="md" page={activePage} size="xs" onChange={setPage} styles={{ item: { fontFamily: 'Manrope' } }} total={(data && (onlyUsers ? 
                 Math.floor(data.posts.filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f).length / 25 + 1) : Math.floor(data.amount / 25 + 1))) ?? 0} withEdges grow />
             <SearchInput onSubmit={handleSearch}/>
-            <Accordion mt="md" sx={{
+            <Transition mounted={Boolean(props.author)} transition="slide-down">{(styles) => <Accordion style={styles} mt="md" sx={{
                 backgroundColor: theme.colorScheme === "light" ? theme.white : theme.colors.dark[5],
                 borderRadius: 4
             }} styles={{
@@ -223,7 +223,7 @@ function Page(props: PageProps) {
                                 color="red">{`${getLocale(locale).Browser["delete-files"]}`}</Button>
                     </Stack>
                 </Accordion.Item>
-            </Accordion>
+            </Accordion>}</Transition>
             <Divider label={`${getLocale(locale).Browser["view-options"]}`} mt="sm"/>
             <Select label={`${getLocale(locale).Browser["sort"]}`} mt="xs" value={sort} onChange={handleSelect}
                     data={["Time", "Size", "Views"]}/>
@@ -285,37 +285,7 @@ function Page(props: PageProps) {
             </Stack>}</Transition>}
         </>
     }>
-        <SEO title="Browser" siteTitle="Doki" description="Sneed"/>
-        {noFiles && <>
-            <Stack>
-                <Title className="use-m-font fancy-transition1">O.O'</Title>
-                <Text className="use-m-font fancy-transition1">There's no files here!</Text>
-            </Stack>
-        </>}
-        {/*<Box sx={{width: '100%', height: `calc(100vh - 40px ${(tag || category || type) ? "- 56px" : ""})`, overflowX: 'hidden'}}>
-            {data && <AutoSizer>
-                {({height, width}) => (
-                    <Grid
-                        style={{
-                            overflowX: 'hidden',
-                            paddingBottom: 16
-                        }}
-                        height={height}
-                        width={width}
-                        rowHeight={300}
-                        columnWidth={(width / scale)}
-                        itemData={matrixData}
-                        columnCount={scale}
-                        rowCount={matrixData.length}
-                    >
-                        {(props) => <RenderGridItem {...props}
-                                                    selected={editMode && selected.includes(props.data[props.rowIndex][props.columnIndex])}
-                                                    editMode={editMode} onSelect={onSelect} onUnselect={onUnselect}
-                                                    author={props.author}/>}
-                    </Grid>
-                )}
-            </AutoSizer>}
-        </Box>*/}
+        <SEO title="Browser" siteTitle="Doki" description="Content for days"/>
         {data && <SimpleGrid cols={5} breakpoints={[
             { maxWidth: 'lg', cols: 4, spacing: 'md' },
             { maxWidth: 'md', cols: 3, spacing: 'md' },

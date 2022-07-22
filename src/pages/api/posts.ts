@@ -11,7 +11,7 @@ export default async function handler(req, res) {
                     model: Author,
                     required: true
                 },
-                limit: 25 * page,
+                limit: 25,
                 offset: (page > 1) ? (25 * (page - 1)) : 0
             });
             const amount = await FileRepository.findAll({

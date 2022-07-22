@@ -118,7 +118,7 @@ function Page(props: PageProps) {
         let _r = [];
         f.forEach(f => {
             _r.push({
-                Title: f.name,
+                Title: f.name.split(".")[0],
                 Description: "",
                 NSFW: false,
                 File: f,

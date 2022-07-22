@@ -20,7 +20,7 @@ export function getExt(file: string) {
 
 export function displayFilename(file: File): string {
     if (file.Title) return file.Title;
-    return file.FileURL.split("/")[file.FileURL.split("/").length - 1];
+    return file.FileURL.split("/")[file.FileURL.split("/").length - 1].split(".")[0];
 }
 
 export function onlyGetMedia(files: File[]) {
