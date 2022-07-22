@@ -15,6 +15,7 @@
     useMantineTheme
 } from '@mantine/core';
 import {
+    Cast,
     Download,
     Help,
     PictureInPicture,
@@ -261,9 +262,13 @@ function Page(props: PageProps) {
         setWillSeek(true);
     }
 
-    return <Layout footer={<></>} hiddenCallback={(h) => setHidden(h)} padding={0} additionalMainStyle={{
+    function handleCast () {
+        // TODO: integrate chromecasting
+    }
+
+    return <Layout onMouseLeave={() => setHidden(true)} footer={<></>} hiddenCallback={(h) => setHidden(h)} padding={0} additionalMainStyle={{
         background: isPlayable ? "black" : undefined, overflow: "hidden",
-        padding: isPlayable ? "0 !important" : undefined,
+        padding: isPlayable ? hidden ? "0 !important" : undefined : undefined,
         transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)"
     }}
                    hiddenAside={hidden}
@@ -294,12 +299,24 @@ function Page(props: PageProps) {
                                              sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-views"]}</Text>
                                    </Stack>
                                    {current.Folder && <Stack spacing="xs">
-                                       <Text size="sm">{current.Folder}</Text>
+                                       <Link href={`/browser?f=${current.Folder}`} passHref>
+                                           <Text color={theme.colors.blue[4]} sx={{
+                                               textDecoration: "none",
+                                               cursor: "pointer",
+                                               "&:hover": { textDecoration: "underline" }
+                                           }} size="sm">{current.Folder}</Text>
+                                       </Link>
                                        <Text size="xs"
                                              sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-category"]}</Text>
                                    </Stack>}
                                    <Stack spacing="xs">
-                                       <Text size="sm">{getExt(current.FileURL)}</Text>
+                                       <Link href={`/browser?type=${getExt(current.FileURL)}`} passHref>
+                                           <Text color={theme.colors.blue[4]} sx={{
+                                               textDecoration: "none",
+                                               cursor: "pointer",
+                                               "&:hover": { textDecoration: "underline" }
+                                           }} size="sm">{getExt(current.FileURL)}</Text>
+                                       </Link>
                                        <Text size="xs"
                                              sx={{marginTop: -8}}>{getLocale(locale).Viewer["nc-file-type"]}</Text>
                                    </Stack>
@@ -448,7 +465,7 @@ function Page(props: PageProps) {
                     <Tooltip gutter={-100} position="right"
                              withArrow label={getLocale(locale).Viewer["play"]}><ActionIcon
                         sx={() => ({color: "white"})}
-                            onClick={() => setPlaying(!playing)}>{playing ? <PlayerPause style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24}/> :
+                            onClick={() => setPlaying(!playing)}>{playing && interacted ? <PlayerPause style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24}/> :
                                 <PlayerPlay style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24}/>}</ActionIcon>
                     </Tooltip>
                     <Tooltip gutter={-100} position="right"
@@ -475,11 +492,24 @@ function Page(props: PageProps) {
                              withArrow label={getLocale(locale).Viewer["contain"]}><ActionIcon
                         sx={() => ({color: "white"})} onClick={handleObjectFit}><Resize
                                 size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon></Tooltip>
+                    <Tooltip gutter={-100} position="right"
+                        withArrow label="Cast (under construction!)"><ActionIcon
+                            sx={() => ({ color: "white" })} onClick={handleCast}><Cast
+                                size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon></Tooltip>
                     <ActionIcon color={firstTime ? "blue" : undefined} sx={() => ({color: "white"})}
                         onClick={showHelp}><Help size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon>
                 </Stack>
             </Box>
-
+            <Box onMouseEnter={() => setHidden(false)} sx={{
+                position: "fixed",
+                height: '100vh',
+                width: 100,
+                right: 0,
+                top: 0,
+                '@media (max-width: 480px)': {
+                    width: 0
+                }
+            }}></Box>
         </div>
 
         <Modal title={getLocale(locale).Viewer["help-title"]} opened={helpOpen} onClose={() => setHelpOpen(false)}>

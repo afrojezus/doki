@@ -1,22 +1,17 @@
-﻿import {Aside, Group, MediaQuery, ScrollArea, Space, Stack, Text, Title} from '@mantine/core';
+﻿import {Aside, Button, Group, MediaQuery, ScrollArea, Space, Stack, Text, Title} from '@mantine/core';
 import Layout, {Menubar, Tabbar} from '../components/layout';
 import {LinkButton} from "@src/components/buttons";
 import SEO from "@src/components/seo";
 
 function Page() {
-    return <Layout aside={
-        <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
-            <Aside p="md" hiddenBreakpoint="sm" width={{lg: 300}}>
-                <Menubar/>
-                <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
+    return <Layout asideContent={
+                <Aside.Section>
                     <Stack>
-                        <LinkButton href="#terms" variant="default">Terms and Conditions</LinkButton>
-                        <LinkButton href="#privacy" variant="default">Privacy Policy</LinkButton>
-                        <LinkButton href="#clause" variant="default">Uploaders' Clause</LinkButton>
+                <Button onClick={() => document.getElementById("#terms").scrollIntoView()} variant="default">Terms and Conditions</Button>
+                <Button onClick={() => document.getElementById("#privacy").scrollIntoView()} variant="default">Privacy Policy</Button>
+                <Button onClick={() => document.getElementById("#clause").scrollIntoView()} variant="default">Uploaders' Clause</Button>
                     </Stack>
-                </Aside.Section>
-                <Tabbar/>
-            </Aside></MediaQuery>}>
+                </Aside.Section>}>
         <SEO title="Policies" siteTitle="Doki"
              description="Content for days"/>
         <Group>
@@ -73,9 +68,9 @@ function Page() {
                         included or made available by the Service.</Text>
                 </li>
                 <li>
-                    <Text><strong>Website</strong> refers to Doki, accessible from <a href="https://doki.cx/"
+                    <Text><strong>Website</strong> refers to Doki, accessible from <a href={`https://${window.location.hostname}/`}
                                                                                       rel="external nofollow noopener"
-                                                                                      target="_blank">https://doki.cx/</a></Text>
+                        target="_blank">{`https://${window.location.hostname}/`}/</a></Text>
                 </li>
                 <li>
                     <Text><strong>You</strong> means the individual accessing or using the Service, or the company, or
@@ -226,7 +221,7 @@ function Page() {
                 The file service stores a token used for identifying authors for files uploaded. The token is
                 responsible for validating your ownership of your files on the service.
                 <br/>
-                Color scheme and other UI options are saved to local storage on your device to remember your choices if
+                Color scheme and other settings options are stored as cookies on your device to remember your choices if
                 you decide to change them.
                 <br/>
                 Uploaders have control over how their files are shown on the service. Deleting a file here will remove

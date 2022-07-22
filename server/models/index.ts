@@ -14,6 +14,7 @@ const sequelize =
 
 sequelize.addModels([File, Author]);
 
+
 export {File, Author};
 
 export const initDB = async () => {

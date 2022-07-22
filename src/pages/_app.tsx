@@ -12,13 +12,14 @@ import {useEffect, useState} from 'react';
 import {useColorScheme, useMediaQuery} from "@mantine/hooks";
 import {LocaleContext, messages} from "@src/locale";
 import { IntroAnimation } from '@src/components/intro-animation';
+import { useMemo } from 'react';
 
-export default function App(props: AppProps & { colorScheme: ColorScheme, accentColor: MantineColor, locale: string }) {
+export default function App(props: AppProps & { colorScheme: ColorScheme & 'system', accentColor: MantineColor, locale: string }) {
     const {Component, pageProps} = props;
-    const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
-    const preferredColorScheme = useColorScheme(prefersDark ? "dark" : "light");
+    const preferDark = useMediaQuery('(prefers-color-scheme: dark)');
+    const preferredColorScheme = useColorScheme(preferDark ? 'dark' : 'light');
 
-    const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme ?? preferredColorScheme);
+    const [colorScheme, setColorScheme] = useState<ColorScheme>((props.colorScheme && props.colorScheme !== 'system') ? props.colorScheme : preferredColorScheme);
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [locale, setLocale] = useState<string>(props.locale);
 
@@ -27,9 +28,9 @@ export default function App(props: AppProps & { colorScheme: ColorScheme, accent
 
     useEffect(() => {
         if (props.accentColor !== accentColor) setAccentColor(props.accentColor);
-        if (props.colorScheme !== colorScheme) setColorScheme(props.colorScheme);
+        if (props.colorScheme !== colorScheme) setColorScheme((props.colorScheme && props.colorScheme !== 'system') ? props.colorScheme : preferredColorScheme);
         if (props.locale !== locale) setLocale(props.locale);
-    }, [props.accentColor, props.colorScheme, props.locale]);
+    }, [props.accentColor, props.colorScheme, props.locale, preferDark, preferredColorScheme]);
 
     useEffect(() => {
         NProgress.configure({

@@ -3,6 +3,7 @@ import {
     Badge,
     Button,
     Card,
+    ColorScheme,
     Divider,
     Group,
     MantineColor,
@@ -29,6 +30,8 @@ import {Item, Value} from "@src/components/filter-elements";
 import {getLocale, LocaleContext} from "@src/locale";
 import {useRouter} from "next/router";
 import {SeekForAuthor} from "../../utils/id_management";
+import { useColorScheme } from '@mantine/hooks';
+import { useCallback } from 'react';
 
 interface PageProps {
     accentColor: MantineColor;
@@ -37,6 +40,7 @@ interface PageProps {
     author?: Author;
     filter: string[];
     locale: string;
+    colorScheme: ColorScheme & 'system'
 }
 
 
@@ -48,6 +52,7 @@ export async function getServerSideProps({req, res}) {
     return {
         props: {
             accentColor: hasCookie('accent-color', {req, res}) ? getCookie('accent-color', {req, res}) : "blue",
+            colorScheme: hasCookie('color-scheme', { req, res }) ? getCookie('color-scheme', { req, res }) : "system",
             nsfw: hasCookie('allow-nsfw-content', {req, res}) ? getCookie('allow-nsfw-content', {req, res}) : true,
             locale: hasCookie('locale', {req,res}) ? getCookie('locale', {req,res}) : "en",
             filter: hasCookie('filtered', {req, res}) ? JSON.parse(getCookie('filtered', {req, res}) as string) : [],
@@ -61,18 +66,21 @@ function Page(props: PageProps) {
     const theme = useMantineTheme();
     const router = useRouter();
     const loc = useContext(LocaleContext);
+    const [selectedColorScheme, setSelectedColorScheme] = useState<ColorScheme & 'system'>(props.colorScheme);
+    const preferredColorScheme = useColorScheme();
     const { colorScheme, toggleColorScheme } = useMantineColorScheme();
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [nsfwOn, setNsfw] = useState<boolean>(props.NSFW);
     const [filter, setFilter] = useState<string[]>(props.filter);
     const [locale, setLocale] = useState<string>(props.locale);
 
-    function tCS () {
-        const newColorScheme = colorScheme === 'dark' ? 'light' : 'dark';
+    const tCS = useCallback((v) =>  {
+        setSelectedColorScheme(v);
+        const newColorScheme = v === 'system' ? preferredColorScheme : v;
         toggleColorScheme(newColorScheme);
-        setCookies('color-scheme', newColorScheme, {maxAge: 60 * 60 * 24 * 30});
+        setCookies('color-scheme', v, {maxAge: 60 * 60 * 24 * 30});
         //router.reload();
-    }
+    }, [selectedColorScheme]);
 
     async function newAccentColor(color: string) {
         setAccentColor(color);
@@ -141,6 +149,12 @@ function Page(props: PageProps) {
             valueComponent={Value}
             itemComponent={Item} defaultValue={props.filter}
             searchable
+            styles={{
+                searchInput: {
+                    fontFamily: 'Manrope',
+                    fontWeight: 700
+                }
+            }}
             placeholder="Pick a category"
             label={`${getLocale(loc).Settings["filter-label"]}`}
                          onChange={(e) => {
@@ -169,7 +183,7 @@ function Page(props: PageProps) {
             <Divider size="xs" label={`${getLocale(loc).Settings["ui"]}`} mt="md" />
             <Text size="xs">{`${getLocale(loc).Settings["language-label"]}`}</Text>
             <Select value={locale} data={languages} onChange={newLocale}/>
-            <RadioGroup label="Appearence" value={colorScheme} onChange={tCS} description="Change how the site should look like">
+            <RadioGroup label="Appearence" value={selectedColorScheme} onChange={tCS} description="Change how the site should look like">
                 <Radio value="light" label="Light" />
                 <Radio value="dark" label="Dark" />
                 <Radio value="system" label="Use system settings" />

@@ -190,7 +190,7 @@
         opacity: 0.4;
         transform: scale(1.0);
         color:rgba(0, 0, 0, .2);
-        -webkit-text-stroke: 0.3px rgba(0,0,0,1);
+        -webkit-text-stroke: 0.9px rgba(0,0,0,1);
     }
     75% {
         opacity: 0.6;
@@ -203,6 +203,10 @@
 }
 
 @media (prefers-color-scheme: dark) {
+#intro {
+    background-color: #1A1B1E;
+}
+
 @keyframes vfx-intro {
         0% {
             opacity: 0;
@@ -219,11 +223,13 @@
 
         75% {
             opacity: 0.6;
+            color: rgba(255, 255, 255, 1);
             transform: scale(1.0);
         }
 
         100% {
             opacity: 0;
+            color: rgba(255, 255, 255, 1);
             transform: scale(0.8);
         }
     }

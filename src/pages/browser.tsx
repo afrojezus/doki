@@ -70,8 +70,11 @@ function SearchInput({ onSubmit }) {
 }
 
 interface PostsResponse {
-    posts: File[],
-    amount: number
+    posts: File[];
+    amount: number;
+    allTags: string[];
+    allCategories: string[];
+    allTypes: string[];
 }
 
 const fetcher = async (url) => {
@@ -91,15 +94,15 @@ function Page(props: PageProps) {
     const locale = useContext(LocaleContext);
     const {mutate} = useSWRConfig();
     const [activePage, setPage] = useState(1);
-    const {data, error} = useSWR(`/api/posts?page=${activePage}`, fetcher);
-    const [noFiles, setNoFiles] = useState<boolean>(false);
-    const [sort, setSort] = useState<string>("Time");
-    const [onlyUsers, setOnlyUsers] = useState<boolean>(false);
-    const [editMode, setEditMode] = useState<boolean>(false);
-    const [searchF, setSearchF] = useState('');
     const [category, setCategory] = useState(null);
     const [tag, setTag] = useState(null);
     const [type, setType] = useState(null);
+    const [onlyUsers, setOnlyUsers] = useState<boolean>(false);
+    const [sort, setSort] = useState<string>("Time");
+    const [searchF, setSearchF] = useState('');
+    const { data, error } = useSWR(`/api/posts?page=${activePage}&sort=${sort}${category ? "&category=" + category : ''}${tag ? "&tag=" + tag : ''}${type ? "&type=" + type : ''}${(onlyUsers && props.author) ? "&author=" + props.author.AuthorId : ''}`, fetcher);
+    const [noFiles, setNoFiles] = useState<boolean>(false);
+    const [editMode, setEditMode] = useState<boolean>(false);
     const [selected, setSelected] = useState<File[]>([]);
     const [editDetails, setEditDetails] = useState(false);
     const [willDelete, setWillDelete] = useState(false);
@@ -122,6 +125,8 @@ function Page(props: PageProps) {
         } else {
             setType(null);
         }
+
+        mutate('/api/posts');
     }, [router.query]);
 
     useEffect(() => {
@@ -142,6 +147,7 @@ function Page(props: PageProps) {
 
     function handleSelect(value) {
         setSort(value);
+        mutate('/api/posts');
     }
 
     function handleOnlyUser(event) {
@@ -232,27 +238,9 @@ function Page(props: PageProps) {
                       onChange={handleOnlyUser}/>
             {/*<Text size="xs" my="md">Scale</Text>
             <Slider label={scale} value={scale} onChange={onScaleChange} min={1} max={8} mb="md" />*/}
-            {data && <Transition transition="slide-down" mounted={Boolean(data.posts.sort(_sort)
-                .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                .filter((x) => x.Folder !== null)
-                .filter(f => !props.filter.includes(f.Folder))
-                .map((x) => x.Folder)
-                .filter((value, index, self) => self.indexOf(value) === index)
-                .filter((x) => x !== null).length > 0)}>{(styles) => <Divider style={styles} label={`${getLocale(locale).Viewer["nc-category"]}`} mb="sm" my="md" />}</Transition>}
-            {data && <Transition mounted={Boolean(data.posts.sort(_sort)
-                .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                .filter((x) => x.Folder !== null)
-                .filter(f => !props.filter.includes(f.Folder))
-                .map((x) => x.Folder)
-                .filter((value, index, self) => self.indexOf(value) === index)
-                .filter((x) => x !== null).length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
-                {data.posts.sort(_sort)
-                    .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                    .filter((x) => x.Folder !== null)
-                    .filter(f => !props.filter.includes(f.Folder))
-                    .map((x) => x.Folder)
-                    .filter((value, index, self) => self.indexOf(value) === index)
-                    .filter((x) => x !== null).map((elem, index) =>
+            {data && <Transition transition="slide-down" mounted={Boolean(data.allCategories.length > 0)}>{(styles) => <Divider style={styles} label={`${getLocale(locale).Viewer["nc-category"]}`} mb="sm" my="md" />}</Transition>}
+            {data && <Transition mounted={Boolean(data.allCategories.length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
+                {data.allCategories.map((elem, index) =>
                         <Link href={`/browser?f=${elem}`} key={index} passHref>
                             <Text size="xs" color={theme.colors.blue[4]} sx={{
                                 textDecoration: "none",
@@ -261,9 +249,9 @@ function Page(props: PageProps) {
                             }}>{elem}</Text>
                         </Link>)}
             </Stack>}</Transition>}
-            {data && <Transition mounted={Boolean(retrieveAllTags(data.posts).length > 0)} transition="slide-down">{(styles) => <Divider style={styles} label={`${getLocale(locale).Browser["tags"]}`} mb="sm" my="sm"/>}</Transition>}
-            {data && <Transition mounted={Boolean(retrieveAllTags(data.posts).length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
-                {retrieveAllTags(data.posts).map((t, i) =>
+            {data && <Transition mounted={Boolean(data.allTags.length > 0)} transition="slide-down">{(styles) => <Divider style={styles} label={`${getLocale(locale).Browser["tags"]}`} mb="sm" my="sm"/>}</Transition>}
+            {data && <Transition mounted={Boolean(data.allTags.length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
+                {data.allTags.map((t, i) =>
                     <Link href={`/browser?t=${t}`} key={i} passHref>
                         <Text size="xs" color={theme.colors.blue[4]} sx={{
                             textDecoration: "none",
@@ -272,9 +260,9 @@ function Page(props: PageProps) {
                         }}>{t}</Text>
                     </Link>)}
             </Stack>}</Transition>}
-            {data && <Transition mounted={Boolean(retrieveAllFileTypes(data.posts).length > 0)} transition="slide-down">{(styles) => <Divider style={styles} label={`${getLocale(locale).Browser["file-types"]}`} mb="sm" my="sm"/>}</Transition>}
-            {data && <Transition mounted={Boolean(retrieveAllFileTypes(data.posts).length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
-                {retrieveAllFileTypes(data.posts).map((t, i) =>
+            {data && <Transition mounted={Boolean(data.allTypes.length > 0)} transition="slide-down">{(styles) => <Divider style={styles} label={`${getLocale(locale).Browser["file-types"]}`} mb="sm" my="sm"/>}</Transition>}
+            {data && <Transition mounted={Boolean(data.allTypes.length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
+                {data.allTypes.map((t, i) =>
                     <Link href={`/browser?type=${t}`} key={i} passHref>
                         <Text size="xs" color={theme.colors.blue[4]} sx={{
                             textDecoration: "none",
@@ -295,10 +283,6 @@ function Page(props: PageProps) {
             {data && data.posts
                 .sort(_sort)
                 .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                .filter(f => f.Folder ? !props.filter.includes(f.Folder) : f)
-                .filter(f => category ? f.Folder === category : f)
-                .filter(f => tag ? f.Tags.includes(tag) : f)
-                .filter(f => type ? getExt(f.FileURL) === type : f)
                 .filter(f => f.Tags ? f.Tags.split(",").map(l => l.match(searchF)) : f)
                 .filter(f => f.Title ? f.Title.match(searchF) : f)
                 .filter(f => f.FileURL.match(searchF))

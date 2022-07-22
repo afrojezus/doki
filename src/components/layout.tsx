@@ -22,7 +22,7 @@ import {
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import Link from 'next/link';
-import {Folder, Home, InfoCircle, ServerOff, Settings, Upload} from 'tabler-icons-react';
+import {Folder, Home, InfoCircle, Plus, ServerOff, Settings, Upload} from 'tabler-icons-react';
 
 import {useRouter} from 'next/router';
 import {getLocale, LocaleContext} from "@src/locale";
@@ -48,6 +48,7 @@ interface Layout {
     hiddenCallback?: (h: boolean) => void;
     hideTabbar?: boolean;
     noScrollArea?: boolean;
+    onMouseLeave?: () => void;
 }
 
 const fetcher = async (url) => {
@@ -65,14 +66,10 @@ function Mbar({topBar = false}) {
     const locale = useContext(LocaleContext);
     const router = useRouter();
 
-    if (error) return <Aside.Section>
-        <Text className="use-m-font" mb="md">The server is down.</Text>
-    </Aside.Section>
-
     if (topBar) {
         if (error) return <Tooltip label="The server is down"><ActionIcon><ServerOff color="red" /></ActionIcon></Tooltip>
         return <>
-            <Menu>
+            <Menu transition="pop-top-right">
                 <LoadingOverlay visible={!data} />
             <Menu.Label>Sitemap</Menu.Label>
             <Link href="/" passHref>
@@ -109,12 +106,16 @@ function Mbar({topBar = false}) {
             </>
     }
 
+    if (error) return <Aside.Section>
+        <Text className="use-m-font" mb="md">The server is down.</Text>
+    </Aside.Section>
+
     return <>
         <Aside.Section mb="sm" style={{flexFlow: 'row wrap', display: 'inline-flex'}}>
             <Text
                 className="use-m-font">{router.asPath.replaceAll('/', '').replace(/\?([;\s\w\"\=\,\:\./\~\{\}\?\!\-\%\&\#\$\^\(\)]*?)\=/, "/")}</Text>
             <div style={{flex: 1}}/>
-            <Menu>
+            <Menu transition="pop-top-right">
                 <LoadingOverlay visible={!data} />
                 <Menu.Label>Sitemap</Menu.Label>
                 <Link href="/" passHref>
@@ -130,6 +131,9 @@ function Mbar({topBar = false}) {
                     <Menu.Item icon={<Settings size={14}/>}>{getLocale(locale).Common["settings"]}</Menu.Item>
                 </Link>
                 <Divider/>
+                <Link href="/policies" passHref>
+                    <Menu.Item>Policies</Menu.Item>
+                </Link>
                 <Link href="/streamshare" passHref>
                     <Menu.Item>{getLocale(locale).Modes["ss"]}</Menu.Item>
                 </Link>
@@ -280,6 +284,32 @@ export function BottomNavBar({setHidden, hidden, white = false}) {
                     </Group>
                 </UnstyledButton>
             </Link>
+            <Link href="/upload" passHref>
+                <Tooltip transition="slide-up" label="Upload">
+                    <UnstyledButton mx="md" sx={(theme) => ({
+                    display: 'block',
+                    padding: theme.spacing.xs,
+                    borderRadius: theme.radius.xl,
+                        border: `1px solid ${theme.colorScheme === 'dark' ? 'rgba(255,255,255,.5)' : white ? 'rgba(255,255,255,.5)' : theme.black}`,
+                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : white ? theme.colors.dark[0] : theme.black,
+                    transition: "all .375s var(--animation-ease)",
+
+                    '&:hover': {
+                        backgroundColor:
+                            theme.colorScheme === 'dark' ? theme.colors.dark[6] + "44" : theme.colors.gray[0] + "44",
+                    },
+
+                    ...(router.asPath.includes("upload") && {
+                        backgroundColor: theme.colors[theme.primaryColor][1] + "22",
+                        borderRadius: 0
+                    })
+                })}>
+                    <Group>
+                        <Plus style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={20} />
+                    </Group>
+                </UnstyledButton>
+                </Tooltip>
+            </Link>
             <Link href="/updates" passHref>
                 <UnstyledButton sx={(theme) => ({
                     display: 'block',
@@ -331,7 +361,7 @@ export function BottomNavBar({setHidden, hidden, white = false}) {
                 </UnstyledButton>
             </Link>
         </Group>
-        <Burger style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} sx={(theme) => ({color: white ? theme.colors.dark[0] : undefined})} mr="md"
+        <Burger style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} color={white ? `#fff` : undefined} mr="md"
                 onClick={() => setHidden(!hidden)} opened={!hidden} size="sm"></Burger>
     </Group>
 }
@@ -347,7 +377,8 @@ export default function Layout({
                                    permanent = true,
                                    padding = "md",
                                    noScrollArea = false,
-                                   hideTabbar = false
+                                   hideTabbar = false,
+                                   onMouseLeave,
                                }: Layout) {
     const theme = useMantineTheme();
     const router = useRouter();
@@ -367,7 +398,7 @@ export default function Layout({
             main: {
                 background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
                 transition: "all .375s var(--animation-ease)",
-                paddingRight: hidden ? 16 : undefined,
+                paddingRight: hidden && permanent ? 16 : undefined,
                 ...additionalMainStyle
             },
         }}
@@ -382,13 +413,14 @@ export default function Layout({
         aside={
             aside ? aside : <Aside p="md"
                 //onMouseEnter={() => !permanent && setHidden(false)} onMouseLeave={() => !permanent && setHidden(true)}
+                onMouseLeave={onMouseLeave}
                                    sx={{
                                        transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
                                        background: theme.colorScheme === 'dark' ? 'rgba(26,27,30,.98)' : 'rgba(255,255,255,.98)',
                                        backdropFilter: 'blur(30px)', ...(hidden && ':hover' && {
                                            opacity: 0.2,
                                            backdropFilter: 'blur(0px)'
-                                       }), ...(hidden && {opacity: 0, right: {sm: -(200 - 16), md: -(250 - 16), lg: -(300 - 16)}, pointerEvents: "none"})
+                                       }), ...(hidden && {opacity: 0, right: -(300 - 16), pointerEvents: "none"})
                                    }} width={{sm: 200, md: 250, lg: 300}}>
                 {isMobile || router.asPath.includes("view") ? <Menubar /> : null}
                 {noScrollArea ? asideContent : <Aside.Section grow component={ScrollArea} mx="-xs" px="xs">
