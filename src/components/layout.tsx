@@ -114,7 +114,7 @@ function Mbar({ topBar = false }) {
     return <>
         <Aside.Section mb="sm" style={{ flexFlow: 'row wrap', display: 'inline-flex' }}>
             <Text
-                className="use-m-font">{router.asPath.replaceAll('/', '').replace(/\?([;\s\w\"\=\,\:\./\~\{\}\?\!\-\%\&\#\$\^\(\)]*?)\=/, "/")}</Text>
+                className="use-m-font">{router.asPath.split("/").join("").replace(/\?([;\s\w\"\=\,\:\./\~\{\}\?\!\-\%\&\#\$\^\(\)]*?)\=/, "/")}</Text>
             <div style={{ flex: 1 }} />
             <Menu transition="pop-top-right">
                 <LoadingOverlay visible={!data} />
@@ -181,7 +181,7 @@ export function TopNavBar({ setHidden, hidden, white = false }) {
             })}>doki</Text></Link>
             {/*<Tooltip label="Work in progress" placement="end"><Badge sx={{ marginBottom: 4 }}>M2</Badge></Tooltip>*/}
             <Text
-                className="use-m-font">{router.asPath.replaceAll('/', '').replace(/\?([;\s\w\"\=\,\:\./\~\{\}\?\!\-\%\&\#\$\^\(\)]*?)\=/, "/")}</Text>
+                className="use-m-font">{router.asPath.split('/').join('').replace(/\?([;\s\w\"\=\,\:\./\~\{\}\?\!\-\%\&\#\$\^\(\)]*?)\=/, "/")}</Text>
         </Group></MediaQuery>
         <Group>
             <Link href="/" passHref>
