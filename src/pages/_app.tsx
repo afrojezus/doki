@@ -1,30 +1,27 @@
-import {ColorScheme, ColorSchemeProvider, MantineColor, MantineProvider, Paper, Title, Transition} from '@mantine/core';
-import {NotificationsProvider} from '@mantine/notifications';
-import {AppProps} from 'next/app';
+import { ColorScheme, ColorSchemeProvider, MantineColor, MantineProvider, MantineThemeOverride, MANTINE_COLORS, Paper, Title, Transition } from '@mantine/core';
+import { NotificationsProvider } from '@mantine/notifications';
+import { AppProps } from 'next/app';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
-import '../styles.css'
-import {GetServerSidePropsContext} from 'next';
-import {getCookie, hasCookie} from 'cookies-next';
-import {useEffect, useState} from 'react';
-import {useColorScheme, useMediaQuery} from "@mantine/hooks";
-import {LocaleContext, messages} from "@src/locale";
-import { IntroAnimation } from '@src/components/intro-animation';
+import '../styles.css';
+import { GetServerSidePropsContext } from 'next';
+import { getCookie, hasCookie } from 'cookies-next';
+import { useEffect, useState } from 'react';
+import { useColorScheme, useMediaQuery } from "@mantine/hooks";
+import { LocaleContext, messages } from "@src/locale";
 import { useMemo } from 'react';
+import { wrapper } from '@src/store';
 
-export default function App(props: AppProps & { colorScheme: ColorScheme & 'system', accentColor: MantineColor, locale: string }) {
-    const {Component, pageProps} = props;
+function App(props: AppProps & { colorScheme: ColorScheme & 'system', accentColor: MantineColor, locale: string; }) {
+    const { Component, pageProps } = props;
     const preferDark = useMediaQuery('(prefers-color-scheme: dark)');
     const preferredColorScheme = useColorScheme(preferDark ? 'dark' : 'light');
 
     const [colorScheme, setColorScheme] = useState<ColorScheme>((props.colorScheme && props.colorScheme !== 'system') ? props.colorScheme : preferredColorScheme);
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [locale, setLocale] = useState<string>(props.locale);
-
-    // for consistency with the previous builds
-    const [showFancyLoader, setShowFancyLoader] = useState(true);
 
     useEffect(() => {
         if (props.accentColor !== accentColor) setAccentColor(props.accentColor);
@@ -53,51 +50,46 @@ export default function App(props: AppProps & { colorScheme: ColorScheme & 'syst
         };
     }, [accentColor]);
 
-    useEffect(() => {
-        setTimeout(() => setShowFancyLoader(false), 2500);
-    }, []);
-
 
     // https://mantine.dev/theming/dark-theme/#colorschemeprovider
     const toggleColorScheme = (value?: ColorScheme) =>
         setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
+    const theme: MantineThemeOverride = useMemo(() => ({
+        colorScheme: colorScheme,
+        primaryColor: accentColor
+    }), [colorScheme, accentColor]);
+
     return (
         <>
             <Head>
                 <title>Doki</title>
-                <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width"/>
-                <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
-                <link rel="manifest" href="/manifest.webmanifest"/>
+                <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
+                <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+                <link rel="manifest" href="/manifest.webmanifest" />
                 <meta name="theme-color" content="#000000" />
             </Head>
             <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-                <LocaleContext.Provider value={{locale, messages}}>
+                <LocaleContext.Provider value={{ locale, messages }}>
                     <MantineProvider
                         withGlobalStyles
                         withNormalizeCSS
-                        theme={{
-                            colorScheme: colorScheme,
-                            primaryColor: accentColor
-                        }}
+                        theme={theme}
                     >
                         <NotificationsProvider position="bottom-center" zIndex={2077}>
-                            <Transition mounted={showFancyLoader} transition="fade">
-                                {(styles) => <IntroAnimation styles={styles} show={showFancyLoader} />}
-                            </Transition>
-                            <Transition mounted={!showFancyLoader} transition="fade">
-                                {(styles) => <Component style={styles} {...pageProps} />}
-                            </Transition>
+                            <Component {...pageProps} />
                         </NotificationsProvider>
                     </MantineProvider>
                 </LocaleContext.Provider>
             </ColorSchemeProvider>
-            </>
+        </>
     );
 }
 
-App.getInitialProps = ({ctx}: { ctx: GetServerSidePropsContext }) => ({
-    colorScheme:  hasCookie("color-scheme", ctx) ? getCookie("color-scheme", ctx) : "light",
+App.getInitialProps = ({ ctx }: { ctx: GetServerSidePropsContext; }) => ({
+    colorScheme: hasCookie("color-scheme", ctx) ? getCookie("color-scheme", ctx) : "light",
     accentColor: hasCookie("accent-color", ctx) ? getCookie("accent-color", ctx) : 'blue',
     locale: hasCookie("locale", ctx) ? getCookie("locale", ctx) : "en",
 });
+
+export default wrapper.withRedux(App);

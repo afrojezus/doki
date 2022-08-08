@@ -14,14 +14,15 @@ import {
     Transition,
     useMantineTheme
 } from "@mantine/core";
-import {File as FileIcon, Folder, User} from "tabler-icons-react";
+import { File as FileIcon, Folder, User } from "tabler-icons-react";
 import Link from "next/link";
-import {Author, File} from "@server/models";
-import {displayFilename, getExt, pictureFormats, videoFormats} from "../../utils/file";
-import {formatDate, ParseUnixTime} from "../../utils/date";
-import {useRouter} from "next/router";
+import { Author, File } from "@server/models";
+import { displayFilename, getExt, pictureFormats, videoFormats } from "../../utils/file";
+import { formatDate, ParseUnixTime } from "../../utils/date";
+import { useRouter } from "next/router";
+import { TouchableCard } from "./buttons";
 
-export function SmallGridItem({data}) {
+export function SmallGridItem({ data }) {
     const theme = useMantineTheme();
 
     return <Link href={`/browser?f=${data}`} passHref><Paper sx={{
@@ -35,7 +36,7 @@ export function SmallGridItem({data}) {
             <Folder style={{ marginLeft: 16 }} size={24} /><Space /><Text size="sm" my="md">{data}</Text>
         </Group>
     </Paper>
-    </Link>
+    </Link>;
 }
 
 function GridItem({
@@ -47,7 +48,7 @@ function GridItem({
     style,
     author,
     onlyUsers = false
-}: { data: File, editMode: boolean, selected: boolean, onSelect: (file: File) => void, onUnselect: (file: File) => void, style?: any, author?: Author, onlyUsers?: boolean }) {
+}: { data: File, editMode: boolean, selected: boolean, onSelect: (file: File) => void, onUnselect: (file: File) => void, style?: any, author?: Author, onlyUsers?: boolean; }) {
     const theme = useMantineTheme();
     const router = useRouter();
 
@@ -63,7 +64,8 @@ function GridItem({
         }
     }, [data]);*/
 
-    return <Card
+    return <TouchableCard
+        className="flowDown"
         style={style}
         sx={{
             transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)",
@@ -82,6 +84,7 @@ function GridItem({
             },
             cursor: "pointer"
         }}
+        link={`/view/${data.Id}`}
         onClick={() => {
             if (editMode) {
                 if (!(data.Author.AuthorId == author.AuthorId)) return;
@@ -101,9 +104,9 @@ function GridItem({
                     filter: data.NSFW ? "blur(10px)" : undefined,
                     transition: "all .375s cubic-bezier(.07, .95, 0, 1)"
                 }} src={`/${videoFormats.includes(getExt(data.FileURL)) ? data.Thumbnail : data.FileURL}`}
-                       fit="cover" width="100%" height={130} alt=""/>
-                : <ThemeIcon variant="filled" sx={{width: "100%", height: 130}} radius={0}>
-                    <FileIcon size={48}/>
+                    fit="cover" width="100%" height={130} alt="" />
+                : <ThemeIcon variant="filled" sx={{ width: "100%", height: 130 }} radius={0}>
+                    <FileIcon size={48} />
                 </ThemeIcon>}
 
 
@@ -117,32 +120,32 @@ function GridItem({
             }} checked={selected} />
         </Card.Section>
         <Stack spacing="xs">
-            <Group position="apart" style={{marginBottom: 5, marginTop: theme.spacing.sm, flex: 1}}>
+            <Group position="apart" style={{ marginBottom: 5, marginTop: theme.spacing.sm, flex: 1 }}>
                 <Text size="sm" sx={{
                     fontFamily: "Manrope, sans-serif;",
                     fontWeight: 700
                 }}
-                      weight={500}>{displayFilename(data)}</Text>
+                    weight={500}>{displayFilename(data)}</Text>
             </Group>
             <Group spacing={8}>
                 <Text size="xs"
-                      style={{color: secondaryColor}}>
+                    style={{ color: secondaryColor }}>
                     {data.Author.Name}
                 </Text>
                 {author && author.AuthorId === data.AuthorId &&
-                    <Tooltip label="Your upload"><User size={16}/></Tooltip>}
+                    <Tooltip label="Your upload"><User size={16} /></Tooltip>}
             </Group>
             <Group position="apart">
                 <Text size="xs"
-                      style={{color: secondaryColor}}>
+                    style={{ color: secondaryColor }}>
                     {formatDate(ParseUnixTime(data.UnixTime))}
                 </Text>
                 <Text size="xs"
-                      style={{color: secondaryColor}}>
+                    style={{ color: secondaryColor }}>
                     {((data.Size) / 1e3 / 1e3).toFixed(2)} MB {getExt(data.FileURL)}
                 </Text>
                 <Text size="xs"
-                      style={{color: secondaryColor}}>
+                    style={{ color: secondaryColor }}>
                     {(data.Views)} views
                 </Text>
             </Group>
@@ -155,7 +158,7 @@ function GridItem({
         </Stack>
         <Transition mounted={selected} transition={{
             in: { opacity: 0.3 },
-            out: {opacity: 0},
+            out: { opacity: 0 },
             common: {},
             transitionProperty: 'opacity'
         }}>{(styles) => <Box style={styles} sx={{
@@ -167,7 +170,7 @@ function GridItem({
             top: 0,
             left: 0
         }}></Box>}</Transition>
-    </Card>
+    </TouchableCard>;
 }
 
 export default GridItem;

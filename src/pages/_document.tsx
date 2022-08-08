@@ -1,6 +1,6 @@
-import Document, {DocumentContext} from 'next/document';
+import Document, { DocumentContext } from 'next/document';
 
-import {createStylesServer, ServerStyles} from '@mantine/next';
+import { createStylesServer, ServerStyles } from '@mantine/next';
 
 const stylesServer = createStylesServer();
 
@@ -12,7 +12,7 @@ export default class _Document extends Document {
             ...initialProps,
             styles: [
                 initialProps.styles,
-                <ServerStyles html={initialProps.html} server={stylesServer} key="styles"/>,
+                <ServerStyles html={initialProps.html} server={stylesServer} key="styles" />,
             ],
         };
     }

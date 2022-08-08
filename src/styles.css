@@ -5,19 +5,22 @@
 }
 
 ::-webkit-scrollbar {
-    width: 1px;
+    width: 14px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, .2);
+    box-shadow: inset 0 0 14px 14px transparent;
+    border: solid 4px transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, .5);
+    box-shadow: inset 0 0 14px 14px #ffffff44;
+    border: solid 4px transparent;
+    border-radius: 14px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, .3);
+    background: rgba(255, 255, 255, .6);
 }
 
 #nprogress .bar {
@@ -153,11 +156,19 @@
     }
 }
 
+.flowDown {
+    animation: flowDown .375s var(--animation-ease);
+}
+
 @keyframes flowDown {
     from {
         opacity: 0;
-        transform: translateY(-50%);
+        transform: translateY(-2%);
     }
+}
+
+.flyIn {
+    animation: flyIn .375s var(--animation-ease);
 }
 
 @keyframes flyIn {
@@ -186,16 +197,19 @@
         transform: scale(0.8);
         color: rgba(0, 0, 0, .2);
     }
+
     50% {
         opacity: 0.4;
         transform: scale(1.0);
-        color:rgba(0, 0, 0, .2);
-        -webkit-text-stroke: 0.9px rgba(0,0,0,1);
+        color: rgba(0, 0, 0, .2);
+        -webkit-text-stroke: 0.9px rgba(0, 0, 0, 1);
     }
+
     75% {
         opacity: 0.6;
         transform: scale(1.0);
     }
+
     100% {
         opacity: 0;
         transform: scale(0.8);
@@ -203,11 +217,11 @@
 }
 
 @media (prefers-color-scheme: dark) {
-#intro {
-    background-color: #1A1B1E;
-}
+    #intro {
+        background-color: #1A1B1E;
+    }
 
-@keyframes vfx-intro {
+    @keyframes vfx-intro {
         0% {
             opacity: 0;
             transform: scale(0.8);

@@ -6,7 +6,7 @@ import figlet from "figlet";
 import RateLimit from "express-rate-limit";
 
 // shut the fuck up webstorm, no it can't be shortened.
-import {initDB} from "./server/models";
+import { initDB } from "./server/models";
 import path from "path";
 
 const hostname = "localhost";
@@ -15,16 +15,16 @@ const dev = process.env.NODE_ENV !== "production";
 
 async function startup() {
     figlet("doki", {
-      font: "Slant Relief"
+        font: "Slant Relief"
     }, (err, data) => {
         if (err) {
             console.dir(err);
             return;
         }
         console.log(data);
-        console.log("Milestone 2 :: Version 2");
+        console.log("Milestone 2 :: Version 3");
         console.log("Maintainer: th.eq.th@protonmail.me\n\n");
-    })
+    });
 
     try {
         await initDB();
@@ -34,7 +34,7 @@ async function startup() {
         return -1;
     }
 
-    const app = next({dev, hostname, port});
+    const app = next({ dev, hostname, port });
     const handle = app.getRequestHandler();
 
     const limiter = RateLimit({
