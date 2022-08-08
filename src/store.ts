@@ -1,8 +1,11 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import { createWrapper } from 'next-redux-wrapper';
+import { sessionState } from './slices/sessionState';
 
 const makeStore = () => configureStore({
-    reducer: {},
+    reducer: {
+        [sessionState.name]: sessionState.reducer
+    },
     devTools: true
 });
 

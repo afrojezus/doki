@@ -127,7 +127,6 @@ function Page(props: PageProps) {
             setType(null);
         }
         mutate('/api/posts');
-        console.log(data);
     }, [router.query]);
 
     useEffect(() => {

@@ -1,5 +1,5 @@
 ﻿// https://stackoverflow.com/questions/48048957/react-long-press-event
-import {useCallback, useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 
 export function useLongPress(callback = () => {
 }, ms = 300) {
