@@ -6,6 +6,7 @@
     Card,
     Divider,
     Group,
+    Header,
     Modal,
     Paper,
     Slider,
@@ -33,7 +34,7 @@ import { showNotification } from '@mantine/notifications';
 import { useContext, useEffect, useState } from 'react';
 import { getCookie, hasCookie, setCookies } from 'cookies-next';
 import { CommentBox } from '@src/components/comments';
-import Layout, { BottomNavBar } from '../../components/layout';
+import Layout, { BottomNavBar, TopNavBar } from '../../components/layout';
 import SEO from '../../components/seo';
 import {
     audioFormats,
@@ -49,7 +50,7 @@ import {
 } from "../../../utils/file";
 import dynamic from 'next/dynamic';
 import FileRepository from "@server/repositories/FileRepository";
-import { Author, File } from "@server/models";
+import { Author, File, Space } from "@server/models";
 import { formatDate, ParseUnixTime } from "../../../utils/date";
 import { NextPageContext } from 'next';
 import { useRouter } from 'next/router';
@@ -58,6 +59,9 @@ import { useLongPress } from "../../../utils/react";
 import { ContentSlide, QuickDetails } from "@src/components/player-elements";
 import Link from "next/link";
 import { getLocale, LocaleContext } from "@src/locale";
+import { withSessionSsr } from '@src/lib/session';
+import { useSessionState, setInteracted as setAppInteracted, setCurrentFile } from '@src/slices/sessionState';
+import { useDispatch, useSelector } from "react-redux";
 
 interface PageProps {
     post: File;
@@ -69,6 +73,7 @@ interface PageProps {
     filter: string[];
     messages: any;
     interacted: boolean;
+    space: Space;
 }
 
 const DynamicContentSlide = dynamic(() => Promise.resolve(ContentSlide), {
@@ -76,27 +81,50 @@ const DynamicContentSlide = dynamic(() => Promise.resolve(ContentSlide), {
 });
 
 
-export async function getServerSideProps(nextPage: NextPageContext) {
-    const id = nextPage.query.Id as string;
+export const getServerSideProps = withSessionSsr(async function ({
+    req,
+    res,
+    ...other
+}) {
+    const space = req.session.space;
+    if (space === undefined) {
+        res.statusCode = 302;
+        return {
+            redirect: {
+                destination: `/login`,
+                permanent: false
+            }
+        };
+    }
+    const id = other.query.Id as string;
     let ids: number[];
     let post: File;
     try {
-        ids = await FileRepository.findAll({ attributes: ["Id", "Thumbnail", "FileURL", "Folder"] });
+        ids = await FileRepository.findAll({
+            where: {
+                Space: space.Id
+            },
+            attributes: ["Id", "Thumbnail", "FileURL", "Folder"]
+        });
         post = await FileRepository.findOne({
             include: {
                 model: Author,
                 required: true
             },
-            where: { id }
+            where: {
+                id,
+                Space: space.Id
+            }
         });
         return {
             props: {
+                space,
                 post, ids,
-                volume: hasCookie('player-volume', nextPage) ? getCookie('player-volume', nextPage) : 0.25,
-                muted: hasCookie('player-muted', nextPage) ? getCookie('player-muted', nextPage) : false,
-                loop: hasCookie('player-loop', nextPage) ? getCookie('player-loop', nextPage) : true,
-                firstTime: hasCookie('first-time', nextPage) ? getCookie('first-time', nextPage) : true,
-                filter: hasCookie('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : [],
+                volume: hasCookie('player-volume', { req, res }) ? getCookie('player-volume', { req, res }) : 0.25,
+                muted: hasCookie('player-muted', { req, res }) ? getCookie('player-muted', { req, res }) : false,
+                loop: hasCookie('player-loop', { req, res }) ? getCookie('player-loop', { req, res }) : true,
+                firstTime: hasCookie('first-time', { req, res }) ? getCookie('first-time', { req, res }) : true,
+                filter: hasCookie('filtered', { req, res }) ? JSON.parse(getCookie('filtered', { req, res }) as string) : [],
             }
         };
     } catch (e) {
@@ -107,9 +135,11 @@ export async function getServerSideProps(nextPage: NextPageContext) {
             }
         };
     }
-}
+});
 
 function Page(props: PageProps) {
+    const sessionState = useSelector(useSessionState);
+    const dispatch = useDispatch();
     const router = useRouter();
     const locale = useContext(LocaleContext);
     const theme = useMantineTheme();
@@ -127,7 +157,7 @@ function Page(props: PageProps) {
     const [isPlayable, setPlayable] = useState(true);
     const [helpOpen, setHelpOpen] = useState(false);
     const [firstTime, setFirstTime] = useState(props.firstTime);
-    const [interacted, setInteracted] = useState(false);
+    const [interacted, setInteracted] = useState(sessionState.interacted);
 
     const [volume, setVolume] = useState<number>(parseFloat(String(props.volume)));
     const [muted, setMuted] = useState(props.muted);
@@ -135,7 +165,7 @@ function Page(props: PageProps) {
     const [playing, setPlaying] = useState(true);
     const [progress, setProgress] = useState<{ played: 0, loaded: 0; }>({ played: 0, loaded: 0 });
     const [pip, setPip] = useState(false);
-    const [objFit, setObjFit] = useState(false);
+    const [objFit, setObjFit] = useState(true);
     const [duration, setDuration] = useState(0);
     const [seek, setSeek] = useState(-1);
     const [willSeek, setWillSeek] = useState(false);
@@ -147,7 +177,12 @@ function Page(props: PageProps) {
             setInteracted(true);
             return;
         }
-
+        if (props.ids.length === 1) {
+            // There is no more media to consume, repeat the current.
+            setRepeat(true);
+            setPlaying(false);
+            return router.push(`/view/${current.Id}`);
+        }
         // check current as seen
         setPrevious(x => [...x, current.Id]);
         // get all media
@@ -162,11 +197,14 @@ function Page(props: PageProps) {
     }
 
     useEffect(() => {
-        if (props.post && props.post.Id !== current.Id) {
-            setCurrent(props.post);
-            setVisualizer(random(props.ids, onlyGetVideo));
+        if (props.post) {
+            dispatch(setCurrentFile(props.post));
+            if (props.post.Id !== current.Id) {
+                setCurrent(props.post);
+                setVisualizer(random(props.ids, onlyGetVideo));
 
-            if (audioFormats.includes(getExt(current.FileURL))) setHoveringPlayer(true);
+                if (audioFormats.includes(getExt(current.FileURL))) setHoveringPlayer(true);
+            }
         }
     }, [props.post]);
 
@@ -185,6 +223,10 @@ function Page(props: PageProps) {
     useEffect(() => {
         setCookies('first-time', firstTime, { maxAge: 60 * 60 * 24 * 30 });
     }, [firstTime]);
+
+    useEffect(() => {
+        dispatch(setAppInteracted(interacted));
+    }, [interacted]);
 
     useEffect(() => {
         const updateViewCounter = async (id: number) => {
@@ -266,15 +308,45 @@ function Page(props: PageProps) {
         // TODO: integrate chromecasting
     }
 
-    return <Layout onMouseLeave={() => setHidden(true)} footer={<></>} hiddenCallback={(h) => setHidden(h)} padding={0} additionalMainStyle={{
-        background: isPlayable ? "black" : undefined, overflow: "hidden",
-        padding: isPlayable ? hidden ? "0 !important" : undefined : undefined,
-        transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)"
-    }}
+    return <Layout space={props.space}
+        header={<Header onMouseMove={handleMouseActivity} sx={{
+            background: "transparent", border: "none", pointerEvents: "none", opacity: 0, ...(hoveringPlayer && {
+                opacity: 1,
+                pointerEvents: "all"
+            }),
+        }} height={52}>
+            <TopNavBar space={props.space} setHidden={(f) => setHidden(f)} hidden={hidden} />
+        </Header>}
+
+        onMouseLeave={isPlayable ? () => setHidden(true) : undefined} hiddenCallback={(h) => setHidden(h)} padding={0}
+
+        additionalMainStyle={{
+            willChange: "auto",
+            background: "black", overflow: "hidden",
+            padding: 0,
+            transition: "padding 0.375s cubic-bezier(.07, .95, 0, 1), background 0.375s cubic-bezier(.07, .95, 0, 1)",
+        }}
+        additionalContainerStyle={{
+            willChange: "auto",
+            maxHeight: "100vh",
+            padding: 0,
+            '&:hover': {
+                overflow: "hidden"
+            },
+            marginRight: 0
+        }}
+        additionalAsideStyle={{
+            willChange: "auto",
+            top: hoveringPlayer ? undefined : 0,
+            height: hoveringPlayer ? "calc(100vh - var(--mantine-header-height, 0px) - var(--mantine-footer-height, 0px) - 16px - 16px)" : "calc(100vh - var(--mantine-header-height, 0px) + 16px)"
+        }}
         hiddenAside={hidden}
         permanent={!isPlayable}
-        asideContent={
+        aside={
             <>
+                {current && <Button
+                    onClick={() => window.open(`https://${window.location.hostname}/${current.FileURL}`)}
+                    mb="sm" variant="light" fullWidth leftIcon={<Download size={14} />}>Download</Button>}
                 <Divider label={getLocale(locale).Viewer["nc-details"]} />
                 <Aside.Section my="xs" mb="xs">
                     <Stack>
@@ -335,9 +407,6 @@ function Page(props: PageProps) {
                             </Link>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
                     </Stack>
                 </Aside.Section>
-                {current && <Button
-                    onClick={() => window.open(`https://${window.location.hostname}/${current.FileURL}`)}
-                    my="sm" variant="light" fullWidth leftIcon={<Download size={14} />}>Download</Button>}
                 <Card mb="sm">
                     <Text size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
                     <Text size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
@@ -406,16 +475,15 @@ function Page(props: PageProps) {
                 {current && <QuickDetails duration={duration} seekTo={seekTo} current={current} isPlayable={isPlayable}
                     progress={progress} full sx={{
                         position: 'fixed',
-                        bottom: 0,
+                        bottom: mobile ? "calc(var(--mantine-footer-height, 0px))" : 0,
                         paddingLeft: 16,
                         paddingBottom: 16,
-                        paddingRight: hidden ? undefined : 300,
+                        paddingRight: hidden ? undefined : "calc(var(--mantine-aside-width, 0px) + 16px)",
                         left: 0,
                         zIndex: 5,
                         width: `calc(100% - ${16}px)`,
                         transition: "all 0.375s cubic-bezier(.07, .95, 0, 1)"
                     }}>
-                    <BottomNavBar white setHidden={(f) => setHidden(f)} hidden={hidden} />
                 </QuickDetails>}
             </Box>
             <Box
@@ -436,7 +504,7 @@ function Page(props: PageProps) {
                 }}>
                 <Stack sx={{
                     position: 'fixed',
-                    top: 16,
+                    top: "calc(var(--mantine-header-height, 0px) + 16px)",
                     left: 16,
                     zIndex: 5
                 }}>
@@ -456,19 +524,19 @@ function Page(props: PageProps) {
                             size="xs"
                             max={1}
                             label={null}
-                            step={0.01} sx={{ minWidth: 100 }} />
+                            step={0.01} sx={{ minWidth: 100, filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} />
                     </Group>
-                    <Tooltip gutter={-100} position="right"
+                    <Tooltip position="right"
                         withArrow label={getLocale(locale).Viewer["prev"]}><ActionIcon
                             sx={() => ({ color: "white" })}
                             onClick={() => router.back()}><PlayerSkipBack style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24} /></ActionIcon></Tooltip>
-                    <Tooltip gutter={-100} position="right"
+                    <Tooltip position="right"
                         withArrow label={getLocale(locale).Viewer["play"]}><ActionIcon
                             sx={() => ({ color: "white" })}
                             onClick={() => setPlaying(!playing)}>{playing && interacted ? <PlayerPause style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24} /> :
                                 <PlayerPlay style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24} />}</ActionIcon>
                     </Tooltip>
-                    <Tooltip gutter={-100} position="right"
+                    <Tooltip position="right"
                         withArrow label={getLocale(locale).Viewer["repeat"]}><ActionIcon
                             sx={() => ({ color: "white" })} onClick={() => {
                                 showNotification({
@@ -480,19 +548,19 @@ function Page(props: PageProps) {
                                 });
                                 setRepeat(!repeat);
                             }}>{repeat ? <Repeat style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24} /> : <RepeatOff style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size={24} />}</ActionIcon></Tooltip>
-                    <Tooltip gutter={-100} position="right"
+                    <Tooltip position="right"
                         withArrow label={getLocale(locale).Viewer["skip"]}><ActionIcon
                             sx={() => ({ color: "white" })} onClick={handleNewFile}><PlayerSkipForward
                                 size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon></Tooltip>
-                    <Tooltip gutter={-100} position="right"
+                    <Tooltip position="right"
                         withArrow label={getLocale(locale).Viewer["pip"]}><ActionIcon
                             sx={() => ({ color: "white" })} onClick={handlePiP}><PictureInPicture
                                 size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon></Tooltip>
-                    <Tooltip gutter={-100} position="right"
+                    <Tooltip position="right"
                         withArrow label={getLocale(locale).Viewer["contain"]}><ActionIcon
                             sx={() => ({ color: "white" })} onClick={handleObjectFit}><Resize
                                 size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon></Tooltip>
-                    <Tooltip gutter={-100} position="right"
+                    <Tooltip position="right"
                         withArrow label="Cast (under construction!)"><ActionIcon
                             sx={() => ({ color: "white" })} onClick={handleCast}><Cast
                                 size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon></Tooltip>
@@ -500,16 +568,6 @@ function Page(props: PageProps) {
                         onClick={showHelp}><Help size={24} style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></ActionIcon>
                 </Stack>
             </Box>
-            <Box onMouseEnter={() => setHidden(false)} sx={{
-                position: "fixed",
-                height: '100vh',
-                width: 100,
-                right: 0,
-                top: 0,
-                '@media (max-width: 480px)': {
-                    width: 0
-                }
-            }}></Box>
         </div>
 
         <Modal title={getLocale(locale).Viewer["help-title"]} opened={helpOpen} onClose={() => setHelpOpen(false)}>

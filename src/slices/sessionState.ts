@@ -1,15 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { File } from "@server/models";
 import { AppState } from "@src/store";
 import { HYDRATE } from "next-redux-wrapper";
 
-// @ts-ignore
-
 export interface SessionState {
     authenticated: boolean;
+    interacted: boolean;
+
+    currentFile?: File;
 }
 
 const initialState: SessionState = {
-    authenticated: false
+    authenticated: false,
+    interacted: false,
+    currentFile: null
 };
 
 export const sessionState = createSlice({
@@ -19,19 +23,26 @@ export const sessionState = createSlice({
         setAuthenticated(state, action) {
             state.authenticated = action.payload;
         },
+        setInteracted(state, action) {
+            state.interacted = action.payload;
+        },
+        setCurrentFile(state, action) {
+            state.currentFile = action.payload;
+        }
     },
     extraReducers: {
         [HYDRATE]: (state, action) => {
             return {
                 ...state,
-                ...action.payload.authenticated
+                ...action.payload.authenticated,
+                ...action.payload.interacted
             };
         }
     }
 });
 
-export const { setAuthenticated } = sessionState.actions;
+export const { setAuthenticated, setInteracted, setCurrentFile } = sessionState.actions;
 
-export const selectAuthenticatedState = (state: AppState) => state.session.authenticated;
+export const useSessionState = (state: AppState) => state.session;
 
 export default sessionState.reducer;

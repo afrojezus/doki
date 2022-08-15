@@ -9,7 +9,7 @@
     "help-title": "How to use Doki",
     "help-controls": "Player controls (when applicable) are located in the top-left corner, the repeat button can switch between continuous or looped playback.\nFound a funny moment? The play/pause button lets you pause the content.",
     "help-quickdetails": "Bottom-left corner contains quick details of what you're looking at.\nTitle of the file, description, uploader, file-type and view count is stored here.",
-    "help-navcard": "Right side of the site is the navigation card, this comes out of sight when you're watching content, but can be retrieved through either moving your mouse to the right edge, right-clicking anywhere, or scrolling downwards.\nIn this page it contains full details and comments for the content. The sitemap is located here.",
+    "help-navcard": "Right side of the site is the navigation card, this comes out of sight when you're watching content, but can be retrieved through clicking the hamburger menu icon, right-clicking anywhere, or scrolling downwards.\nIn this page it contains full details and comments for the content. The sitemap is located here.",
     "help-accept": "Understood",
     "uploaded-by": "Uploaded by",
     "file": "-file",
@@ -34,7 +34,7 @@
     "updates": "Updates",
     "settings": "Settings",
     "modes": "Modes",
-    "created-by": "Created by tokumei with",
+    "created-by": "Created by afroj with",
     "upload": "Upload"
   },
   "Settings": {

@@ -12,14 +12,14 @@
     TextInput,
     useMantineTheme
 } from "@mantine/core";
-import {useForm} from "@mantine/form";
-import {displayFilename, getExt, pictureFormats, retrieveAllFolders, retrieveAllTags} from "../../utils/file";
-import {Author, File as MFile} from "@server/models";
-import {useCallback, useEffect, useState} from "react";
-import {mutate} from "swr";
-import {showNotification} from "@mantine/notifications";
-import {CarCrash, Video} from "tabler-icons-react";
-import {setCookies} from "cookies-next";
+import { useForm } from "@mantine/form";
+import { displayFilename, getExt, pictureFormats, retrieveAllFolders, retrieveAllTags } from "../../utils/file";
+import { Author, File as MFile } from "@server/models";
+import { useCallback, useEffect, useState } from "react";
+import { mutate } from "swr";
+import { showNotification } from "@mantine/notifications";
+import { CarCrash, Video } from "tabler-icons-react";
+import { setCookies } from "cookies-next";
 
 export interface FormFile {
     Title: string;
@@ -30,7 +30,7 @@ export interface FormFile {
     Folder: string;
 }
 
-export function UploadBoxD({file, posts}: { file: FormFile, posts: MFile[] }) {
+export function UploadBoxD({ file, posts }: { file: FormFile, posts: MFile[]; }) {
     const theme = useMantineTheme();
     const [state, setState] = useState(file);
 
@@ -38,8 +38,8 @@ export function UploadBoxD({file, posts}: { file: FormFile, posts: MFile[] }) {
         file = state;
     }, [state]);
 
-    return <Card sx={{display: "inline-flex", transition: "all .375s var(--animation-ease)"}}>
-        <Card.Section mr="md" mb={-16} sx={{transition: "all .375s var(--animation-ease)"}}>
+    return <Card sx={{ display: "inline-flex", transition: "all .375s var(--animation-ease)" }}>
+        <Card.Section mr="md" mb={-16} sx={{ transition: "all .375s var(--animation-ease)" }}>
             <Image withPlaceholder placeholder={<Text size="xs" align="center">
                 {getExt(state.File.name)}-format file
             </Text>} radius={0} styles={{
@@ -62,49 +62,49 @@ export function UploadBoxD({file, posts}: { file: FormFile, posts: MFile[] }) {
                     top: 0,
                     left: 0
                 }
-            }} src={URL.createObjectURL(state.File)} alt="" sx={{color: theme.primaryColor}}/>
+            }} src={URL.createObjectURL(state.File)} alt="" sx={{ color: theme.primaryColor }} />
         </Card.Section>
-        <form style={{flex: 1}}>
+        <form style={{ flex: 1 }}>
             <Group position="apart">
                 <Text size="xs">{state.Title}</Text>
                 <Group>
                     <Checkbox size="xs" label="NSFW"
-                              onChange={(e) => setState(prev => ({NSFW: e.target.checked, ...prev}))}
-                              checked={state.NSFW}/>
+                        onChange={(e) => setState(prev => ({ NSFW: e.target.checked, ...prev }))}
+                        checked={state.NSFW} />
                     <Text size="xs">{(state.File.size / 1e3 / 1e3).toFixed(2)} MB</Text>
                     <Badge>{getExt(state.File.name)}</Badge>
                 </Group>
             </Group>
             <TextInput label="Title" placeholder="Call it something easy to forget, like 'Sneed'!"
-                       required onChange={(e) => setState(prev => ({Title: e.target.value, ...prev}))}
-                       value={state.Title}/>
+                required onChange={(e) => setState(prev => ({ Title: e.target.value, ...prev }))}
+                value={state.Title} />
             <Textarea
                 label="Description"
                 placeholder="Enter a description here"
                 maxRows={4}
                 autosize
-                onChange={(e) => setState(prev => ({Description: e.target.value, ...prev}))} value={state.Description}
+                onChange={(e) => setState(prev => ({ Description: e.target.value, ...prev }))} value={state.Description}
             />
             <MultiSelect required data={[...retrieveAllTags(posts)]} label="Tags" placeholder="Select or create a tag"
-                         searchable creatable
-                         getCreateLabel={(t) => `+ ${t}`}
-                         onChange={(e) => setState(prev => ({Tags: e, ...prev}))} value={state.Tags}
+                searchable creatable
+                getCreateLabel={(t) => `+ ${t}`}
+                onChange={(e) => setState(prev => ({ Tags: e, ...prev }))} value={state.Tags}
             />
             <Autocomplete label="Category" placeholder="Enter category here"
-                          data={retrieveAllFolders(posts)} onChange={(e) => setState(prev => ({Folder: e, ...prev}))}
-                          value={state.Folder}/>
+                data={retrieveAllFolders(posts)} onChange={(e) => setState(prev => ({ Folder: e, ...prev }))}
+                value={state.Folder} />
         </form>
-    </Card>
+    </Card>;
 }
 
-export const locatePreview = (file: MFile) => pictureFormats.includes(getExt(file.FileURL)) ? `/${file.FileURL}` : `/${file.Thumbnail}`
+export const locatePreview = (file: MFile) => pictureFormats.includes(getExt(file.FileURL)) ? `/${file.FileURL}` : `/${file.Thumbnail}`;
 
 export function EditBox({
-                            file,
-                            posts,
-                            author,
-                            cancel
-                        }: { file: MFile, posts: MFile[], author: Author, cancel: () => void }) {
+    file,
+    posts,
+    author,
+    cancel
+}: { file: MFile, posts: MFile[], author: Author, cancel: () => void; }) {
     const theme = useMantineTheme();
 
     const form = useForm({
@@ -116,8 +116,7 @@ export function EditBox({
             Folder: file.Folder || ''
         },
         validate: {
-            Title: (value: string) => value.length > 0 ? null : "Please enter a title",
-            Tags: (value: string[]) => value.length > 0 ? null : "Please enter at least one tag"
+            Title: (value: string) => value.length > 0 ? null : "Please enter a title"
         }
     });
 
@@ -152,14 +151,14 @@ export function EditBox({
                 title: "Deletion failed!",
                 message: error.message,
                 color: "red"
-            })
+            });
         } finally {
             cancel();
         }
     }
 
-    return <Card sx={{display: "inline-flex", width: "100%", transition: "all .375s var(--animation-ease)"}}>
-        <Card.Section mr="md" mb={-16} sx={{transition: "all .375s var(--animation-ease)"}}>
+    return <Card sx={{ display: "inline-flex", width: "100%", transition: "all .375s var(--animation-ease)" }}>
+        <Card.Section mr="md" mb={-16} sx={{ transition: "all .375s var(--animation-ease)" }}>
             <Image withPlaceholder placeholder={<Text size="xs" align="center">
                 {getExt(file.FileURL)}-format file
             </Text>} radius={0} styles={{
@@ -182,9 +181,9 @@ export function EditBox({
                     top: 0,
                     left: 0
                 }
-            }} src={locatePreview(file)} alt="" sx={{color: theme.primaryColor}}/>
+            }} src={locatePreview(file)} alt="" sx={{ color: theme.primaryColor }} />
         </Card.Section>
-        <form style={{flex: 1}} onSubmit={submit}>
+        <form style={{ flex: 1 }} onSubmit={submit}>
             <Group position="apart">
                 <Text size="xs">{file.Title ? file.Title : displayFilename(file)}</Text>
                 <Group>
@@ -193,7 +192,7 @@ export function EditBox({
                 </Group>
             </Group>
             <TextInput label="Title" placeholder="Call it something easy to forget, like 'Sneed'!"
-                       required {...form.getInputProps("Title")} />
+                required {...form.getInputProps("Title")} />
             <Textarea
                 label="Description"
                 placeholder="Enter a description here"
@@ -202,20 +201,20 @@ export function EditBox({
                 {...form.getInputProps("Description")}
             />
             <MultiSelect data={[...retrieveAllTags(posts)]} label="Tags" placeholder="Select or create a tag" searchable
-                         creatable
-                         getCreateLabel={(t) => `+ ${t}`}
-                         {...form.getInputProps("Tags")}
+                creatable
+                getCreateLabel={(t) => `+ ${t}`}
+                {...form.getInputProps("Tags")}
             />
             <Autocomplete label="Category" placeholder="Enter category here"
-                          data={retrieveAllFolders(posts)} {...form.getInputProps("Folder")} />
+                data={retrieveAllFolders(posts)} {...form.getInputProps("Folder")} />
             <Group mt="md" position="right"><Button onClick={cancel} variant="light">Cancel</Button><Button
                 type="submit">Save</Button></Group>
         </form>
-    </Card>
+    </Card>;
 }
 
 // To be used within a modal
-export const Importer = ({isUploading, setUploading, desc, type, id, createNewID, playSuccess, router}) => {
+export const Importer = ({ isUploading, setUploading, desc, type, id, createNewID, playSuccess, router }) => {
     const [url, setUrl] = useState<string>("");
 
     const verify = (): string | undefined => {
@@ -228,10 +227,10 @@ export const Importer = ({isUploading, setUploading, desc, type, id, createNewID
         }
 
         return undefined;
-    }
+    };
 
     const onChange = useCallback((e: { target: { value: string; }; }) => {
-        setUrl(e.target.value)
+        setUrl(e.target.value);
     }, [url]);
 
     const onImport = useCallback(async () => {
@@ -239,12 +238,12 @@ export const Importer = ({isUploading, setUploading, desc, type, id, createNewID
 
         if (id === null) {
             id = createNewID();
-            setCookies('DokiIdentification', id, {maxAge: 60 * 60 * 24 * 30});
+            setCookies('DokiIdentification', id, { maxAge: 60 * 60 * 24 * 30 });
         }
 
         try {
             const spec = verify();
-            const details = await fetch(`/api/import/${spec}`, {method: "POST", body: id});
+            const details = await fetch(`/api/import/${spec}`, { method: "POST", body: id });
             const user = await details.json();
 
             if (user) {
@@ -252,13 +251,13 @@ export const Importer = ({isUploading, setUploading, desc, type, id, createNewID
                     title: "Imported!",
                     message: user.title,
                     color: "green",
-                    icon: <Video/>
-                })
+                    icon: <Video />
+                });
                 if (id === null || id === undefined) {
                     showNotification({
                         title: `Welcome to Doki, your profile is now ${user.Name}`,
                         message: "You can now manage your own uploads here."
-                    })
+                    });
                 }
                 playSuccess();
                 await router.push("/browser");
@@ -269,8 +268,8 @@ export const Importer = ({isUploading, setUploading, desc, type, id, createNewID
                 title: "Importing failed!",
                 message: error.response,
                 color: "red",
-                icon: <CarCrash/>
-            })
+                icon: <CarCrash />
+            });
         } finally {
             setUploading(false);
         }
@@ -278,9 +277,9 @@ export const Importer = ({isUploading, setUploading, desc, type, id, createNewID
 
     return (
         <>
-            <TextInput value={url} onChange={onChange} my="md" label={desc} placeholder="Place the URL here"/>
+            <TextInput value={url} onChange={onChange} my="md" label={desc} placeholder="Place the URL here" />
             <Group position="right"><Button disabled={!verify()} onClick={onImport}
-                                            loading={isUploading}>Import</Button></Group>
+                loading={isUploading}>Import</Button></Group>
         </>
-    )
-}
+    );
+};

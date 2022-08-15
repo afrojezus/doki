@@ -1,4 +1,5 @@
 import {
+    Badge,
     Box,
     Card,
     Container,
@@ -13,14 +14,16 @@ import {
     Title,
     UnstyledButton
 } from "@mantine/core";
-import {audioFormats, displayFilename, getExt, pictureFormats, playableFormats} from "../../utils/file";
-import {createRef, useCallback, useContext, useEffect, useRef, useState} from "react";
+import { audioFormats, displayFilename, getExt, pictureFormats, playableFormats } from "../../utils/file";
+import { createRef, useCallback, useContext, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
-import {showNotification} from "@mantine/notifications";
-import {File as FileIcon} from "tabler-icons-react";
-import {LinkButton} from "@src/components/buttons";
-import {getLocale, LocaleContext} from "@src/locale";
-import {normalise} from "../../utils/math";
+import { showNotification } from "@mantine/notifications";
+import { File as FileIcon } from "tabler-icons-react";
+import { LinkButton } from "@src/components/buttons";
+import { getLocale, LocaleContext } from "@src/locale";
+import { normalise } from "../../utils/math";
+import { formatDate, ParseUnixTime } from "utils/date";
+import Link from "next/link";
 
 function pad(string: number) {
     return `0${string}`.slice(-2);
@@ -37,7 +40,7 @@ function format(seconds: number) {
     return `${mm}:${ss}`;
 }
 
-export function Duration({className, seconds}: { className?: string, seconds: number }) {
+export function Duration({ className, seconds }: { className?: string, seconds: number; }) {
     return (
         <time dateTime={`P${Math.round(seconds)}S`} className={className}>
             {format(seconds)}
@@ -69,26 +72,33 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
     }
 
     return <Stack sx={sx}>
-        <Title style={{ filter: `drop-shadow(0px 4px 2px rgb(0 0 0 / 0.4))` }} order={5} className="file-title"
-               color={isPlayable && full ? "white" : undefined}>{displayFilename(current)}</Title>
+        <Group><Title style={{ filter: `drop-shadow(0px 4px 2px rgb(0 0 0 / 0.4))` }} order={5} className="file-title"
+            color={isPlayable && full ? "white" : undefined}>{displayFilename(current)}</Title>{current.Folder && <><Space />
+                <Link href={`/browser?f=${current.Folder}`} passHref>
+                    <Badge sx={{
+                        textDecoration: "none",
+                        cursor: "pointer",
+                        "&:hover": { textDecoration: "underline" }
+                    }} style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="lg" color="yellow"
+                    >{current.Folder}</Badge></Link></>}</Group>
         {current.Description &&
-            <UnstyledButton onClick={fullDescOpen}><Text className="fade" sx={{whiteSpace: "pre-wrap", maxHeight: 72, overflow: "hidden"}} color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text></UnstyledButton>}
+            <UnstyledButton onClick={fullDescOpen}><Text className="fade" sx={{ whiteSpace: "pre-wrap", maxHeight: 72, overflow: "hidden" }} color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text></UnstyledButton>}
         <Group>
             <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
-                  weight={500}>{`${getLocale(locale).Viewer["uploaded-by"]} `}{current.Author.Name}</Text>
-            <Space/>
+                weight={500}>{`${getLocale(locale).Viewer["uploaded-by"]} `}{current.Author.Name}, {formatDate(ParseUnixTime(current.UnixTime))}</Text>
+            <Space />
             <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
-                  weight={500}>{getExt(current.FileURL)}{getLocale(locale).Viewer["file"]}</Text>
-            <Space/>
+                weight={500}>{getExt(current.FileURL)}{getLocale(locale).Viewer["file"]}</Text>
+            <Space />
             <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
-                  weight={500}>{current.Views}{` ${getLocale(locale).Viewer["views"]}`}</Text>
-            <Space/>
+                weight={500}>{current.Views}{` ${getLocale(locale).Viewer["views"]}`}</Text>
+            <Space />
             <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
-                  weight={500}>{current.Likes}{` ${getLocale(locale).Viewer["likes"]}`}</Text>
+                weight={500}>{current.Likes}{` ${getLocale(locale).Viewer["likes"]}`}</Text>
         </Group>
         {duration && seekTo ?
-            <Box sx={{position: "relative"}} py="sm" onMouseDown={handleSeek} onMouseMove={handleTrack}
-                 onMouseLeave={() => setSeeking(false)}>
+            <Box sx={{ position: "relative" }} py="sm" onMouseDown={handleSeek} onMouseMove={handleTrack}
+                onMouseLeave={() => setSeeking(false)}>
                 <Progress style={{ filter: `drop-shadow(0px 2px 2px rgb(0 0 0 / 0.4))` }} radius={0} size="sm" value={progress.played * 100} styles={{
                     root: {
                         opacity: 0.5,
@@ -97,7 +107,7 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
                     bar: {
                         transition: 'all 0.375s cubic-bezier(.07, .95, 0, 1)'
                     }
-                }}/>
+                }} />
                 <Progress radius={0} size="sm" value={seek} ref={seeker} styles={{
                     root: {
                         opacity: seeking ? 0.3 : 0,
@@ -111,7 +121,7 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
                         color: "white",
                         backgroundColor: "white",
                     }
-                }}/>
+                }} />
                 <Paper pl="xs" pr="xs" pt={1} pb={1} sx={{
                     position: "absolute",
                     left: `calc(${seek}% - 24px)`,
@@ -120,7 +130,7 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
                     opacity: seeking ? 0.9 : 0,
                     transition: "opacity .375s var(--animation-ease)"
                 }}>
-                    <Text size="xs"><Duration seconds={rawSeek * duration}/></Text>
+                    <Text size="xs"><Duration seconds={rawSeek * duration} /></Text>
                 </Paper>
             </Box> : <Progress radius={0} size="sm" value={progress.played * 100} styles={{
                 root: {
@@ -130,11 +140,11 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
                 bar: {
                     transition: 'all 0.375s cubic-bezier(.07, .95, 0, 1)'
                 }
-            }}/>}
+            }} />}
         {children}
 
         <Modal opened={showFullDesc} onClose={fullDescClose} title="Description">
-            <Text size="xs" sx={{whiteSpace: "pre-wrap"}}>
+            <Text size="xs" sx={{ whiteSpace: "pre-wrap" }}>
                 {current.Description}
             </Text>
         </Modal>
@@ -142,26 +152,26 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
 }
 
 export function ContentSlide({
-                                 visualizer,
-                                 data,
-                                 isSelected,
-                                 muted,
-                                 volume,
-                                 repeat,
-                                 onEnded,
-                                 onClick,
-                                 href = "/",
-                                 onProgress,
-                                 pip,
-                                 pipCallback,
-                                 objFit,
-                                 onDuration = null,
-                                 seek = -1,
-                                 willSeek = false,
-                                 seekCallback = null,
-                                 interacted = false,
-                                 thumbnail = ""
-                             }) {
+    visualizer,
+    data,
+    isSelected,
+    muted,
+    volume,
+    repeat,
+    onEnded,
+    onClick,
+    href = "/",
+    onProgress,
+    pip,
+    pipCallback,
+    objFit,
+    onDuration = null,
+    seek = -1,
+    willSeek = false,
+    seekCallback = null,
+    interacted = false,
+    thumbnail = ""
+}) {
     const [player, setPlayer] = useState<ReactPlayer>(null);
     const audioVisualizer = createRef<HTMLVideoElement>();
 
@@ -178,7 +188,7 @@ export function ContentSlide({
                             title: "Failed to enable picture-in-picture",
                             message: e,
                             color: "red"
-                        })
+                        });
                     });
                 pipCallback();
             } else {
@@ -186,7 +196,7 @@ export function ContentSlide({
                     title: "Browser error",
                     message: "Your browser currently doesn't support picture-in-picture mode",
                     color: "yellow"
-                })
+                });
             }
         }
     }, [pip, player]);
@@ -208,27 +218,27 @@ export function ContentSlide({
 
     return <div className="player-wrapper">
         {playableFormats.includes(getExt(data)) ?
-            <Box sx={{"& > * > video": {objectFit: objFit ? "contain" : "cover"}}}
-                 style={{width: "inherit", height: "inherit", position: "inherit"}} onClick={onClick}>
+            <Box sx={{ "& > * > video": { objectFit: objFit ? "contain" : "cover" } }}
+                style={{ width: "inherit", height: "inherit", position: "inherit" }} onClick={onClick}>
                 <ReactPlayer light={(audioFormats.includes(getExt(data)) && !interacted) || (!interacted && thumbnail)} onDuration={onDuration} onReady={handleReady} progressInterval={0.001} stopOnUnmount
-                             playing={isSelected}
-                             onProgress={onProgress} muted={muted} volume={volume} loop={repeat} onEnded={onEnded}
-                             className="react-player"
-                             url={data} width="100%" height="100%"/>
+                    playing={isSelected}
+                    onProgress={onProgress} muted={muted} volume={volume} loop={repeat} onEnded={onEnded}
+                    className="react-player"
+                    url={data} width="100%" height="100%" />
                 {audioFormats.includes(getExt(data)) &&
                     <video src={`/${visualizer.FileURL}`} autoPlay loop muted width="100%" height="100%"
-                           ref={audioVisualizer}
-                           style={{objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh"}}/>}
+                        ref={audioVisualizer}
+                        style={{ objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh" }} />}
             </Box> :
             pictureFormats.includes(getExt(data)) ?
                 <Image onClick={onClick} src={data} alt="" width="100%" height="100vh"
-                       fit={objFit ? "contain" : "cover"} sx={{margin: "auto"}}/>
+                    fit={objFit ? "contain" : "cover"} sx={{ margin: "auto" }} />
                 :
-                <Container sx={{height: "100vh", display: "inline-flex"}}>
-                    <Card sx={{margin: "auto", minWidth: 200}}>
+                <Container sx={{ height: "100vh", display: "inline-flex" }}>
+                    <Card sx={{ margin: "auto", minWidth: 200 }}>
                         <Card.Section>
-                            <ThemeIcon variant="light" sx={{width: "100%", height: 160}} radius={0}>
-                                <FileIcon size={48}/>
+                            <ThemeIcon variant="light" sx={{ width: "100%", height: 160 }} radius={0}>
+                                <FileIcon size={48} />
                             </ThemeIcon>
                         </Card.Section>
                         <Text my="md">
@@ -239,5 +249,5 @@ export function ContentSlide({
                         </LinkButton>
                     </Card>
                 </Container>}
-    </div>
+    </div>;
 }

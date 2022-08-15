@@ -1,6 +1,7 @@
-﻿import {Sequelize} from "sequelize-typescript";
-import {File} from "./definitions/File";
-import {Author} from "./definitions/Author";
+﻿import { Sequelize } from "sequelize-typescript";
+import { File } from "./definitions/File";
+import { Author } from "./definitions/Author";
+import { Space } from "./definitions/Space";
 
 const sequelize =
     new Sequelize({
@@ -12,13 +13,13 @@ const sequelize =
         logging: false
     });
 
-sequelize.addModels([File, Author]);
+sequelize.addModels([File, Author, Space]);
 
 
-export {File, Author};
+export { File, Author, Space };
 
 export const initDB = async () => {
     await sequelize.authenticate();
-    await sequelize.sync({alter: true});
+    await sequelize.sync({ alter: true });
 
-}
+};

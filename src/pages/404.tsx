@@ -1,14 +1,14 @@
 import Layout from "@src/components/layout";
-import {Center, Group, Stack, Text} from "@mantine/core";
+import { Center, Group, Stack, Text } from "@mantine/core";
 import SEO from "@src/components/seo";
-import {LinkButton} from "@src/components/buttons";
+import { LinkButton } from "@src/components/buttons";
 
 export default function Custom404() {
-    return <Layout aside={<></>}>
+    return <Layout flex header={<></>} footer={<></>}>
         <SEO description="I couldn't find the page" title="404" siteTitle="Doki" />
-        <Center>
+        <Center m="auto">
             <Stack>
-            <video autoPlay muted loop src="/assets/404.mp4" />
+                <video autoPlay muted loop src="/assets/404.mp4" />
                 <Group position="apart">
                     <Group>
                         <Text className="use-m-font" size="xl">404</Text>
@@ -20,5 +20,5 @@ export default function Custom404() {
                 <Text size="xs">This incident has been reported to God.</Text>
             </Stack>
         </Center>
-    </Layout>
+    </Layout>;
 }

@@ -1,6 +1,5 @@
 ﻿import { ActionIcon, Button, Card, CardProps } from "@mantine/core";
 import Link from "next/link";
-import { MouseEventHandler, useCallback } from "react";
 
 // defining types to these components are a pain in the ass.
 export function LinkAction({ href, children, ...props }: any) {
@@ -17,13 +16,13 @@ export function LinkButton({ href, ...props }: any) {
 
 interface Common {
     link: string;
+    onClick: () => void;
 }
 
 // Wrappers for common elements in need of middle-mouse click functionality
-export function TouchableCard({ children, link, onClick, ...props }: CardProps<'a'> & Common) {
+export function TouchableCard({ children, link, onClick, ...props }: CardProps & Common) {
     const auxClick = () => (event: MouseEvent) => {
         event.preventDefault();
-        console.log("!!!!!!!!!!!!");
         window.open(link);
     };
 

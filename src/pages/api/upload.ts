@@ -1,22 +1,27 @@
-import {NextApiRequest, NextApiResponse} from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 import formidable from "formidable";
 import ffmpeg from "fluent-ffmpeg";
 import AuthorRepository from "@server/repositories/AuthorRepository";
-import {fakeNames} from "../../../utils/name";
+import { fakeNames } from "../../../utils/name";
 import FileRepository from "@server/repositories/FileRepository";
 import path from "path";
 import getConfig from "next/config";
-import {getExt, videoFormats} from "../../../utils/file";
+import { getExt, videoFormats } from "../../../utils/file";
+import { withSessionRoute } from "@src/lib/session";
 
 export const config = {
     api: {
         bodyParser: false
     }
-}
+};
 
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
-    const {serverRuntimeConfig} = getConfig();
+export const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+    if (req.session.space === undefined) {
+        return res.status(500);
+    }
+
+    const { serverRuntimeConfig } = getConfig();
 
     const dir = path.join(serverRuntimeConfig.PROJECT_ROOT, './public', 'files');
 
@@ -26,7 +31,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 .on('error', (err) => reject(err))
                 .on('filenames', (filenames) => console.log(`Generating ${filenames.join(", ")}`))
                 .on('end', () => {
-                    console.log(`Generated thumbnails`)
+                    console.log(`Generated thumbnails`);
                     resolve();
                 })
                 .screenshot({
@@ -35,7 +40,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                     folder: dir,
                     size: "1280x720"
                 });
-        })
+        });
     }
 
     const processForm = new Promise((resolve, reject) => {
@@ -52,29 +57,30 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         form.parse(req, async (err, fields, files) => {
             if (err)
                 reject(err);
-            resolve({fields, files});
+            resolve({ fields, files });
         });
 
     });
 
-    return processForm.then(async ({fields, files}) => {
+    return processForm.then(async ({ fields, files }) => {
         // Is this stupid? Yes, yes it is.
         if (files.File.length > 0) {
             console.log("Multiple file mode");
             let author = await AuthorRepository.findOne({
-                where: {AuthorId: fields.Id[0]}
+                where: { AuthorId: fields.Id[0] }
             }, true);
 
             if (author === null) {
                 author = await AuthorRepository.create({
                     AuthorId: fields.Id[0],
                     Name: fakeNames[~~(Math.random() * fakeNames.length)],
-                    CreationDate: Date.now() / 1e3
-                })
+                    CreationDate: Date.now() / 1e3,
+                    Space: req.session.space.Id
+                });
             }
 
             for (let i = 0; i < files.File.length; i++) {
-                const {Title, Folder, NSFW, Tags, Description} = fields;
+                const { Title, Folder, NSFW, Tags, Description } = fields;
 
                 const file = await FileRepository.create({
                     Size: files.File[i].size,
@@ -91,30 +97,33 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                     Tags: Tags[i],
                     FolderId: 0,
                     Report: null,
-                    NSFW: NSFW[i]
+                    NSFW: NSFW[i],
+                    Space: req.session.space.Id
                 });
 
-                console.log(`New file added:\n\tID: ${file.Id}, Filename: ${file.FileURL}, Author: ${author.AuthorId}, NSFW: ${file.NSFW}\n`)
+                console.log(`New file added:\n\tID: ${file.Id}, Filename: ${file.FileURL}, Author: ${author.AuthorId}, NSFW: ${file.NSFW}\n`);
 
                 if (videoFormats.includes(getExt(files.File[i].newFilename)))
                     await processThumbs(files.File[i]);
             }
-            res.status(200).json({...author});
+            console.log(author);
+            res.status(200).json({ ...author });
         } else {
             console.log("Singular file mode");
             let author = await AuthorRepository.findOne({
-                where: {AuthorId: fields.Id}
+                where: { AuthorId: fields.Id }
             }, true);
 
             if (author === null) {
                 author = await AuthorRepository.create({
                     AuthorId: fields.Id,
                     Name: fakeNames[~~(Math.random() * fakeNames.length)],
-                    CreationDate: Date.now() / 1e3
-                })
+                    CreationDate: Date.now() / 1e3,
+                    Space: req.session.space.Id
+                });
             }
 
-            const {Title, Folder, NSFW, Tags, Description} = fields;
+            const { Title, Folder, NSFW, Tags, Description } = fields;
 
             const file = await FileRepository.create({
                 Size: files.File.size,
@@ -131,17 +140,21 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 Tags: Tags,
                 FolderId: 0,
                 Report: null,
-                NSFW: NSFW
+                NSFW: NSFW,
+                Space: req.session.space.Id
             });
 
-            console.log(`New file added:\n\tID: ${file.Id}, Author: ${author.AuthorId}\n`)
+            console.log(`New file added:\n\tID: ${file.Id}, Author: ${author.AuthorId}\n`);
 
             if (videoFormats.includes(getExt(files.File.newFilename)))
                 await processThumbs(files.File);
 
-            res.status(200).json({...author});
+            console.log(author);
+            res.status(200).json({ ...author });
         }
     });
 
 
-}
+};
+
+export default withSessionRoute(handler);

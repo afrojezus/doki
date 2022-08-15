@@ -1,12 +1,12 @@
 import Layout from "@src/components/layout";
-import {Center, Group, Stack, Text} from "@mantine/core";
+import { Center, Group, Stack, Text } from "@mantine/core";
 import SEO from "@src/components/seo";
-import {LinkButton} from "@src/components/buttons";
+import { LinkButton } from "@src/components/buttons";
 
 export default function Custom500() {
-    return <Layout aside={<></>} footer={<></>}>
+    return <Layout flex header={<></>} footer={<></>}>
         <SEO description="I messed up.." title="500" siteTitle="Doki" />
-        <Center>
+        <Center m="auto">
             <Stack>
                 <video autoPlay muted loop src="/assets/404.mp4" />
                 <Group position="apart">
@@ -20,5 +20,5 @@ export default function Custom500() {
                 <Text size="xs">This incident has definitely been reported to God.</Text>
             </Stack>
         </Center>
-    </Layout>
+    </Layout>;
 }

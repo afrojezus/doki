@@ -21,6 +21,7 @@ import { displayFilename, getExt, pictureFormats, videoFormats } from "../../uti
 import { formatDate, ParseUnixTime } from "../../utils/date";
 import { useRouter } from "next/router";
 import { TouchableCard } from "./buttons";
+import { useMediaQuery } from "@mantine/hooks";
 
 export function SmallGridItem({ data }) {
     const theme = useMantineTheme();
@@ -52,6 +53,8 @@ function GridItem({
     const theme = useMantineTheme();
     const router = useRouter();
 
+    const isMobile = useMediaQuery('only screen and (max-width: 1000px)');
+
     const secondaryColor = theme.colorScheme === 'dark'
         ? theme.colors.dark[1]
         : theme.colors.gray[7];
@@ -82,7 +85,11 @@ function GridItem({
             '&>div': {
                 flex: 1
             },
-            cursor: "pointer"
+            cursor: "pointer",
+            ...(isMobile && {
+                minHeight: 300
+            }),
+            maxHeight: 300
         }}
         link={`/view/${data.Id}`}
         onClick={() => {

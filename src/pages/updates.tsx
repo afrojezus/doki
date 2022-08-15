@@ -1,4 +1,5 @@
-import {Accordion, Aside, Badge, Button, Card, Divider, Group, Stack, Text, Title} from '@mantine/core';
+import { Accordion, Aside, Badge, Button, Card, Divider, Group, Stack, Text, Title } from '@mantine/core';
+import { withSessionSsr } from '@src/lib/session';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
 
@@ -7,25 +8,39 @@ import SEO from '../components/seo';
 const M2 = [
     {
         current: true,
+        version: 'M2.03',
+        details: () => (
+            <>
+                <p>
+                    - Introducing Spaces: an isolated space of Doki for you and your friends
+                    <br />
+                    - Added pagination to the file browser
+                    <br />
+                    - Middle-mouse clicking issue patched
+                </p>
+            </>
+
+        ),
+    },
+    {
+        current: false,
         version: 'M2.02',
         details: () => (
             <>
-                    <p>
+                <p>
                     - Added internationalization. (UI language can now be changed to Norwegian, Ukranian, etc.)
-                    <br/>
+                    <br />
                     - Re-added several core features from M1, including editing files.
-                    <br/>
+                    <br />
                     - Fixed video player seeker
-                    <br/>
+                    <br />
                     - SEO-optimization, links to files can now be previewed.
-                    <br/>
-                    - Middle-mouse clicking issue patched.
-                    <br/>
+                    <br />
                     - Upload page improvements.
-                    <br/>
+                    <br />
                     - Styling improvements.
-                        <br />
-                        - Bugfixes to filtering
+                    <br />
+                    - Bugfixes to filtering
                 </p>
             </>
 
@@ -38,11 +53,11 @@ const M2 = [
             <>
                 <p>
                     - Migrated from ASP.NET to NextJS.
-                    <br/>
+                    <br />
                     - Minimalist makeover with a completely rewritten backend.
-                    <br/>
+                    <br />
                     - Mobile-first layout.
-                    <br/>
+                    <br />
                     - Performance improvements.
                 </p>
             </>
@@ -59,47 +74,47 @@ const PreM2 = [
             <>
                 <p>
                     General:
-                    <br/>
+                    <br />
                     - Edgy redesign.
-                    <br/>
+                    <br />
                     - Standardized navigation controls.
-                    <br/>
+                    <br />
                     - First build ready for public testing.
-                    <br/>
+                    <br />
                     - The formerly known &quot;Browser page&quot; is now responsble for viewing other pages alongside
                     the file grid.
-                    <br/>
+                    <br />
                     - Internal refractoring to make the platform more reusable and sustainable to develop on.
-                    <br/>
+                    <br />
                     - UI is now adjusted to handle mobile devices when used on one.
-                    <br/>
-                    <br/>
+                    <br />
+                    <br />
                     Browser:
-                    <br/>
+                    <br />
                     - Administrator mode (private only)
-                    <br/>
+                    <br />
                     - Folders are now Channels (folders with special purpose), tags replace the old folder
                     functionality.
-                    <br/>
+                    <br />
                     - Files can be sorted by views or likes, and can be filtered by tags or by file types.
-                    <br/>
-                    <br/>
+                    <br />
+                    <br />
                     Player:
-                    <br/>
+                    <br />
                     - Timestamps and seeking functionality added
-                    <br/>
+                    <br />
                     - Right-click will show a new options pane. The options pane stores file info, sharing details,
                     comments, current channel playlist and settings.
-                    <br/>
+                    <br />
                     - More file details added to the second row of the title
-                    <br/>
-                    <br/>
+                    <br />
+                    <br />
                     Settings:
-                    <br/>
+                    <br />
                     - UI fonts can be changed.
-                    <br/>
+                    <br />
                     - An alternative theme has been added, "Material".
-                    <br/>
+                    <br />
                     - Options to hide tags and file types added.
                 </p>
             </>
@@ -112,37 +127,37 @@ const PreM2 = [
         details: () => (
             <p>
                 General
-                <br/>
+                <br />
                 - Cleaner bar design, does not get in your way now
-                <br/>
+                <br />
                 - Backend now uses .NET 6, faster file handling.
-                <br/>
+                <br />
                 - More active alert management
-                <br/>
+                <br />
                 - Super hidden exclusive snow effect with optional raytracing mode in the settings
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Browser
-                <br/>
+                <br />
                 - File management from &quot;My Files&quot; have migrated over to the browser and completely removed its
                 purpose
-                <br/>
+                <br />
                 - Minor adjustments to UI, you can now right click files to delete or change their folders
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Player
-                <br/>
+                <br />
                 - Common media playback control added
-                <br/>
+                <br />
                 - Autoplay is now default
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Settings
-                <br/>
+                <br />
                 - Now holds your Doki ID info
-                <br/>
+                <br />
                 - Anonymous will correctly show up now
-                <br/>
+                <br />
             </p>
         ),
     },
@@ -152,54 +167,54 @@ const PreM2 = [
         details: () => (
             <p>
                 General
-                <br/>
+                <br />
                 - Upgraded styling backend.
-                <br/>
+                <br />
                 - Increase in upload size (from 200 MB to 5 GB).
-                <br/>
+                <br />
                 - Unlimited amount of files can now be uploaded.
-                <br/>
+                <br />
                 - Bug fixes.
-                <br/>
+                <br />
                 - (12-1) Blur effects have been removed for a smoother experience.
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Player
-                <br/>
+                <br />
                 - Removed a bunch of clutter to make space for smaller screens. Video controls are now inside of
                 a &quot;quick settings&quot; menu.
-                <br/>
+                <br />
                 - The toolbar is now always visible.
-                <br/>
+                <br />
                 - The player can now adapt between classic &quot;fill your screen&quot;-style format and fitting
                 everything on the screen.
-                <br/>
+                <br />
                 - Easier design for downloading non-playable files.
-                <br/>
+                <br />
                 - (12-1) Volume control will now appear on the toolbar if the screen is wide enough.
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Files Browser
-                <br/>
+                <br />
                 - Folder indicators on the sidebar.
-                <br/>
+                <br />
                 - You can now pick a different folder for each file.
-                <br/>
+                <br />
                 - NSFW indicator has been added.
-                <br/>
+                <br />
                 - New uploader interface.
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Me
-                <br/>
+                <br />
                 - New design.
-                <br/>
+                <br />
                 - Activity tab for all you&apos;ve done.
-                <br/>
+                <br />
                 - You can now download your user profile and import them.
-                <br/>
+                <br />
                 - You can now delete every single file you&apos;ve uploaded and your own profile on the server.
-                <br/>
+                <br />
             </p>
         ),
     },
@@ -209,45 +224,45 @@ const PreM2 = [
         details: () => (
             <p>
                 General
-                <br/>
+                <br />
                 - Support for ads implemented. Not on by default on private instances.
-                <br/>
+                <br />
                 - A much more understandable button to switch between the file browser and the player
-                <br/>
+                <br />
                 - (11-1) Like functionality implemented
-                <br/>
+                <br />
                 - (11-1) Doki instances can now be renamed
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Player
-                <br/>
+                <br />
                 - Style adjustments, now turns almost transparent when the toolbar is not focused
-                <br/>
+                <br />
                 - Autoplay mechanic adjusted, click to play once you enter the site
-                <br/>
+                <br />
                 - Sound feedback removed from clicking on the video
-                <br/>
+                <br />
                 - Continuous playback will now remain in the background if the player is not in focus
-                <br/>
+                <br />
                 - Share button added
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Files Browser
-                <br/>
+                <br />
                 - Uploader should now have a less confusing indicator
-                <br/>
+                <br />
                 - Drag-and-drop onto file browser itself bug has been removed (along with performance improvements)
-                <br/>
+                <br />
                 - (11-1) Brand new redesign
-                <br/>
+                <br />
                 - (11-1) You can now search for files!
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Report
-                <br/>
+                <br />
                 - Not in use for private instances currently
-                <br/>
-                <br/>
+                <br />
+                <br />
             </p>
         ),
     },
@@ -257,52 +272,52 @@ const PreM2 = [
         details: () => (
             <p>
                 General
-                <br/>
+                <br />
                 - Massive structure change, TV mode is now front and center of the frontend
-                <br/>
+                <br />
                 - Much of Dokis old functionality are still retained and not fully in modal-form yet.
-                <br/>
+                <br />
                 - Subtle code refactoring.
-                <br/>
+                <br />
                 - General loading indicator for the frontend
-                <br/>
+                <br />
                 - Landing page removed temporarily
-                <br/>
+                <br />
                 - (10-1) New font, layout adjustments and sound feedback added
-                <br/>
-                <br/>
+                <br />
+                <br />
                 TV mode & Settings
-                <br/>
+                <br />
                 - The player can now continuously play videos without looping.
-                <br/>
+                <br />
                 - An optional filter for filtering out folders the player will not play from.
-                <br/>
+                <br />
                 - Handles pictures and un-viewable file formats now.
-                <br/>
+                <br />
                 - Sensible design choices for the new player UI.
-                <br/>
+                <br />
                 - (10-1) Player will now shrink itself if the user navigates out of the TV mode
-                <br/>
+                <br />
                 - (10-1) Folder playlist for quick navigation
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Files Browser
-                <br/>
+                <br />
                 - Now instanciated in the form of a fullscreen modal
-                <br/>
+                <br />
                 - Internal navigation added; it won&apos;t forget what folder you opened files from.
-                <br/>
+                <br />
                 - &quot;All files&quot; folder shortcut added.
-                <br/>
+                <br />
                 - (10-1) Support for folders in folders
                 {' '}
-                <br/>
-                <br/>
+                <br />
+                <br />
                 Report
-                <br/>
+                <br />
                 - Initial release, backend code not yet implemented.
-                <br/>
-                <br/>
+                <br />
+                <br />
             </p>
         ),
     },
@@ -312,18 +327,18 @@ const PreM2 = [
         details: () => (
             <p>
                 - Flight mode renamed to TV mode
-                <br/>
+                <br />
                 - Early preperation code in place for public release
-                <br/>
+                <br />
                 - Landing page
-                <br/>
+                <br />
                 - Settings moved to dialog
                 {' '}
-                <br/>
+                <br />
                 - Custom media player for TV and File page
-                <br/>
+                <br />
                 - Additional functionality in place for TV (not complete)
-                <br/>
+                <br />
                 - Expect breaking changes in build 10
             </p>
         ),
@@ -334,7 +349,7 @@ const PreM2 = [
         details: () => (
             <p>
                 - Minor adjustments for better Firefox compatability
-                <br/>
+                <br />
                 - Revamped UI tweaks for mobile devices
             </p>
         ),
@@ -345,11 +360,11 @@ const PreM2 = [
         details: () => (
             <p>
                 - Booru-like view and a mobile-friendly &quot;timeline&quot; view added
-                <br/>
+                <br />
                 - Sorting options added
-                <br/>
+                <br />
                 - Support for more audio formats within flight mode
-                <br/>
+                <br />
                 - Jaded animations to complement virtualized lists
             </p>
         ),
@@ -360,13 +375,13 @@ const PreM2 = [
         details: () => (
             <p>
                 - Drag-and-drop based upload
-                <br/>
+                <br />
                 - Customizable colors and light settings
-                <br/>
+                <br />
                 - Support for uploading multiple files
-                <br/>
+                <br />
                 - Support for comments
-                <br/>
+                <br />
                 - Random video viewing mode
             </p>
         ),
@@ -377,11 +392,11 @@ const PreM2 = [
         details: () => (
             <p>
                 - React frontend on a rewritten ASP.NET backend
-                <br/>
+                <br />
                 - New styling
-                <br/>
+                <br />
                 - SQL-based database management
-                <br/>
+                <br />
                 - Folder support
             </p>
         ),
@@ -392,7 +407,7 @@ const PreM2 = [
         details: () => (
             <p>
                 - Tooltip for files
-                <br/>
+                <br />
                 - .JPEG and .WEBP support for images
             </p>
         ),
@@ -403,20 +418,20 @@ const PreM2 = [
         details: () => (
             <p>
                 - More styling
-                <br/>
+                <br />
                 - Refresh button is now an icon
-                <br/>
+                <br />
                 - ID handling has moved away from IPs to identification cookies (only stores the ID
                 number on client machine)
-                <br/>
+                <br />
                 - SSL added for HTTPS connections
-                <br/>
+                <br />
                 - Updates and API pages
-                <br/>
+                <br />
                 - New &quot;O.O&quot; header
-                <br/>
+                <br />
                 - Mild rebranding
-                <br/>
+                <br />
                 - Upload now has a preview
             </p>
         ),
@@ -427,17 +442,17 @@ const PreM2 = [
         details: () => (
             <p>
                 - Dark mode
-                <br/>
+                <br />
                 - HTTP version available online
-                <br/>
+                <br />
                 - Refresh button
-                <br/>
+                <br />
                 - Video thumbnails fixed
-                <br/>
+                <br />
                 - My Files
-                <br/>
+                <br />
                 - File details in grid
-                <br/>
+                <br />
                 - First publicly available build
             </p>
         ),
@@ -448,46 +463,73 @@ const PreM2 = [
         details: () => (
             <p>
                 - Upload functionality
-                <br/>
+                <br />
                 - File grid
-                <br/>
+                <br />
                 - Internal build
             </p>
         ),
     },
 ];
 
-function Page() {
-    return <Layout hiddenAside={true} asideContent={
-                <Aside.Section>
-                    <Stack>
-                        <Button variant="default">Milestone 2 builds</Button>
-                        <Button variant="default">Milestone 1 builds</Button>
-                    </Stack>
-                </Aside.Section>}>
-        <SEO title="Updates" siteTitle="Doki" description="Sneed"/>
-        <Stack ml="auto" mr="auto" sx={{maxWidth: 800}}>
+export const getServerSideProps = withSessionSsr(async function ({
+    req,
+    res,
+    ...other
+}) {
+    const space = req.session.space;
+    if (space === undefined) {
+        res.statusCode = 302;
+        return {
+            redirect: {
+                destination: `/login`,
+                permanent: false
+            }
+        };
+    }
+    return {
+        props: {
+            space
+        }
+    };
+});
+
+function Page({ space }) {
+    return <Layout space={space} hiddenAside={true} navbar={
+        <Aside.Section>
+            <Stack>
+                <Button variant="default">Milestone 2 builds</Button>
+                <Button variant="default">Milestone 1 builds</Button>
+            </Stack>
+        </Aside.Section>}>
+        <SEO title="Updates" siteTitle="Doki" description="Sneed" />
+        <Stack ml="auto" mr="auto" sx={{ maxWidth: 800 }}>
             <Card p="xl">
                 <Title order={3}>What's new?</Title>
-                <Text>You can now import videos directly from YouTube!</Text>
-                <Text>Delete files and edit files at ease in addition to a much more robust uploader!</Text>
-                <Text>A muuuuuch better responsive design!</Text>
+                <Text>Spaces! You can have your own slice of Doki, you can also make them only accessible by you and your friends.</Text>
+                <Text>Pagination in the file browser, which speeds things up.</Text>
+                <Text>Middle-mouse clicking has been patched.</Text>
             </Card>
             <Divider label="Changelogs" />
             <Text size="xs">Milestone 2 Builds</Text>
             <Accordion multiple>
                 {M2.map((elem, index) =>
-                    <Accordion.Item key={index}
-                                    label={<Group><Text>{elem.version}</Text>{elem.current && <Badge>Current</Badge>}
-                                    </Group>}>
-                        <elem.details/>
+                    <Accordion.Item key={index} value={elem.version}>
+                        <Accordion.Control><Group><Text>{elem.version}</Text>{elem.current && <Badge>Current</Badge>}
+                        </Group></Accordion.Control>
+                        <Accordion.Panel>
+                            <elem.details />
+                        </Accordion.Panel>
                     </Accordion.Item>)}
             </Accordion>
             <Text size="xs">Milestone 1 Builds</Text>
             <Accordion multiple>
                 {PreM2.map((elem, index) =>
-                    <Accordion.Item key={index} label={elem.version}>
-                        <elem.details/>
+                    <Accordion.Item key={index} value={elem.version}>
+                        <Accordion.Control><Text>{elem.version}</Text></Accordion.Control>
+                        <Accordion.Panel>
+                            <elem.details />
+                        </Accordion.Panel>
                     </Accordion.Item>)}
             </Accordion>
         </Stack>

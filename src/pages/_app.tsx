@@ -1,4 +1,4 @@
-import { ColorScheme, ColorSchemeProvider, MantineColor, MantineProvider, MantineThemeOverride, MANTINE_COLORS, Paper, Title, Transition } from '@mantine/core';
+import { ColorScheme, ColorSchemeProvider, Global, MantineColor, MantineProvider, MantineSizes, MantineThemeOverride } from '@mantine/core';
 import { NotificationsProvider } from '@mantine/notifications';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -6,15 +6,15 @@ import Router from 'next/router';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import '../styles.css';
+import '../login-bg-style.css';
 import { GetServerSidePropsContext } from 'next';
 import { getCookie, hasCookie } from 'cookies-next';
 import { useEffect, useState } from 'react';
 import { useColorScheme, useMediaQuery } from "@mantine/hooks";
 import { LocaleContext, messages } from "@src/locale";
-import { useMemo } from 'react';
 import { wrapper } from '@src/store';
 
-function App(props: AppProps & { colorScheme: ColorScheme & 'system', accentColor: MantineColor, locale: string; }) {
+function App(props: AppProps & { colorScheme: ColorScheme & 'system'; accentColor: MantineColor; locale: string; colorful: boolean; radius: string; }) {
     const { Component, pageProps } = props;
     const preferDark = useMediaQuery('(prefers-color-scheme: dark)');
     const preferredColorScheme = useColorScheme(preferDark ? 'dark' : 'light');
@@ -22,12 +22,16 @@ function App(props: AppProps & { colorScheme: ColorScheme & 'system', accentColo
     const [colorScheme, setColorScheme] = useState<ColorScheme>((props.colorScheme && props.colorScheme !== 'system') ? props.colorScheme : preferredColorScheme);
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [locale, setLocale] = useState<string>(props.locale);
+    const [colorful, setColorful] = useState(false);
+    const [radius, setRadius] = useState<string>("sm");
 
     useEffect(() => {
         if (props.accentColor !== accentColor) setAccentColor(props.accentColor);
         if (props.colorScheme !== colorScheme) setColorScheme((props.colorScheme && props.colorScheme !== 'system') ? props.colorScheme : preferredColorScheme);
         if (props.locale !== locale) setLocale(props.locale);
-    }, [props.accentColor, props.colorScheme, props.locale, preferDark, preferredColorScheme]);
+        if (props.colorful !== colorful) setColorful(props.colorful);
+        if (props.radius !== radius) setRadius(props.radius);
+    }, [props.accentColor, props.colorScheme, props.locale, preferDark, preferredColorScheme, props.colorful, props.radius]);
 
     useEffect(() => {
         NProgress.configure({
@@ -55,11 +59,6 @@ function App(props: AppProps & { colorScheme: ColorScheme & 'system', accentColo
     const toggleColorScheme = (value?: ColorScheme) =>
         setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
-    const theme: MantineThemeOverride = useMemo(() => ({
-        colorScheme: colorScheme,
-        primaryColor: accentColor
-    }), [colorScheme, accentColor]);
-
     return (
         <>
             <Head>
@@ -74,8 +73,38 @@ function App(props: AppProps & { colorScheme: ColorScheme & 'system', accentColo
                     <MantineProvider
                         withGlobalStyles
                         withNormalizeCSS
-                        theme={theme}
+                        theme={{
+                            colorScheme: colorScheme,
+                            primaryColor: accentColor,
+                            defaultRadius: radius,
+                            other: {
+                                userRadius: radius
+                            }
+                        }}
                     >
+                        <Global styles={(theme) => ({
+                            body: {
+                                ...theme.fn.fontStyles(),
+                                ...(colorful && {
+                                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors[accentColor][theme.fn.primaryShade()] : theme.colors[accentColor][theme.fn.primaryShade()]
+                                })
+                            },
+                            ".mantine-AppShell-main": {
+                                ...(colorful && {
+                                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[9] + "ee" : theme.colors.gray[0] + "ee"
+                                })
+                            },
+                            ".mantine-Aside-root": {
+                                ...(colorful && {
+                                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[4] + "44" : undefined
+                                })
+                            },
+                            ".mantine-Paper-root": {
+                                ...(colorful && {
+                                    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[3] + "22" : undefined
+                                })
+                            },
+                        })} />
                         <NotificationsProvider position="bottom-center" zIndex={2077}>
                             <Component {...pageProps} />
                         </NotificationsProvider>
@@ -90,6 +119,8 @@ App.getInitialProps = ({ ctx }: { ctx: GetServerSidePropsContext; }) => ({
     colorScheme: hasCookie("color-scheme", ctx) ? getCookie("color-scheme", ctx) : "light",
     accentColor: hasCookie("accent-color", ctx) ? getCookie("accent-color", ctx) : 'blue',
     locale: hasCookie("locale", ctx) ? getCookie("locale", ctx) : "en",
+    colorful: hasCookie("colorful", ctx) ? getCookie("colorful", ctx) : false,
+    radius: hasCookie("radius", ctx) ? getCookie("radius", ctx) : "sm"
 });
 
 export default wrapper.withRedux(App);

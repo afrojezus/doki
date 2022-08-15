@@ -1,6 +1,7 @@
 import {
     Accordion,
     Button,
+    Center,
     Checkbox,
     Divider,
     Group,
@@ -18,7 +19,7 @@ import {
 import GridItem from '../components/grid-item';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
-import { Author, File } from "@server/models";
+import { Author, File, Space } from "@server/models";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { Edit } from 'tabler-icons-react';
 import { useRouter } from 'next/router';
@@ -31,34 +32,43 @@ import { showNotification } from "@mantine/notifications";
 import { getLocale, LocaleContext } from "@src/locale";
 import { EditBox } from '@src/components/upload-forms';
 import { SeekForAuthor } from "../../utils/id_management";
+import { withSessionSsr } from '@src/lib/session';
+import { useWindowScroll } from '@mantine/hooks';
 
 interface PageProps {
     posts: File[];
     author: Author;
     filter: string[];
+    space: Space;
+    nsfw: boolean;
 }
 
-export async function getServerSideProps(nextPage: NextPageContext) {
-    // TODO: Implement pagination as an alternative
+export const getServerSideProps = withSessionSsr(async function ({
+    req,
+    res,
+    ...other
+}) {
+    const space = req.session.space;
+    if (space === undefined) {
+        res.statusCode = 302;
+        return {
+            redirect: {
+                destination: `/login`,
+                permanent: false
+            }
+        };
+    }
 
-    // this is slow as fuck.
-    /*const posts = await FileRepository.findAll({
-        include: {
-            model: Author,
-            required: true
-        },
-        limit: 10
-    });*/
-
-    const author = await SeekForAuthor(getCookie('DokiIdentification', nextPage));
+    const author = await SeekForAuthor(getCookie('DokiIdentification', { req, res }));
     return {
         props: {
-            // posts,
+            space,
             author,
-            filter: hasCookie('filtered', nextPage) ? JSON.parse(getCookie('filtered', nextPage) as string) : []
+            nsfw: hasCookie('allow-nsfw-content', { req, res }) ? getCookie('allow-nsfw-content', { req, res }) : false,
+            filter: hasCookie('filtered', { req, res }) ? JSON.parse(getCookie('filtered', { req, res }) as string) : []
         }
     };
-}
+});
 
 function SearchInput({ onSubmit }) {
     const locale = useContext(LocaleContext);
@@ -101,7 +111,7 @@ function Page(props: PageProps) {
     const [onlyUsers, setOnlyUsers] = useState<boolean>(false);
     const [sort, setSort] = useState<string>("Time");
     const [searchF, setSearchF] = useState('');
-    const { data, error } = useSWR(`/api/posts?page=${activePage}&sort=${sort}${category ? "&category=" + category : ''}${tag ? "&tag=" + tag : ''}${type ? "&type=" + type : ''}${(onlyUsers && props.author) ? "&author=" + props.author.AuthorId : ''}`, fetcher);
+    const { data, error } = useSWR(`/api/posts?page=${activePage}&sort=${sort}${category ? "&category=" + category : ''}${tag ? "&tag=" + tag : ''}${type ? "&type=" + type : ''}${(onlyUsers && props.author) ? "&author=" + props.author.AuthorId : ''}${"&nsfw=" + props.nsfw}`, fetcher);
     const [noFiles, setNoFiles] = useState<boolean>(false);
     const [editMode, setEditMode] = useState<boolean>(false);
     const [selected, setSelected] = useState<File[]>([]);
@@ -215,7 +225,7 @@ function Page(props: PageProps) {
         }
     };
 
-    return <Layout asideContent={
+    return <Layout additionalMainStyle={{ display: "flex" }} space={props.space} navbar={
         <>
             <Text mb="md" size="xs">{(data && data.all.length) ?? 0} file(s) on the server</Text>
             <Pagination mb="md" page={activePage} size="xs" onChange={setNewPage} styles={{ item: { fontFamily: 'Manrope' } }} total={(data && (onlyUsers ?
@@ -228,18 +238,18 @@ function Page(props: PageProps) {
             <Transition mounted={Boolean(props.author)} transition="slide-down">{(styles) => <Accordion style={styles} mt="md" sx={{
                 backgroundColor: theme.colorScheme === "light" ? theme.white : theme.colors.dark[5],
                 borderRadius: 4
-            }} styles={{
-                contentInner: { padding: 0 }
-            }} offsetIcon={false} onChange={toggleEditMode} disableIconRotation>
-                <Accordion.Item sx={{ border: "none" }} icon={<Edit size={16} />} styles={{ label: { fontSize: 12 } }}
-                    label={`${getLocale(locale).Browser["edit-mode"]}`}>
-                    <Stack>
-                        <Text size="xs">{selected.length}{` ${getLocale(locale).Browser["selected"]}`}</Text>
-                        <Button disabled={selected.length === 0} onClick={() => setEditDetails(true)}
-                            variant="light">{`${getLocale(locale).Browser["edit-details"]}`}</Button>
-                        <Button disabled={selected.length === 0} onClick={() => setWillDelete(true)} variant="light"
-                            color="red">{`${getLocale(locale).Browser["delete-files"]}`}</Button>
-                    </Stack>
+            }} onChange={toggleEditMode}>
+                <Accordion.Item style={{ border: "none" }} value="edit">
+                    <Accordion.Control sx={{ border: "none", fontSize: 12 }} icon={<Edit size={16} />}>{getLocale(locale).Browser["edit-mode"]}</Accordion.Control>
+                    <Accordion.Panel>
+                        <Stack>
+                            <Text size="xs">{selected.length}{` ${getLocale(locale).Browser["selected"]}`}</Text>
+                            <Button disabled={selected.length === 0} onClick={() => setEditDetails(true)}
+                                variant="light">{`${getLocale(locale).Browser["edit-details"]}`}</Button>
+                            <Button disabled={selected.length === 0} onClick={() => setWillDelete(true)} variant="light"
+                                color="red">{`${getLocale(locale).Browser["delete-files"]}`}</Button>
+                        </Stack>
+                    </Accordion.Panel>
                 </Accordion.Item>
             </Accordion>}</Transition>
             <Divider label={`${getLocale(locale).Browser["view-options"]}`} mt="sm" />
@@ -286,7 +296,7 @@ function Page(props: PageProps) {
         </>
     }>
         <SEO title="Browser" siteTitle="Doki" description="Content for days" />
-        {data && <SimpleGrid cols={5} breakpoints={[
+        {data && data.posts.length > 0 ? <SimpleGrid cols={5} breakpoints={[
             { maxWidth: 'lg', cols: 4, spacing: 'md' },
             { maxWidth: 'md', cols: 3, spacing: 'md' },
             { maxWidth: 'sm', cols: 2, spacing: 'sm' },
@@ -303,7 +313,10 @@ function Page(props: PageProps) {
                         {(styles) => <GridItem onlyUsers={onlyUsers} style={styles} author={props.author} editMode={editMode} selected={selected.includes(elem)}
                             onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
                             onSelect={(f) => setSelected(p => [...p, f])} data={elem} />}</Transition>)}
-        </SimpleGrid>}
+        </SimpleGrid> : <Stack sx={{ margin: "auto", textAlign: "center" }}>
+            <Title className='use-m-font'>O.O'</Title>
+            <Text className='use-m-font'>There's no files!</Text>
+        </Stack>}
 
         <Modal size="xl" opened={editDetails} title="Edit details" onClose={() => setEditDetails(false)}
             styles={{

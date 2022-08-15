@@ -1,6 +1,6 @@
-import {NextApiRequest, NextApiResponse} from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 import AuthorRepository from "@server/repositories/AuthorRepository";
-import {fakeNames} from "../../../../utils/name";
+import { fakeNames } from "../../../../utils/name";
 import FileRepository from "@server/repositories/FileRepository";
 import path from "path";
 import getConfig from "next/config";
@@ -8,6 +8,7 @@ import getConfig from "next/config";
 import ytdl from "ytdl-core";
 import * as fs from "fs";
 import * as client from "https";
+import { withSessionRoute } from "@src/lib/session";
 
 interface ImportForm {
     Id: number;
@@ -21,9 +22,13 @@ interface ImportForm {
     Thumbnail: string;
 }
 
+export const handler = async ({ query: { id }, body, session: { space } }: NextApiRequest, res: NextApiResponse) => {
 
-export default async ({query: {id}, body}: NextApiRequest, res: NextApiResponse) => {
-    const {serverRuntimeConfig} = getConfig();
+    if (space === undefined) {
+        return res.status(500);
+    }
+
+    const { serverRuntimeConfig } = getConfig();
 
     const dir = path.join(serverRuntimeConfig.PROJECT_ROOT, './public', 'files');
 
@@ -32,22 +37,22 @@ export default async ({query: {id}, body}: NextApiRequest, res: NextApiResponse)
             client.get(`https://img.youtube.com/vi/${info.videoDetails.videoId}/hqdefault.jpg`, (res) => {
                 if (res.statusCode === 200) {
                     res.pipe(fs.createWriteStream(`${dir}/${id}.mp4_thumbnail.png`));
-                    res.on('error', reject)
-                    res.once('close', () => resolve(`${id}.mp4_thumbnail.png`))
+                    res.on('error', reject);
+                    res.once('close', () => resolve(`${id}.mp4_thumbnail.png`));
                 } else {
                     res.resume();
                     reject(new Error(`Request Failed With a Status Code: ${res.statusCode}`));
                 }
-            })
-        })
+            });
+        });
     }
 
     function processYT(info: ytdl.videoInfo) {
         return new Promise<string>(async (resolve, reject) => {
             const stream = ytdl.downloadFromInfo(info).pipe(fs.createWriteStream(`${dir}/${id}.mp4`));
-            stream.on('finish', () => resolve(`${id}.mp4`))
+            stream.on('finish', () => resolve(`${id}.mp4`));
             stream.on('error', reject);
-        })
+        });
     }
 
     const processURL = new Promise<ImportForm>(async (resolve, reject) => {
@@ -84,18 +89,19 @@ export default async ({query: {id}, body}: NextApiRequest, res: NextApiResponse)
         console.log("Import mode");
         try {
             let author = await AuthorRepository.findOne({
-                where: {AuthorId: form.Id}
+                where: { AuthorId: form.Id }
             }, true);
 
             if (author === null) {
                 author = await AuthorRepository.create({
                     AuthorId: form.Id,
                     Name: fakeNames[~~(Math.random() * fakeNames.length)],
-                    CreationDate: Date.now() / 1e3
-                })
+                    CreationDate: Date.now() / 1e3,
+                    Space: space.Id
+                });
             }
 
-            const {Title, Folder, NSFW, Tags, Description, Size, File, Thumbnail} = form;
+            const { Title, Folder, NSFW, Tags, Description, Size, File, Thumbnail } = form;
 
             await FileRepository.create({
                 Size: Size,
@@ -112,15 +118,19 @@ export default async ({query: {id}, body}: NextApiRequest, res: NextApiResponse)
                 Tags: Tags.join(","),
                 FolderId: 0,
                 Report: null,
-                NSFW: NSFW
+                NSFW: NSFW,
+                Space: space.Id
             });
 
-            console.log(`New file added:\n\tID: ${form.Id}, Author: ${author.AuthorId}\n`)
+            console.log(`New file added:\n\tID: ${form.Id}, Author: ${author.AuthorId}\n`);
 
-            res.status(200).json({...author});
+            res.status(200).json({ ...author });
         } catch (err) {
             console.error(err);
-            res.status(500).json({error: "Could not import file"});
+            res.status(500).json({ error: "Could not import file" });
         }
     });
-}
+};
+
+
+export default withSessionRoute(handler);
