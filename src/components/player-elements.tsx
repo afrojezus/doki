@@ -234,7 +234,7 @@ export function ContentSlide({
                     <Center sx={{ pointerEvents: "none", position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 10, width: "100vw" }}><Disc style={{ animation: "spin 1s linear infinite" }} size={72} /></Center>
                     <video src={`/${visualizer.FileURL}`} autoPlay loop muted width="100%" height="100%"
                         ref={audioVisualizer}
-                        style={{ objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh", filter: "blur(10px) brightness(0.3)" }} /></>}
+                        style={{ objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh", filter: "brightness(0.3)" }} /></>}
             </Box> :
             pictureFormats.includes(getExt(data)) ?
                 <Image onClick={onClick} src={data} alt="" width="100%" height="100vh"
