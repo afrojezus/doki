@@ -1,3 +1,6 @@
+
+<img src="./public/assets/doki-logo.png" height="64" />
+
 # doki
 
 ![The viewer](./doki-viewer-img.png)
