@@ -1,10 +1,12 @@
 import SpaceRepository from "@server/repositories/SpaceRepository";
 import { withSessionRoute } from "@src/lib/session";
 import { NextApiRequest, NextApiResponse } from "next";
+import * as bcrypt from 'bcrypt';
 
 async function makeSpaceRoute(req: NextApiRequest, res: NextApiResponse) {
     const { space } = await req.body;
     try {
+        const hashed = space.password.length > 0 ? await bcrypt.hash(space.password, 10) : null;
         const serverSpace = await SpaceRepository.create({
             Name: space.Name,
             Description: space.Description,
@@ -12,7 +14,7 @@ async function makeSpaceRoute(req: NextApiRequest, res: NextApiResponse) {
             Bg: space.Bg.length > 0 ? space.Bg : null,
             CreationDate: Date.now() / 1e3,
             Private: space.Private,
-            Token: space.password.length > 0 ? Buffer.from(space.password).toString('base64') : null
+            Token: hashed
         });
         if (!serverSpace) throw Error("Space could not be created");
         req.session.space = serverSpace;

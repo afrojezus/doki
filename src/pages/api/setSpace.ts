@@ -1,18 +1,26 @@
 import SpaceRepository from "@server/repositories/SpaceRepository";
 import { withSessionRoute } from "@src/lib/session";
 import { NextApiRequest, NextApiResponse } from "next";
+import * as bcrypt from "bcrypt";
+import { Space } from "@server/models";
+
 
 async function setSpaceRoute(req: NextApiRequest, res: NextApiResponse) {
     const { space, password } = await req.body;
     try {
-        const serverSpace = await SpaceRepository.findOne({
+        const serverSpace: Space = await SpaceRepository.findOne({
             where: {
-                Id: space.Id,
-                // todo: this should really be taken care of before production
-                Token: space.Private && password.length > 0 ? Buffer.from(password).toString('base64') : null
-            }
+                Id: space.Id
+            },
         });
         if (!serverSpace) throw Error("Space not found");
+        // space is found, if private, check the token
+        if (serverSpace.Private) {
+            const valid = await bcrypt.compare(password, serverSpace.Token);
+            if (!valid) {
+                throw Error("Incorrect password, access denied");
+            }
+        }
         req.session.space = serverSpace;
         await req.session.save();
         res.json(serverSpace);

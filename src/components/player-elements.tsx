@@ -2,6 +2,7 @@ import {
     Badge,
     Box,
     Card,
+    Center,
     Container,
     Group,
     Image, Modal,
@@ -18,7 +19,7 @@ import { audioFormats, displayFilename, getExt, pictureFormats, playableFormats 
 import { createRef, useCallback, useContext, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { showNotification } from "@mantine/notifications";
-import { File as FileIcon } from "tabler-icons-react";
+import { Disc, File as FileIcon } from "tabler-icons-react";
 import { LinkButton } from "@src/components/buttons";
 import { getLocale, LocaleContext } from "@src/locale";
 import { normalise } from "../../utils/math";
@@ -82,18 +83,18 @@ export function QuickDetails({ sx, full = false, current, isPlayable, progress, 
                     }} style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="lg" color="yellow"
                     >{current.Folder}</Badge></Link></>}</Group>
         {current.Description &&
-            <UnstyledButton onClick={fullDescOpen}><Text className="fade" sx={{ whiteSpace: "pre-wrap", maxHeight: 72, overflow: "hidden" }} color={isPlayable && full ? "white" : undefined} size="xs">{current.Description}</Text></UnstyledButton>}
+            <UnstyledButton onClick={fullDescOpen}><Text className="fade" sx={{ whiteSpace: "pre-wrap", maxHeight: 72, overflow: "hidden" }} color={"white"} size="xs">{current.Description}</Text></UnstyledButton>}
         <Group>
-            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
+            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={"white"}
                 weight={500}>{`${getLocale(locale).Viewer["uploaded-by"]} `}{current.Author.Name}, {formatDate(ParseUnixTime(current.UnixTime))}</Text>
             <Space />
-            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
+            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={"white"}
                 weight={500}>{getExt(current.FileURL)}{getLocale(locale).Viewer["file"]}</Text>
             <Space />
-            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
+            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={"white"}
                 weight={500}>{current.Views}{` ${getLocale(locale).Viewer["views"]}`}</Text>
             <Space />
-            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={isPlayable && full ? "white" : undefined}
+            <Text style={{ filter: `drop-shadow(0px 3px 2px rgb(0 0 0 / 0.4))` }} size="xs" color={"white"}
                 weight={500}>{current.Likes}{` ${getLocale(locale).Viewer["likes"]}`}</Text>
         </Group>
         {duration && seekTo ?
@@ -216,6 +217,10 @@ export function ContentSlide({
         }
     }, [audioVisualizer, isSelected]);
 
+    if (!data) {
+        return null;
+    }
+
     return <div className="player-wrapper">
         {playableFormats.includes(getExt(data)) ?
             <Box sx={{ "& > * > video": { objectFit: objFit ? "contain" : "cover" } }}
@@ -225,10 +230,11 @@ export function ContentSlide({
                     onProgress={onProgress} muted={muted} volume={volume} loop={repeat} onEnded={onEnded}
                     className="react-player"
                     url={data} width="100%" height="100%" />
-                {audioFormats.includes(getExt(data)) &&
+                {audioFormats.includes(getExt(data)) && <>
+                    <Center sx={{ pointerEvents: "none", position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 10, width: "100vw" }}><Disc style={{ animation: "spin 1s linear infinite" }} size={72} /></Center>
                     <video src={`/${visualizer.FileURL}`} autoPlay loop muted width="100%" height="100%"
                         ref={audioVisualizer}
-                        style={{ objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh" }} />}
+                        style={{ objectFit: "cover", position: "fixed", top: 0, left: 0, height: "100vh", filter: "blur(10px) brightness(0.3)" }} /></>}
             </Box> :
             pictureFormats.includes(getExt(data)) ?
                 <Image onClick={onClick} src={data} alt="" width="100%" height="100vh"

@@ -3,6 +3,7 @@ import {
     Aside,
     Autocomplete,
     Badge,
+    Box,
     Button,
     Card,
     Checkbox,
@@ -12,6 +13,7 @@ import {
     MantineTheme,
     Modal,
     MultiSelect,
+    Progress,
     ScrollArea,
     Stack,
     Text,
@@ -20,20 +22,22 @@ import {
     Title,
     useMantineTheme
 } from '@mantine/core';
-import Layout from '../components/layout';
+import Layout, { Disk } from '../components/layout';
 import { getCookie, setCookies } from 'cookies-next';
 import useSound from 'use-sound';
 import { FormFile, Importer } from "@src/components/upload-forms";
 import SEO from "@src/components/seo";
-import { ComponentProps, useRef, useState } from "react";
+import { ComponentProps, useCallback, useEffect, useRef, useState } from "react";
 import { Dropzone } from '@mantine/dropzone';
-import { File, Upload as IconUpload, X } from 'tabler-icons-react';
+import { File, File3d, Plus, Upload as IconUpload, X } from 'tabler-icons-react';
 import { showNotification } from '@mantine/notifications';
 import FileRepository from "@server/repositories/FileRepository";
 import { Author, File as OBJ, Space } from "@server/models";
 import { useRouter } from 'next/router';
 import { getExt, retrieveAllFolders, retrieveAllTags } from 'utils/file';
 import { withSessionSsr } from '@src/lib/session';
+import useSWR from 'swr';
+import { useForm } from '@mantine/form';
 
 interface PageProps {
     id: number;
@@ -78,7 +82,94 @@ export const getServerSideProps = withSessionSsr(async function ({
     };
 });
 
+const fetcher = async (url) => {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (res.status !== 200) {
+        throw new Error(data.message);
+    }
+    return data as Disk;
+};
+
+const UploadEditBox = ({ onChange, formFile, posts, ...rest }: { onChange: (e: FormFile) => void; formFile: FormFile; posts: any[]; }) => {
+    const [preview] = useState<string | undefined>(URL.createObjectURL(formFile.File));
+    return <Card {...rest}
+        sx={{ display: "inline-flex", transition: "all .375s var(--animation-ease)" }}>
+        <Card.Section mr="md" mb={-16} sx={{ transition: "all .375s var(--animation-ease)" }}>
+            <Image withPlaceholder placeholder={<File3d />} fit="cover" styles={{
+                root: {
+                    width: "200px !important",
+                    overflow: 'hidden',
+                    display: "flex"
+                },
+                figure: {
+                    flex: 1,
+                    display: "flex"
+                },
+                imageWrapper: {
+                    flex: 1,
+                    display: "flex"
+                },
+                placeholder: {
+                    flex: 1
+                }
+            }} width="100%" height="100%" radius={0} src={preview} alt="" />
+        </Card.Section>
+        <Box component="form" sx={{ flex: 1 }}>
+            <Stack>
+                <Group position="apart">
+                    <Text size="xs">{formFile.Title}</Text>
+                    <Group>
+                        <Checkbox size="xs" label="NSFW" onChange={(m) => {
+                            formFile.NSFW = m.target.checked;
+                            onChange(formFile);
+                        }} checked={formFile.NSFW} />
+                        <Text size="xs">{(formFile.File.size / 1e3 / 1e3).toFixed(2)} MB</Text>
+                        <Badge>{getExt(formFile.File.name)}</Badge>
+                    </Group>
+                </Group>
+                <TextInput label="Title" placeholder="Call it something easy to forget, like 'Sneed'!"
+                    required onChange={(m) => {
+                        formFile.Title = m.target.value;
+                        onChange(formFile);
+                    }} value={formFile.Title} />
+                <Textarea
+                    label="Description"
+                    placeholder="Enter a description here"
+                    maxRows={4}
+                    autosize
+                    onChange={(m) => {
+                        formFile.Description = m.target.value;
+                        onChange(formFile);
+                    }} value={formFile.Description}
+                />
+                <MultiSelect data={[...retrieveAllTags(posts)]} label="Tags"
+                    styles={{
+                        searchInput: {
+                            fontFamily: 'inherit'
+                        }
+                    }}
+                    placeholder="Select or create a tag" searchable creatable
+                    onCreate={(query) => query.replace(/ /g, '_')}
+                    getCreateLabel={(t) => `+ ${t}`}
+                    onChange={(m) => {
+                        formFile.Tags = m;
+                        onChange(formFile);
+                    }} defaultValue={formFile.Tags}
+                />
+                <Autocomplete label="Category" placeholder="Enter category here"
+                    data={retrieveAllFolders(posts)} onChange={(m) => {
+                        formFile.Folder = m;
+                        onChange(formFile);
+                    }} value={formFile.Folder} />
+            </Stack>
+        </Box>
+    </Card>;
+};
+
 function Page(props: PageProps) {
+    const { data, error } = useSWR(() => `/api/disk`, fetcher);
     const router = useRouter();
     const [playSuccess] = useSound("/assets/upload-successful.wav", {
         volume: 0.25
@@ -164,6 +255,10 @@ function Page(props: PageProps) {
         }
     }
 
+    const onFileChange = useCallback((e: FormFile) => {
+        setFiles([...files]);
+    }, [files]);
+
     return <Layout space={props.space} hideTabbar noScrollArea navbar={<>
         <Aside.Section>
             <Stack>
@@ -191,22 +286,20 @@ function Page(props: PageProps) {
                     }}><X size={14} /></ActionIcon>
                 </Group>
             </Card>)}
-        </Aside.Section>
-        <Divider my="md" size="xs" />
-        <Aside.Section style={{ flexFlow: 'row wrap', display: 'inline-flex' }}>
-            <Button disabled={files.length === 0} loading={uploading} onClick={upload} variant="light" fullWidth
-                leftIcon={<IconUpload size={14} />}>Upload
-                now</Button>
         </Aside.Section></>}>
         <SEO title="Upload" siteTitle="Doki"
             description="Content for days" />
-        <Group position="right" mb="md">
+        <Group position="apart" mb="md">
+            <Stack spacing={0}>
+                <Text size="xs">{`Total space of server: ${data ? (data.totalSpace / 1e3 / 1e3 / 1e3).toFixed(2) : 0} GB. ${data ? (data.freeSpace / 1e3 / 1e3 / 1e3).toFixed(2) : 0} GB available.`}</Text>
+                <Progress sx={{ minWidth: 150 }} value={data ? Math.floor(data.freeSpace / 1e3 / 1e3 / 1e3) : 0} />
+            </Stack>
             <Group>
                 <Button disabled onClick={() => setOpen({ type: 'twt', opened: true })} variant="light" color="cyan">Import
                     from Twitter</Button>
                 <Button onClick={() => setOpen({ type: 'yt', opened: true })} variant="light" color="red">Import from
                     Youtube</Button>
-                <Button variant="light" onClick={() => openRef.current()}>Add file(s)</Button>
+                <Button leftIcon={<Plus size={14} />} variant="light" onClick={() => openRef.current()}>Add file(s)</Button>
             </Group>
         </Group>
         <Dropzone onDrop={onDrop} openRef={openRef}>
@@ -237,65 +330,12 @@ function Page(props: PageProps) {
             </Group>
         </Dropzone>
         <Stack mt="md">
-            {files.map((e, i) => <Card key={i}
-                sx={{ display: "inline-flex", transition: "all .375s var(--animation-ease)" }}>
-                <Card.Section mr="md" mb={-16} sx={{ transition: "all .375s var(--animation-ease)" }}>
-                    <Image withPlaceholder placeholder={<Text size="xs" align="center">
-                        {getExt(e.File.name)}-format file
-                    </Text>} fit="cover" styles={{
-                        root: {
-                            borderRadius: theme.defaultRadius,
-                            overflow: 'hidden'
-                        },
-                        placeholder: {
-                            background: theme.colors.dark[9],
-                            borderRadius: theme.defaultRadius,
-                            overflow: 'hidden'
-                        }
-                    }} width={160} radius={0} src={URL.createObjectURL(e.File)} alt="" />
-                </Card.Section>
-                <form style={{ flex: 1 }}>
-                    <Group position="apart">
-                        <Text size="xs">{e.Title}</Text>
-                        <Group>
-                            <Checkbox size="xs" label="NSFW" onChange={(m) => {
-                                e.NSFW = m.target.checked;
-                                setFiles([...files]);
-                            }} checked={e.NSFW} />
-                            <Text size="xs">{(e.File.size / 1e3 / 1e3).toFixed(2)} MB</Text>
-                            <Badge>{getExt(e.File.name)}</Badge>
-                        </Group>
-                    </Group>
-                    <TextInput label="Title" placeholder="Call it something easy to forget, like 'Sneed'!"
-                        required onChange={(m) => {
-                            e.Title = m.target.value;
-                            setFiles([...files]);
-                        }} value={e.Title} />
-                    <Textarea
-                        label="Description"
-                        placeholder="Enter a description here"
-                        maxRows={4}
-                        autosize
-                        onChange={(m) => {
-                            e.Description = m.target.value;
-                            setFiles([...files]);
-                        }} value={e.Description}
-                    />
-                    <MultiSelect required data={[...retrieveAllTags(props.posts)]} label="Tags"
-                        placeholder="Select or create a tag" searchable creatable
-                        getCreateLabel={(t) => `+ ${t}`}
-                        onChange={(m) => {
-                            e.Tags = m;
-                            setFiles([...files]);
-                        }} value={e.Tags}
-                    />
-                    <Autocomplete label="Category" placeholder="Enter category here"
-                        data={retrieveAllFolders(props.posts)} onChange={(m) => {
-                            e.Folder = m;
-                            setFiles([...files]);
-                        }} value={e.Folder} />
-                </form>
-            </Card>)}
+            {files.map((e) => <UploadEditBox onChange={onFileChange} posts={props.posts} key={e.File.name} formFile={e} />)}
+            <Group position="right">
+                <Button disabled={files.length === 0} loading={uploading} onClick={upload} variant="light"
+                    leftIcon={<IconUpload size={14} />}>Upload
+                    now</Button>
+            </Group>
         </Stack>
 
         <Modal title="Import from Youtube" opened={open.type === 'yt' && open.opened}

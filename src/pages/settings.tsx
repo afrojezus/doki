@@ -10,15 +10,15 @@ import {
     MultiSelect,
     Radio,
     Select,
-    Slider,
     Stack,
     Switch,
     Text,
+    Title,
     Tooltip,
     useMantineColorScheme,
     useMantineTheme
 } from '@mantine/core';
-import { deleteCookie, getCookie, hasCookie, setCookie, setCookies } from 'cookies-next';
+import { deleteCookie, getCookie, hasCookie, setCookie } from 'cookies-next';
 import { Check } from 'tabler-icons-react';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
@@ -34,6 +34,8 @@ import { SeekForAuthor } from "../../utils/id_management";
 import { useColorScheme } from '@mantine/hooks';
 import { useCallback } from 'react';
 import { withSessionSsr } from '@src/lib/session';
+import FilledAccordion from '@src/components/filledAccordion';
+import { retrieveAllTags } from 'utils/file';
 
 interface PageProps {
     accentColor: MantineColor;
@@ -41,6 +43,7 @@ interface PageProps {
     posts: File[];
     author?: Author;
     filter: string[];
+    filteredTags: string[];
     locale: string;
     colorScheme: ColorScheme & 'system';
     space: Space;
@@ -81,6 +84,7 @@ export const getServerSideProps = withSessionSsr(async function ({
             radius: hasCookie('radius', { req, res }) ? getCookie('radius', { req, res }) : 'sm',
             locale: hasCookie('locale', { req, res }) ? getCookie('locale', { req, res }) : "en",
             filter: hasCookie('filtered', { req, res }) ? JSON.parse(getCookie('filtered', { req, res }) as string) : [],
+            filteredTags: hasCookie('filtered-tags', { req, res }) ? JSON.parse(getCookie('filtered-tags', { req, res }) as string) : [],
             posts,
             author,
         }
@@ -97,6 +101,7 @@ function Page(props: PageProps) {
     const [accentColor, setAccentColor] = useState<MantineColor>(props.accentColor);
     const [nsfwOn, setNsfw] = useState<boolean>(props.nsfw);
     const [filter, setFilter] = useState<string[]>(props.filter);
+    const [filteredTags, setFilteredTags] = useState<string[]>(props.filteredTags);
     const [locale, setLocale] = useState<string>(props.locale);
     const [colorful, setColorful] = useState<boolean>(props.colorful);
     const [radius, setRadius] = useState<string>(props.radius);
@@ -142,9 +147,10 @@ function Page(props: PageProps) {
         if (props.accentColor !== accentColor) setAccentColor(props.accentColor);
         if (props.nsfw !== nsfwOn) setNsfw(props.nsfw);
         if (props.filter !== filter) setFilter(props.filter);
+        if (props.filteredTags !== filteredTags) setFilteredTags(props.filteredTags);
         if (props.colorful !== colorful) setColorful(props.colorful);
         if (props.radius !== radius) setRadius(props.radius);
-    }, [props.accentColor, props.nsfw, props.filter, props.colorful, props.radius]);
+    }, [props.accentColor, props.nsfw, props.filter, props.colorful, props.radius, props.filteredTags]);
 
     return <Layout space={props.space} navbar={<>
         <Stack mb="md">
@@ -207,11 +213,33 @@ function Page(props: PageProps) {
                 }
                 }
             />
+            <MultiSelect data={[...retrieveAllTags(props.posts)]}
+                valueComponent={Value}
+                itemComponent={Item} defaultValue={props.filteredTags}
+                searchable
+                styles={{
+                    searchInput: {
+                        fontFamily: 'Manrope',
+                        fontWeight: 700
+                    }
+                }}
+                placeholder="Pick some tags"
+                label={`Which tags do you wish to hide?`}
+                onChange={(e) => {
+                    setFilter(e);
+                    if (e.length <= 0) {
+                        deleteCookie('filtered-tags');
+                    } else {
+                        setCookie('filtered-tags', JSON.stringify(e), { maxAge: 60 * 60 * 24 * 30 });
+                    }
+                }
+                }
+            />
             <Group position="apart">
                 <Text size="xs">{`${getLocale(loc).Settings["nsfw-label"]}`}</Text>
                 <Switch checked={nsfwOn} onChange={toggleNSFW} label={nsfwOn ? getLocale(loc).Settings["on"] : getLocale(loc).Settings["off"]} />
             </Group>
-            <Accordion>
+            <FilledAccordion>
                 <Accordion.Item value="delete-profile">
                     <Accordion.Control>
                         {getLocale(loc).Settings["delete-profile-label"]}
@@ -224,10 +252,9 @@ function Page(props: PageProps) {
                         </Group>
                     </Accordion.Panel>
                 </Accordion.Item>
-            </Accordion>
+            </FilledAccordion>
             <Divider size="xs" label={`${getLocale(loc).Settings["ui"]}`} mt="md" />
-            <Text size="xs">{`${getLocale(loc).Settings["language-label"]}`}</Text>
-            <Select value={locale} data={languages} onChange={newLocale} />
+            <Select label={`${getLocale(loc).Settings["language-label"]}`} value={locale} data={languages} onChange={newLocale} />
             <Radio.Group label="Appearence" value={selectedColorScheme} onChange={tCS} description="Change how the site should look like">
                 <Radio value="light" label="Light" />
                 <Radio value="dark" label="Dark" />

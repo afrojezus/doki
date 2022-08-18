@@ -29,4 +29,7 @@ export class Space extends BaseModel {
 
     @Column({ type: DataType.TEXT, allowNull: true })
     public Token?: string;
+
+    @Column({ type: DataType.INTEGER, allowNull: true })
+    public Owner?: number;
 }

@@ -1,25 +1,28 @@
 ﻿import {
     Autocomplete,
     Badge,
+    Box,
     Button,
     Card,
     Checkbox,
     Group,
     Image,
     MultiSelect,
+    Stack,
     Text,
     Textarea,
     TextInput,
     useMantineTheme
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { displayFilename, getExt, pictureFormats, retrieveAllFolders, retrieveAllTags } from "../../utils/file";
+import { displayFilename, getExt, pictureFormats, retrieveAllFolders, retrieveAllTags, videoFormats } from "../../utils/file";
 import { Author, File as MFile } from "@server/models";
 import { useCallback, useEffect, useState } from "react";
 import { mutate } from "swr";
 import { showNotification } from "@mantine/notifications";
-import { CarCrash, Video } from "tabler-icons-react";
+import { CarCrash, File3d, Video } from "tabler-icons-react";
 import { setCookies } from "cookies-next";
+import useSound from "use-sound";
 
 export interface FormFile {
     Title: string;
@@ -103,9 +106,14 @@ export function EditBox({
     file,
     posts,
     author,
-    cancel
-}: { file: MFile, posts: MFile[], author: Author, cancel: () => void; }) {
-    const theme = useMantineTheme();
+    cancel,
+    onUpdated
+}: { file: MFile, posts: MFile[], author: Author, cancel: () => void; onUpdated: () => void; }) {
+    const [allFolders] = useState(retrieveAllFolders(posts));
+    const [preview] = useState<string | undefined>(`/${videoFormats.includes(getExt(file.FileURL)) ? file.Thumbnail : file.FileURL}`);
+    const [playChange] = useSound("/assets/info.wav", {
+        volume: 0.25
+    });
 
     const form = useForm({
         initialValues: {
@@ -116,24 +124,23 @@ export function EditBox({
             Folder: file.Folder || ''
         },
         validate: {
-            Title: (value: string) => value.length > 0 ? null : "Please enter a title"
+            Title: (value: string) => value.length > 0 ? null : "Please enter a title",
+            Folder: (value: string) => !value?.length ? null : /^\s*$/.test(value) ? "Please enter a proper category name" : null
         }
     });
 
-    async function submit(e) {
-        e.preventDefault();
-        if (form.validate().hasErrors) return;
+    const submit = form.onSubmit(async (values) => {
         try {
             const res = await fetch(`/api/update`, {
                 body: JSON.stringify({
                     author: author,
                     file: {
                         ...file,
-                        Title: form.values.Title,
-                        Description: form.values.Description,
-                        NSFW: form.values.NSFW,
-                        Tags: form.values.Tags.join(","),
-                        Folder: form.values.Folder
+                        Title: values.Title.trim(),
+                        Description: values.Description,
+                        NSFW: values.NSFW,
+                        Tags: values.Tags.join(","),
+                        Folder: !values.Folder.trim()?.length ? null : values.Folder.trim()
                     }
                 }),
                 method: 'POST'
@@ -144,7 +151,8 @@ export function EditBox({
                 message: json.message,
                 color: "green"
             });
-            mutate('/api/posts');
+            playChange();
+            onUpdated();
         } catch (error) {
             console.error(error);
             showNotification({
@@ -155,61 +163,60 @@ export function EditBox({
         } finally {
             cancel();
         }
-    }
+    });
 
     return <Card sx={{ display: "inline-flex", width: "100%", transition: "all .375s var(--animation-ease)" }}>
         <Card.Section mr="md" mb={-16} sx={{ transition: "all .375s var(--animation-ease)" }}>
-            <Image withPlaceholder placeholder={<Text size="xs" align="center">
-                {getExt(file.FileURL)}-format file
-            </Text>} radius={0} styles={{
+            <Image withPlaceholder placeholder={<File3d />} fit="cover" styles={{
                 root: {
-                    width: 300,
-                    height: "100%",
-                    background: theme.primaryColor,
-                    transition: "all .375s var(--animation-ease)"
+                    width: "200px !important",
+                    overflow: 'hidden',
+                    display: "flex"
+                },
+                figure: {
+                    flex: 1,
+                    display: "flex"
                 },
                 imageWrapper: {
-                    height: "100%"
+                    flex: 1,
+                    display: "flex"
                 },
-                placeholder: {},
-                figure: {
-                    height: "100%"
-                },
-                image: {
-                    height: "100% !important",
-                    position: "absolute",
-                    top: 0,
-                    left: 0
+                placeholder: {
+                    flex: 1
                 }
-            }} src={locatePreview(file)} alt="" sx={{ color: theme.primaryColor }} />
+            }} width="100%" height="100%" radius={0} src={preview} alt="" />
         </Card.Section>
-        <form style={{ flex: 1 }} onSubmit={submit}>
-            <Group position="apart">
-                <Text size="xs">{file.Title ? file.Title : displayFilename(file)}</Text>
-                <Group>
-                    <Checkbox size="xs" label="NSFW" {...form.getInputProps("NSFW")} />
-                    <Text size="xs">{(file.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
+        <Box component="form" sx={{ flex: 1 }} onSubmit={submit}>
+            <Stack>
+                <Group position="apart">
+                    <Text size="xs">{file.Title ? file.Title : displayFilename(file)}</Text>
+                    <Group>
+                        <Checkbox size="xs" label="NSFW" {...form.getInputProps("NSFW")} />
+                        <Text size="xs">{(file.Size / 1e3 / 1e3).toFixed(2)} MB</Text>
+                    </Group>
                 </Group>
-            </Group>
-            <TextInput label="Title" placeholder="Call it something easy to forget, like 'Sneed'!"
-                required {...form.getInputProps("Title")} />
-            <Textarea
-                label="Description"
-                placeholder="Enter a description here"
-                maxRows={4}
-                autosize
-                {...form.getInputProps("Description")}
-            />
-            <MultiSelect data={[...retrieveAllTags(posts)]} label="Tags" placeholder="Select or create a tag" searchable
-                creatable
-                getCreateLabel={(t) => `+ ${t}`}
-                {...form.getInputProps("Tags")}
-            />
-            <Autocomplete label="Category" placeholder="Enter category here"
-                data={retrieveAllFolders(posts)} {...form.getInputProps("Folder")} />
-            <Group mt="md" position="right"><Button onClick={cancel} variant="light">Cancel</Button><Button
-                type="submit">Save</Button></Group>
-        </form>
+                <TextInput label="Title" placeholder="Call it something easy to remember"
+                    required {...form.getInputProps("Title")} />
+                <Textarea
+                    label="Description"
+                    placeholder="Enter a description here"
+                    maxRows={4}
+                    autosize
+                    {...form.getInputProps("Description")}
+                />
+                <MultiSelect data={[...retrieveAllTags(posts)]} label="Tags" placeholder="Select or create a tag" searchable
+                    creatable
+                    defaultValue={form.values.Tags}
+                    getCreateLabel={(t) => `+ ${t}`}
+                    onChange={(value) => form.setFieldValue("Tags", value)}
+                    onCreate={(query) => query.replace(/ /g, '_')}
+                />
+                <Autocomplete label="Category" placeholder="Enter category here"
+                    data={allFolders} {...form.getInputProps("Folder")} />
+                <Group position="right"><Button onClick={cancel} variant="light">Cancel</Button><Button
+                    type="submit">Save</Button></Group>
+            </Stack>
+        </Box>
     </Card>;
 }
 

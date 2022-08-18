@@ -65,6 +65,7 @@ function App(props: AppProps & { colorScheme: ColorScheme & 'system'; accentColo
                 <title>Doki</title>
                 <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
                 <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+                <link rel="apple-touch-icon" href="/favicon.png" />
                 <link rel="manifest" href="/manifest.webmanifest" />
                 <meta name="theme-color" content="#000000" />
             </Head>

@@ -6,14 +6,15 @@ import { HYDRATE } from "next-redux-wrapper";
 export interface SessionState {
     authenticated: boolean;
     interacted: boolean;
-
     currentFile?: File;
+    volume: number;
 }
 
 const initialState: SessionState = {
     authenticated: false,
     interacted: false,
-    currentFile: null
+    currentFile: null,
+    volume: 0.25
 };
 
 export const sessionState = createSlice({
@@ -28,6 +29,9 @@ export const sessionState = createSlice({
         },
         setCurrentFile(state, action) {
             state.currentFile = action.payload;
+        },
+        cacheVolume(state, action) {
+            state.volume = action.payload;
         }
     },
     extraReducers: {
@@ -35,13 +39,14 @@ export const sessionState = createSlice({
             return {
                 ...state,
                 ...action.payload.authenticated,
-                ...action.payload.interacted
+                ...action.payload.interacted,
+                ...action.payload.volume
             };
         }
     }
 });
 
-export const { setAuthenticated, setInteracted, setCurrentFile } = sessionState.actions;
+export const { setAuthenticated, setInteracted, setCurrentFile, cacheVolume } = sessionState.actions;
 
 export const useSessionState = (state: AppState) => state.session;
 

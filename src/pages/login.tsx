@@ -1,9 +1,9 @@
-import { Avatar, Badge, Box, Button, Group, Paper, Select, Stack, Text, TextInput, Title, Transition, useMantineTheme } from "@mantine/core";
+import { Avatar, Badge, Box, Button, Center, Group, Loader, LoadingOverlay, Paper, Select, Stack, Text, TextInput, Title, Transition, useMantineTheme } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { Space } from "@server/models/definitions/Space";
 import SpaceRepository from "@server/repositories/SpaceRepository";
-import { LinkButton } from "@src/components/buttons";
+import { LinkButton, TouchableLink } from "@src/components/buttons";
 import Emoji from "@src/components/emoji";
 import Layout from "@src/components/layout";
 import { NextPageContext } from "next";
@@ -87,7 +87,8 @@ function Page({ spaces }: PageProps) {
                     color: "green"
                 });
                 setLoading(true);
-                router.push('/');
+                setTimeout(() =>
+                    router.push('/'), 1000);
             } else {
                 throw result;
             }
@@ -102,57 +103,67 @@ function Page({ spaces }: PageProps) {
             setLoading(false);
         }
     };
-    return <Layout additionalMainStyle={{ opacity: loading ? 0 : 1, background: selectedSpace.Bg ? "transparent" : theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] }} flex header={<></>} footer={<></>}>
+    return <Layout additionalMainStyle={{ background: selectedSpace.Bg ? "transparent" : theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] }} flex header={<></>} footer={<></>}>
         <div className="bg-container">
-            {spaces.map((x) => <img key={x.Id} style={{ opacity: (selectedSpace.Id === x.Id && x.Bg) ? 1 : 0 }} alt="" src={x.Bg} />)}
+            {spaces.map((x) => <img referrerPolicy="no-referrer" key={x.Id} style={{ opacity: loading ? 0 : (selectedSpace.Id === x.Id && x.Bg) ? 1 : 0 }} alt="" src={x.Bg} />)}
         </div>
         <Box m="auto">
-            <Paper onSubmit={form.onSubmit((values) => tryConnect(values))} component="form" p="xl" shadow="xl">
-                <Stack>
-                    <Group position="apart">
-                        <Title className="use-m-font" order={3}>doki</Title>
-                        {selectedSpace.Icon ? <Avatar src={selectedSpace.Icon} /> : selectedSpace.Private ? <Avatar src="/assets/doki-logo-priv.png" /> : <Avatar src="/assets/doki-logo.png" />}
-                    </Group>
-                    <Text size="sm">The doki platform is built upon spaces, please select a space to begin:</Text>
-                    <Select
-                        value={selectedSpace.Name}
-                        onChange={changeSpace}
-                        placeholder="Spaces"
-                        data={spaces.map((x) => ({
-                            description: x.Description,
-                            image: x.Icon,
-                            value: x.Name,
-                            label: x.Name,
-                            priv: x.Private
-                        }))}
-                        itemComponent={SpaceItem}
-                    />
-                    <TextInput
-                        disabled={!selectedSpace.Private}
-                        required={selectedSpace.Private}
-                        label="Password"
-                        placeholder="Password for the space"
-                        {...form.getInputProps('password')}
-                    />
-                    <Group position="right">
+            <Transition mounted={loading} transition="scale">
+                {(styles) => <Center style={styles} sx={{ justifyContent: "center", alignItems: "center" }}><Stack><Avatar size="xl" src={selectedSpace.Icon ? selectedSpace.Icon : selectedSpace.Private ? "/assets/doki-logo-priv.png" : "/assets/doki-logo.png"} /><Loader sx={{ margin: "auto" }} /></Stack></Center>}
+            </Transition>
+            <Transition mounted={!loading} transition="scale">
+                {(styles) => <Paper style={styles} onSubmit={form.onSubmit((values) => tryConnect(values))} component="form" p="xl" shadow="xl">
+                    <Stack>
+                        <Group position="apart">
+                            <Title className="use-m-font" order={3}>doki</Title>
+                            {selectedSpace.Icon ? <Avatar imageProps={{ referrerPolicy: "no-referrer" }} src={selectedSpace.Icon} /> : selectedSpace.Private ? <Avatar src="/assets/doki-logo-priv.png" /> : <Avatar src="/assets/doki-logo.png" />}
+                        </Group>
+                        <Text size="sm">The doki platform is built upon spaces, please select a space to begin:</Text>
+                        <Select
+                            value={selectedSpace.Name}
+                            onChange={changeSpace}
+                            placeholder="Spaces"
+                            withinPortal
+                            shadow="xl"
+                            data={spaces.map((x) => ({
+                                description: x.Description,
+                                image: x.Icon,
+                                value: x.Name,
+                                label: x.Name,
+                                priv: x.Private
+                            }))}
+                            itemComponent={SpaceItem}
+                        />
+                        <TextInput
+                            disabled={!selectedSpace.Private}
+                            required={selectedSpace.Private}
+                            label="Password"
+                            placeholder="Password for the space"
+                            type="password"
+                            {...form.getInputProps('password')}
+                        />
+                        <Group position="right">
 
-                        <Transition transition="fade" mounted={form.values.password.length > 0}>
-                            {(styles) => <Button style={styles} onClick={() => form.reset()} variant="subtle">Clear</Button>}
-                        </Transition>
-                        <LinkButton href="/signup" variant="subtle">Create a new space</LinkButton>
-                        <Button type="submit">Continue</Button>
+                            <Transition transition="fade" mounted={form.values.password.length > 0}>
+                                {(styles) => <Button style={styles} onClick={() => form.reset()} variant="subtle">Clear</Button>}
+                            </Transition>
+                            <LinkButton href="/signup" variant="subtle">Create a new space</LinkButton>
+                            <Button type="submit">Continue</Button>
+                        </Group>
+                    </Stack>
+                </Paper>}
+            </Transition>
+            <Transition mounted={!loading} transition="fade">
+                {(styles) => <Group style={styles} position="apart">
+                    <TouchableLink link="/faq"><Text sx={{ "&:hover": { textDecoration: "underline" }, cursor: "pointer", filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size="xs">Frequently asked questions</Text></TouchableLink>
+                    <Group>
+                        <Text size="xs" sx={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }}>Created by afroj with <Emoji
+                            symbol={String.fromCodePoint(parseInt("2764", 16))}
+                            label="Love" style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></Text>
+                        <Text size="xs" sx={{ "&:hover": { textDecoration: "underline" }, cursor: "pointer", filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} onClick={() => window.open("https://github.com/tokumei-gr/doki")}>GitHub</Text>
                     </Group>
-                </Stack>
-            </Paper>
-            <Group position="apart">
-                <Link href="/faq"><Text sx={{ "&:hover": { textDecoration: "underline" }, cursor: "pointer", filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size="xs">Frequently asked questions</Text></Link>
-                <Group>
-                    <Text size="xs" sx={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }}>Created by afroj with <Emoji
-                        symbol={String.fromCodePoint(parseInt("2764", 16))}
-                        label="Love" style={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} /></Text>
-                    <Text size="xs" sx={{ "&:hover": { textDecoration: "underline" }, cursor: "pointer", filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} onClick={() => window.open("https://github.com/tokumei-gr/doki")}>GitHub</Text>
-                </Group>
-            </Group>
+                </Group>}
+            </Transition>
         </Box>
     </Layout>;
 }

@@ -47,7 +47,7 @@
     "ui-settings": "UI settings",
     "content": "Content",
     "ui": "UI",
-    "filter-label": "Which categories of files do you wish to filter from the viewer?",
+    "filter-label": "Which categories of files do you wish to hide?",
     "nsfw-label": "Allow not safe for work content to be shown on Doki",
     "delete-profile-label": "Delete profile",
     "language-label": "Language (Beta)",

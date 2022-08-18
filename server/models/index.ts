@@ -2,6 +2,7 @@
 import { File } from "./definitions/File";
 import { Author } from "./definitions/Author";
 import { Space } from "./definitions/Space";
+import { Comment } from "./definitions/Comment";
 
 const sequelize =
     new Sequelize({
@@ -13,10 +14,10 @@ const sequelize =
         logging: false
     });
 
-sequelize.addModels([File, Author, Space]);
+sequelize.addModels([File, Author, Space, Comment]);
 
 
-export { File, Author, Space };
+export { File, Author, Space, Comment };
 
 export const initDB = async () => {
     await sequelize.authenticate();

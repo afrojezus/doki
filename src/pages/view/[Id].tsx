@@ -32,9 +32,9 @@ import {
 } from 'tabler-icons-react';
 import { showNotification } from '@mantine/notifications';
 import { useContext, useEffect, useState } from 'react';
-import { getCookie, hasCookie, setCookies } from 'cookies-next';
+import { getCookie, hasCookie, setCookie } from 'cookies-next';
 import { CommentBox } from '@src/components/comments';
-import Layout, { BottomNavBar, TopNavBar } from '../../components/layout';
+import Layout, { TopNavBar } from '../../components/layout';
 import SEO from '../../components/seo';
 import {
     audioFormats,
@@ -50,7 +50,7 @@ import {
 } from "../../../utils/file";
 import dynamic from 'next/dynamic';
 import FileRepository from "@server/repositories/FileRepository";
-import { Author, File, Space } from "@server/models";
+import { Author, Comment, File, Space } from "@server/models";
 import { formatDate, ParseUnixTime } from "../../../utils/date";
 import { NextPageContext } from 'next';
 import { useRouter } from 'next/router';
@@ -60,8 +60,11 @@ import { ContentSlide, QuickDetails } from "@src/components/player-elements";
 import Link from "next/link";
 import { getLocale, LocaleContext } from "@src/locale";
 import { withSessionSsr } from '@src/lib/session';
-import { useSessionState, setInteracted as setAppInteracted, setCurrentFile } from '@src/slices/sessionState';
+import { useSessionState, setInteracted as setAppInteracted, setCurrentFile, cacheVolume } from '@src/slices/sessionState';
 import { useDispatch, useSelector } from "react-redux";
+import useSWR, { mutate } from 'swr';
+import { SeekForAuthor } from 'utils/id_management';
+import { TouchableLink } from '@src/components/buttons';
 
 interface PageProps {
     post: File;
@@ -74,6 +77,7 @@ interface PageProps {
     messages: any;
     interacted: boolean;
     space: Space;
+    author?: Author;
 }
 
 const DynamicContentSlide = dynamic(() => Promise.resolve(ContentSlide), {
@@ -116,10 +120,13 @@ export const getServerSideProps = withSessionSsr(async function ({
                 Space: space.Id
             }
         });
+
+        const author = await SeekForAuthor(getCookie('DokiIdentification', { req, res }));
         return {
             props: {
                 space,
                 post, ids,
+                author,
                 volume: hasCookie('player-volume', { req, res }) ? getCookie('player-volume', { req, res }) : 0.25,
                 muted: hasCookie('player-muted', { req, res }) ? getCookie('player-muted', { req, res }) : false,
                 loop: hasCookie('player-loop', { req, res }) ? getCookie('player-loop', { req, res }) : true,
@@ -136,7 +143,6 @@ export const getServerSideProps = withSessionSsr(async function ({
         };
     }
 });
-
 function Page(props: PageProps) {
     const sessionState = useSelector(useSessionState);
     const dispatch = useDispatch();
@@ -153,13 +159,12 @@ function Page(props: PageProps) {
     const [hidden, setHidden] = useState(true);
     const [hoveringPlayer, setHoveringPlayer] = useState(true);
     const longPress = useLongPress(() => setHidden(true), 500);
-    const [lastTimeout, setNewTimeout] = useState<NodeJS.Timeout>(null);
     const [isPlayable, setPlayable] = useState(true);
     const [helpOpen, setHelpOpen] = useState(false);
     const [firstTime, setFirstTime] = useState(props.firstTime);
     const [interacted, setInteracted] = useState(sessionState.interacted);
 
-    const [volume, setVolume] = useState<number>(parseFloat(String(props.volume)));
+    const [volume, setVolume] = useState(sessionState.volume);
     const [muted, setMuted] = useState(props.muted);
     const [repeat, setRepeat] = useState(props.loop);
     const [playing, setPlaying] = useState(true);
@@ -170,13 +175,16 @@ function Page(props: PageProps) {
     const [seek, setSeek] = useState(-1);
     const [willSeek, setWillSeek] = useState(false);
 
-    //const [palette, setPalette] = useState<Palette>(null);
+    const [loading, setLoading] = useState(true);
+
+    let timeout: NodeJS.Timeout;
 
     function handleNewFile() {
         if (!interacted) {
             setInteracted(true);
             return;
         }
+        setLoading(true);
         if (props.ids.length === 1) {
             // There is no more media to consume, repeat the current.
             setRepeat(true);
@@ -199,6 +207,7 @@ function Page(props: PageProps) {
     useEffect(() => {
         if (props.post) {
             dispatch(setCurrentFile(props.post));
+            setLoading(false);
             if (props.post.Id !== current.Id) {
                 setCurrent(props.post);
                 setVisualizer(random(props.ids, onlyGetVideo));
@@ -209,19 +218,20 @@ function Page(props: PageProps) {
     }, [props.post]);
 
     useEffect(() => {
-        setCookies('player-volume', volume, { maxAge: 60 * 60 * 24 * 30 });
+        setCookie('player-volume', volume, { maxAge: 60 * 60 * 24 * 30 });
+        dispatch(cacheVolume(volume));
     }, [volume]);
 
     useEffect(() => {
-        setCookies('player-muted', muted, { maxAge: 60 * 60 * 24 * 30 });
+        setCookie('player-muted', muted, { maxAge: 60 * 60 * 24 * 30 });
     }, [muted]);
 
     useEffect(() => {
-        setCookies('player-loop', repeat, { maxAge: 60 * 60 * 24 * 30 });
+        setCookie('player-loop', repeat, { maxAge: 60 * 60 * 24 * 30 });
     }, [repeat]);
 
     useEffect(() => {
-        setCookies('first-time', firstTime, { maxAge: 60 * 60 * 24 * 30 });
+        setCookie('first-time', firstTime, { maxAge: 60 * 60 * 24 * 30 });
     }, [firstTime]);
 
     useEffect(() => {
@@ -245,21 +255,17 @@ function Page(props: PageProps) {
         }
     }, [current]);
 
-    useEffect(() => {
-        if (playableFormats.includes(getExt(current.FileURL))) {
-            setPlayable(true);
-            setHidden(true);
-        } else {
-            setPlayable(false);
-            setHidden(false);
-        }
-    }, [current, isPlayable]);
 
     useEffect(() => {
-        if (mobile) {
-            setHoveringPlayer(mobile);
+        if (hoveringPlayer) {
+            if (mobile) return;
+            if (timeout) clearTimeout(timeout);
+            if (hidden && isPlayable && !audioFormats.includes(getExt(current.FileURL))) {
+                timeout = setTimeout(() => setHoveringPlayer(false), 5000);
+            }
         }
-    }, [mobile]);
+        return () => clearTimeout(timeout);
+    }, [hoveringPlayer, mobile, current, hidden, isPlayable]);
 
 
     /*function handleScroll(event) {
@@ -274,18 +280,7 @@ function Page(props: PageProps) {
         debounce(() => trigger(event));
     }*/
 
-    function handleMouseActivity() {
-        if (mobile) {
-            setHoveringPlayer(true);
-            return;
-        }
-        if (lastTimeout) clearTimeout(lastTimeout);
-        setHoveringPlayer(true);
-        if (hidden && isPlayable && !audioFormats.includes(getExt(current.FileURL))) {
-            setNewTimeout(
-                setTimeout(() => setHoveringPlayer(false), 5000));
-        }
-    }
+    const handleMouseActivity = () => setHoveringPlayer(true);
 
     function showHelp() {
         setHelpOpen(true);
@@ -308,14 +303,14 @@ function Page(props: PageProps) {
         // TODO: integrate chromecasting
     }
 
-    return <Layout space={props.space}
+    return <Layout noScrollArea space={props.space}
         header={<Header onMouseMove={handleMouseActivity} sx={{
             background: "transparent", border: "none", pointerEvents: "none", opacity: 0, ...(hoveringPlayer && {
                 opacity: 1,
                 pointerEvents: "all"
             }),
         }} height={52}>
-            <TopNavBar space={props.space} setHidden={(f) => setHidden(f)} hidden={hidden} />
+            <TopNavBar white space={props.space} setHidden={(f) => setHidden(f)} hidden={hidden} />
         </Header>}
 
         onMouseLeave={isPlayable ? () => setHidden(true) : undefined} hiddenCallback={(h) => setHidden(h)} padding={0}
@@ -341,13 +336,14 @@ function Page(props: PageProps) {
             height: hoveringPlayer ? "calc(100vh - var(--mantine-header-height, 0px) - var(--mantine-footer-height, 0px) - 16px - 16px)" : "calc(100vh - var(--mantine-header-height, 0px) + 16px)"
         }}
         hiddenAside={hidden}
-        permanent={!isPlayable}
+        permanent={false}
         aside={
             <>
                 {current && <Button
+                    sx={(theme) => ({ background: theme.fn.primaryColor("dark"), color: "white" })}
                     onClick={() => window.open(`https://${window.location.hostname}/${current.FileURL}`)}
-                    mb="sm" variant="light" fullWidth leftIcon={<Download size={14} />}>Download</Button>}
-                <Divider label={getLocale(locale).Viewer["nc-details"]} />
+                    mb="sm" variant="light" color={theme.fn.primaryColor("dark")} fullWidth leftIcon={<Download size={14} />}>Download</Button>}
+                <Divider color="dark" label={getLocale(locale).Viewer["nc-details"]} />
                 <Aside.Section my="xs" mb="xs">
                     <Stack>
                         <Stack spacing="xs">
@@ -371,47 +367,47 @@ function Page(props: PageProps) {
                                 sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-views"]}</Text>
                         </Stack>
                         {current.Folder && <Stack spacing="xs">
-                            <Link href={`/browser?f=${current.Folder}`} passHref>
+                            <TouchableLink link={`/browser?f=${current.Folder}`} passHref>
                                 <Text color={theme.colors.blue[4]} sx={{
                                     textDecoration: "none",
                                     cursor: "pointer",
                                     "&:hover": { textDecoration: "underline" }
                                 }} size="sm">{current.Folder}</Text>
-                            </Link>
+                            </TouchableLink>
                             <Text size="xs"
                                 sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-category"]}</Text>
                         </Stack>}
                         <Stack spacing="xs">
-                            <Link href={`/browser?type=${getExt(current.FileURL)}`} passHref>
+                            <TouchableLink link={`/browser?type=${getExt(current.FileURL)}`} passHref>
                                 <Text color={theme.colors.blue[4]} sx={{
                                     textDecoration: "none",
                                     cursor: "pointer",
                                     "&:hover": { textDecoration: "underline" }
                                 }} size="sm">{getExt(current.FileURL)}</Text>
-                            </Link>
+                            </TouchableLink>
                             <Text size="xs"
                                 sx={{ marginTop: -8 }}>{getLocale(locale).Viewer["nc-file-type"]}</Text>
                         </Stack>
                     </Stack>
                 </Aside.Section>
-                <Divider label={getLocale(locale).Viewer["nc-tags"]} />
+                <Divider color="dark" label={getLocale(locale).Viewer["nc-tags"]} />
                 <Aside.Section mt="xs" mb="md">
                     <Stack spacing={0}>
                         {current.Tags ? current.Tags.split(",").map((t, i) =>
-                            <Link href={`/browser?t=${t}`} key={i} passHref>
+                            <TouchableLink link={`/browser?t=${t}`} key={i} passHref>
                                 <Text size="xs" color={theme.colors.blue[4]} sx={{
                                     textDecoration: "none",
                                     cursor: "pointer",
                                     "&:hover": { textDecoration: "underline" }
                                 }}>{t}</Text>
-                            </Link>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
+                            </TouchableLink>) : <Text size="xs">{getLocale(locale).Viewer["nc-none"]}</Text>}
                     </Stack>
                 </Aside.Section>
-                <Card mb="sm">
-                    <Text size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
-                    <Text size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
+                <Card sx={(theme) => ({ background: theme.colors.dark[5] })} mb="sm">
+                    <Text color="white" size="xs" weight={500}>{getLocale(locale).Viewer["nc-comment-policy"]}</Text>
+                    <Text color="white" size="xs">{getLocale(locale).Viewer["nc-comment-policy-message"]}</Text>
                 </Card>
-                <CommentBox />
+                <CommentBox file={current} author={props.author} />
             </>
         }
     >
@@ -449,7 +445,7 @@ function Page(props: PageProps) {
             <DynamicContentSlide seek={seek} willSeek={willSeek} seekCallback={() => setWillSeek(false)}
                 onDuration={(n: number) => setDuration(n)} visualizer={visualizer} objFit={objFit}
                 pipCallback={handlePiP} pip={pip}
-                onProgress={(p) => setProgress(p)} onClick={handleNewFile} data={`/${current.FileURL}`}
+                onProgress={(p) => setProgress(p)} onClick={handleNewFile} data={loading ? null : `/${current.FileURL}`}
                 isSelected={playing} muted={muted} volume={volume}
                 repeat={repeat} onEnded={handleNewFile}
                 interacted={interacted}
@@ -463,7 +459,7 @@ function Page(props: PageProps) {
                     bottom: 0,
                     left: 0,
                     width: '100%',
-                    background: isPlayable ? 'linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,27,0.5) 35%, rgba(0,0,0,0) 100%)' : undefined,
+                    background: 'linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,27,0.5) 35%, rgba(0,0,0,0) 100%)',
                     height: 150,
                     opacity: 0,
                     ...(hoveringPlayer && {
@@ -497,8 +493,7 @@ function Page(props: PageProps) {
                     height: 150,
                     opacity: 0,
                     ...(hoveringPlayer && {
-                        opacity: playableFormats.includes(getExt(current.FileURL)) ? 1 : 0,
-                        pointerEvents: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
+                        opacity: 1
                     }),
                     zIndex: 5
                 }}>
@@ -506,7 +501,11 @@ function Page(props: PageProps) {
                     position: 'fixed',
                     top: "calc(var(--mantine-header-height, 0px) + 16px)",
                     left: 16,
-                    zIndex: 5
+                    zIndex: 5,
+                    ...(hoveringPlayer && {
+                        opacity: playableFormats.includes(getExt(current.FileURL)) ? 1 : 0,
+                        pointerEvents: playableFormats.includes(getExt(current.FileURL)) ? undefined : "none"
+                    })
                 }}>
                     <Group>
                         <ActionIcon sx={() => ({ color: "white" })} onClick={() => {

@@ -7,17 +7,17 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
 
         try {
-            const {available, total} = await disk.check(path);
+            const { available, total } = await disk.check(path);
             res.status(200).json({
                 freeSpace: available, totalSpace: total
             });
         } catch (e) {
             console.error(e);
-            res.status(500)
+            res.status(500);
         }
 
 
     } else {
-        res.status(404)
+        res.status(404);
     }
 };

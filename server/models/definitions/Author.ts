@@ -1,6 +1,7 @@
-﻿import { Column, DataType, Table } from "sequelize-typescript";
+﻿import { Column, DataType, Table, ForeignKey } from "sequelize-typescript";
 
 import BaseModel from "./BaseModel";
+import { Space } from "./Space";
 
 @Table({
     timestamps: false,
@@ -16,6 +17,7 @@ export class Author extends BaseModel {
     @Column({ type: DataType.INTEGER, allowNull: false })
     public CreationDate!: number;
 
+    @ForeignKey(() => Space)
     @Column({ type: DataType.INTEGER, allowNull: false })
     public Space!: number;
 }

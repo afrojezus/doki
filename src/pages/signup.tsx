@@ -1,8 +1,8 @@
-import { Avatar, Badge, Box, Button, Checkbox, Group, Paper, Select, Stack, Text, TextInput, Title, Transition } from "@mantine/core";
+import { Avatar, Badge, Box, Button, Checkbox, Group, Paper, Select, Stack, Text, TextInput, Title, Transition, useMantineTheme } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { Space } from "@server/models/definitions/Space";
 import SpaceRepository from "@server/repositories/SpaceRepository";
-import { LinkButton } from "@src/components/buttons";
+import { LinkButton, TouchableLink } from "@src/components/buttons";
 import Emoji from "@src/components/emoji";
 import Layout from "@src/components/layout";
 import { NextPageContext } from "next";
@@ -54,6 +54,7 @@ interface PageProps {
 }
 
 function Page({ spaces }: PageProps) {
+    const theme = useMantineTheme();
     const router = useRouter();
     const form = useForm({
         initialValues: {
@@ -87,16 +88,16 @@ function Page({ spaces }: PageProps) {
             console.error(error);
         }
     };
-    return <Layout flex header={<></>} footer={<></>}>
+    return <Layout additionalMainStyle={{ background: form.values.Bg ? "transparent" : theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] }} flex header={<></>} footer={<></>}>
         <div className="bg-container">
-            <img style={{ opacity: form.values.Bg ? 1 : 0 }} alt="" src={form.values.Bg} />
+            <img referrerPolicy="no-referrer" style={{ opacity: form.values.Bg ? 1 : 0 }} alt="" src={form.values.Bg} />
         </div>
         <Box sx={{ margin: 'auto' }}>
             <Paper onSubmit={form.onSubmit((values) => tryConnect(values))} component="form" p="xl" shadow="xl">
                 <Stack>
                     <Group position="apart">
                         <Title className="use-m-font" order={3}>doki</Title>
-                        {form.values.Icon ? <Avatar src={form.values.Icon} /> : form.values.Private ? <Avatar src="/assets/doki-logo-priv.png" /> : <Avatar src="/assets/doki-logo.png" />}
+                        {form.values.Icon ? <Avatar imageProps={{ referrerPolicy: "no-referrer" }} src={form.values.Icon} /> : form.values.Private ? <Avatar src="/assets/doki-logo-priv.png" /> : <Avatar src="/assets/doki-logo.png" />}
                     </Group>
                     <Text size="sm">Creating a new space is simple, just make sure you fill the required fields</Text>
                     <TextInput
@@ -127,6 +128,7 @@ function Page({ spaces }: PageProps) {
                         label="Password"
                         error="Minimum 1 number, 1 special character, 1 uppercase letter and 1 lowercase letter in a length of 8 characters"
                         placeholder="Required if you want your space to be private"
+                        type="password"
                         {...form.getInputProps('password')}
                     />
                     <Checkbox
@@ -140,7 +142,7 @@ function Page({ spaces }: PageProps) {
                 </Stack>
             </Paper>
             <Group position="apart">
-                <Link href="/faq"><Text sx={{ "&:hover": { textDecoration: "underline" }, cursor: "pointer", filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size="xs">Frequently asked questions</Text></Link>
+                <TouchableLink link="/faq"><Text sx={{ "&:hover": { textDecoration: "underline" }, cursor: "pointer", filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }} size="xs">Frequently asked questions</Text></TouchableLink>
                 <Group>
                     <Text size="xs" sx={{ filter: `drop-shadow(0px 5px 2px rgb(0 0 0 / 0.4))` }}>Created by afroj with <Emoji
                         symbol={String.fromCodePoint(parseInt("2764", 16))}

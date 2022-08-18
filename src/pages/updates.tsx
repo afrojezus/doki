@@ -1,4 +1,5 @@
 import { Accordion, Aside, Badge, Button, Card, Divider, Group, Stack, Text, Title } from '@mantine/core';
+import FilledAccordion from '@src/components/filledAccordion';
 import { withSessionSsr } from '@src/lib/session';
 import Layout from '../components/layout';
 import SEO from '../components/seo';

@@ -1,9 +1,12 @@
 import {
     Accordion,
+    ActionIcon,
+    Autocomplete,
     Button,
     Center,
     Checkbox,
     Divider,
+    Grid,
     Group,
     LoadingOverlay,
     Modal,
@@ -13,6 +16,7 @@ import {
     Text,
     TextInput,
     Title,
+    Tooltip,
     Transition,
     useMantineTheme
 } from '@mantine/core';
@@ -21,7 +25,7 @@ import Layout from '../components/layout';
 import SEO from '../components/seo';
 import { Author, File, Space } from "@server/models";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { Edit } from 'tabler-icons-react';
+import { Edit, Refresh } from 'tabler-icons-react';
 import { useRouter } from 'next/router';
 import { getExt, retrieveAllFileTypes, retrieveAllTags } from "../../utils/file";
 import Link from "next/link";
@@ -33,14 +37,17 @@ import { getLocale, LocaleContext } from "@src/locale";
 import { EditBox } from '@src/components/upload-forms';
 import { SeekForAuthor } from "../../utils/id_management";
 import { withSessionSsr } from '@src/lib/session';
-import { useWindowScroll } from '@mantine/hooks';
+import useSound from 'use-sound';
+import { TouchableLink } from '@src/components/buttons';
 
 interface PageProps {
     posts: File[];
     author: Author;
     filter: string[];
+    filteredTags: string[];
     space: Space;
     nsfw: boolean;
+    userIsSpaceOwner: boolean;
 }
 
 export const getServerSideProps = withSessionSsr(async function ({
@@ -64,19 +71,21 @@ export const getServerSideProps = withSessionSsr(async function ({
         props: {
             space,
             author,
+            userIsSpaceOwner: (author ? author.AuthorId === space.Owner : false),
             nsfw: hasCookie('allow-nsfw-content', { req, res }) ? getCookie('allow-nsfw-content', { req, res }) : false,
-            filter: hasCookie('filtered', { req, res }) ? JSON.parse(getCookie('filtered', { req, res }) as string) : []
+            filter: hasCookie('filtered', { req, res }) ? JSON.parse(getCookie('filtered', { req, res }) as string) : [],
+            filteredTags: hasCookie('filtered-tags', { req, res }) ? JSON.parse(getCookie('filtered-tags', { req, res }) as string) : [],
         }
     };
 });
 
-function SearchInput({ onSubmit }) {
+function SearchInput({ onSubmit, data }) {
     const locale = useContext(LocaleContext);
     const [searchTerm, setSearchTerm] = useState<string>('');
     return <form onSubmit={(e) => {
         e.preventDefault();
         onSubmit(searchTerm);
-    }}><TextInput autoFocus value={searchTerm} placeholder={`${getLocale(locale).Browser["search"]}`} onChange={(v) => setSearchTerm(v.target.value)} /></form>;
+    }}><Autocomplete data={data} autoFocus value={searchTerm} placeholder={`${getLocale(locale).Browser["search"]}`} onChange={(v) => setSearchTerm(v)} /></form>;
 }
 
 interface PostsResponse {
@@ -98,8 +107,11 @@ const fetcher = async (url) => {
 };
 
 function Page(props: PageProps) {
+    const [playChange] = useSound("/assets/info.wav", {
+        volume: 0.25
+    });
+
     const theme = useMantineTheme();
-    //const mobile = useMediaQuery('(max-width: 450px)');
     const router = useRouter();
     const locale = useContext(LocaleContext);
     const { mutate } = useSWRConfig();
@@ -136,7 +148,7 @@ function Page(props: PageProps) {
         } else {
             setType(null);
         }
-        mutate('/api/posts');
+        mutate(`/api/posts?page=${activePage}&sort=${sort}${category ? "&category=" + category : ''}${tag ? "&tag=" + tag : ''}${type ? "&type=" + type : ''}${(onlyUsers && props.author) ? "&author=" + props.author.AuthorId : ''}${"&nsfw=" + props.nsfw}`);
     }, [router.query]);
 
     useEffect(() => {
@@ -158,7 +170,7 @@ function Page(props: PageProps) {
 
     function handleSelect(value) {
         setSort(value);
-        mutate('/api/posts');
+        mutate(`/api/posts?page=${activePage}&sort=${sort}${category ? "&category=" + category : ''}${tag ? "&tag=" + tag : ''}${type ? "&type=" + type : ''}${(onlyUsers && props.author) ? "&author=" + props.author.AuthorId : ''}${"&nsfw=" + props.nsfw}`);
     }
 
     function handleOnlyUser(event) {
@@ -186,7 +198,7 @@ function Page(props: PageProps) {
     }, [editMode]);
 
     function handleSearch(search) {
-        setSearchF(search);
+        router.push(`/browser?t=${search}`);
     }
 
     async function deleteSelected() {
@@ -204,7 +216,8 @@ function Page(props: PageProps) {
                 message: json.message,
                 color: "green"
             });
-            await mutate('/api/posts');
+            playChange();
+            await mutate(`/api/posts?page=${activePage}&sort=${sort}${category ? "&category=" + category : ''}${tag ? "&tag=" + tag : ''}${type ? "&type=" + type : ''}${(onlyUsers && props.author) ? "&author=" + props.author.AuthorId : ''}${"&nsfw=" + props.nsfw}`);
         } catch (error) {
             console.error(error);
             showNotification({
@@ -224,17 +237,19 @@ function Page(props: PageProps) {
             setPage(page);
         }
     };
-
     return <Layout additionalMainStyle={{ display: "flex" }} space={props.space} navbar={
         <>
-            <Text mb="md" size="xs">{(data && data.all.length) ?? 0} file(s) on the server</Text>
+            <Group mb="md" position="apart">
+                <Text size="xs">{(data && data.all.length) ?? 0} file(s) on the server</Text>
+                <Tooltip label="Refresh grid"><ActionIcon onClick={() => mutate('/api/posts')}><Refresh size={14} /></ActionIcon></Tooltip>
+            </Group>
             <Pagination mb="md" page={activePage} size="xs" onChange={setNewPage} styles={{ item: { fontFamily: 'Manrope' } }} total={(data && (onlyUsers ?
                 Math.floor(data.posts.filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f).length / 25 + 1) :
                 type ? Math.floor(data.all.filter(x => getExt(x.FileURL) === type).length / 25 + 1) :
                     category ? Math.floor(data.all.filter(x => x.Folder && x.Folder === category).length / 25 + 1) :
                         tag ? Math.floor(data.all.filter(x => x.Tags && x.Tags.includes(tag)).length / 25 + 1) :
                             Math.floor(data.all.length / 25 + 1))) ?? 0} withEdges grow />
-            <SearchInput onSubmit={handleSearch} />
+            <SearchInput data={data ? data.allTags : []} onSubmit={handleSearch} />
             <Transition mounted={Boolean(props.author)} transition="slide-down">{(styles) => <Accordion style={styles} mt="md" sx={{
                 backgroundColor: theme.colorScheme === "light" ? theme.white : theme.colors.dark[5],
                 borderRadius: 4
@@ -243,6 +258,7 @@ function Page(props: PageProps) {
                     <Accordion.Control sx={{ border: "none", fontSize: 12 }} icon={<Edit size={16} />}>{getLocale(locale).Browser["edit-mode"]}</Accordion.Control>
                     <Accordion.Panel>
                         <Stack>
+                            {props.userIsSpaceOwner && <Text size="xs">You own this space, therefore you can edit any files here</Text>}
                             <Text size="xs">{selected.length}{` ${getLocale(locale).Browser["selected"]}`}</Text>
                             <Button disabled={selected.length === 0} onClick={() => setEditDetails(true)}
                                 variant="light">{`${getLocale(locale).Browser["edit-details"]}`}</Button>
@@ -262,58 +278,52 @@ function Page(props: PageProps) {
             <Slider label={scale} value={scale} onChange={onScaleChange} min={1} max={8} mb="md" />*/}
             {data && <Transition transition="slide-down" mounted={Boolean(data.allCategories.length > 0)}>{(styles) => <Divider style={styles} label={`${getLocale(locale).Viewer["nc-category"]}`} mb="sm" my="md" />}</Transition>}
             {data && <Transition mounted={Boolean(data.allCategories.length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
-                {data.allCategories.map((elem, index) =>
-                    <Link href={`/browser?f=${elem}`} key={index} passHref>
+                {data.allCategories.filter(x => !props.filter.includes(x)).map((elem, index) =>
+                    <TouchableLink link={`/browser?f=${elem}`} key={index} passHref>
                         <Text size="xs" color={theme.colors.blue[4]} sx={{
                             textDecoration: "none",
                             cursor: "pointer",
                             "&:hover": { textDecoration: "underline" }
                         }}>{elem}</Text>
-                    </Link>)}
+                    </TouchableLink>)}
             </Stack>}</Transition>}
             {data && <Transition mounted={Boolean(data.allTags.length > 0)} transition="slide-down">{(styles) => <Divider style={styles} label={`${getLocale(locale).Browser["tags"]}`} mb="sm" my="sm" />}</Transition>}
             {data && <Transition mounted={Boolean(data.allTags.length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
-                {data.allTags.map((t, i) =>
-                    <Link href={`/browser?t=${t}`} key={i} passHref>
+                {data.allTags.filter(x => !props.filteredTags.includes(x)).map((t, i) =>
+                    <TouchableLink link={`/browser?t=${t}`} key={i} passHref>
                         <Text size="xs" color={theme.colors.blue[4]} sx={{
                             textDecoration: "none",
                             cursor: "pointer",
                             "&:hover": { textDecoration: "underline" }
                         }}>{t}</Text>
-                    </Link>)}
+                    </TouchableLink>)}
             </Stack>}</Transition>}
             {data && <Transition mounted={Boolean(data.allTypes.length > 0)} transition="slide-down">{(styles) => <Divider style={styles} label={`${getLocale(locale).Browser["file-types"]}`} mb="sm" my="sm" />}</Transition>}
             {data && <Transition mounted={Boolean(data.allTypes.length > 0)} transition="slide-down">{(styles) => <Stack style={styles} spacing={0}>
                 {data.allTypes.map((t, i) =>
-                    <Link href={`/browser?type=${t}`} key={i} passHref>
+                    <TouchableLink link={`/browser?type=${t}`} key={i}>
                         <Text size="xs" color={theme.colors.blue[4]} sx={{
                             textDecoration: "none",
                             cursor: "pointer",
                             "&:hover": { textDecoration: "underline" }
                         }}>{t}</Text>
-                    </Link>)}
+                    </TouchableLink>)}
             </Stack>}</Transition>}
         </>
     }>
         <SEO title="Browser" siteTitle="Doki" description="Content for days" />
-        {data && data.posts.length > 0 ? <SimpleGrid cols={5} breakpoints={[
-            { maxWidth: 'lg', cols: 4, spacing: 'md' },
-            { maxWidth: 'md', cols: 3, spacing: 'md' },
-            { maxWidth: 'sm', cols: 2, spacing: 'sm' },
-            { maxWidth: 'xs', cols: 1, spacing: 'sm' },
-        ]}>
+        {data && data.posts.length > 0 ? <div className="grid">
             {!loading && data && data.posts
                 .sort(_sort)
                 .filter(f => onlyUsers && props.author ? f.AuthorId === props.author.AuthorId : f)
-                .filter(f => f.Tags ? f.Tags.split(",").map(l => l.match(searchF)) : f)
-                .filter(f => f.Title ? f.Title.match(searchF) : f)
-                .filter(f => f.FileURL.match(searchF))
+                .filter(x => !props.filteredTags.includes(x.Tags))
+                .filter(x => !props.filter.includes(x.Folder))
                 .map((elem, index) =>
                     <Transition mounted={Boolean(elem)} transition="fade" key={index}>
-                        {(styles) => <GridItem onlyUsers={onlyUsers} style={styles} author={props.author} editMode={editMode} selected={selected.includes(elem)}
+                        {(styles) => <GridItem style={styles} spaceOwner={props.userIsSpaceOwner} onlyUsers={onlyUsers} author={props.author} editMode={editMode} selected={selected.includes(elem)}
                             onUnselect={(f) => setSelected(p => p.filter(x => x !== f))}
                             onSelect={(f) => setSelected(p => [...p, f])} data={elem} />}</Transition>)}
-        </SimpleGrid> : <Stack sx={{ margin: "auto", textAlign: "center" }}>
+        </div> : <Stack sx={{ margin: "auto", textAlign: "center" }}>
             <Title className='use-m-font'>O.O'</Title>
             <Text className='use-m-font'>There's no files!</Text>
         </Stack>}
@@ -334,7 +344,7 @@ function Page(props: PageProps) {
         >
             <Stack>
                 {selected && selected.map((e, i) => (
-                    <EditBox author={props.author} cancel={() => setSelected(selected.filter(x => x.Id != e.Id))}
+                    <EditBox onUpdated={() => mutate(`/api/posts?page=${activePage}&sort=${sort}${category ? "&category=" + category : ''}${tag ? "&tag=" + tag : ''}${type ? "&type=" + type : ''}${(onlyUsers && props.author) ? "&author=" + props.author.AuthorId : ''}${"&nsfw=" + props.nsfw}`)} author={props.author} cancel={() => setSelected(selected.filter(x => x.Id != e.Id))}
                         posts={data.posts} file={e} key={i} />
                 ))}
             </Stack>
