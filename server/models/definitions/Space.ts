@@ -3,7 +3,7 @@ import BaseModel from "./BaseModel";
 
 @Table({
     timestamps: false,
-    tableName: "Spaces"
+    tableName: "Space"
 })
 export class Space extends BaseModel {
     @Column({ type: DataType.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true })
